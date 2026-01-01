@@ -1,0 +1,75 @@
+[{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be372"
+  },
+  "moduleName": "Dashboard",
+  "actions": [
+    "Read"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+},
+{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be374"
+  },
+  "moduleName": "Api_List",
+  "actions": [
+    "Create",
+    "View",
+    "View_code",
+    "Add_customers",
+    "Update",
+    "Export"
+  ],
+  "description": "Monitor and export API usage logs"
+},
+{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be375"
+  },
+  "moduleName": "Api_key_Details",
+  "actions": [
+    "Test_api",
+    "Add_Key",
+    "View_Logs",
+    "Update_Key",
+    "Delete_Key",
+    "Restore_Key",
+    "History_Key"
+  ],
+  "description": "Displays detailed information about individual APIs, including endpoints, methods, key, request/response formats, and configuration settings."
+},
+{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be378"
+  },
+  "moduleName": "Role",
+  "actions": [
+    "View",
+    "Update"
+  ],
+  "description": "Manage application settings"
+},
+{
+  "_id": {
+    "$oid": "68ad9022a72740f9ebbdcbbc"
+  },
+  "moduleName": "User",
+  "actions": [
+    "Add",
+    "Update",
+    "Delete",
+    "View"
+  ],
+  "description": "User application settings"
+},
+{
+  "_id": {
+    "$oid": "690c36930f89eaafb0ac2bb7"
+  },
+  "moduleName": "NaverDashboard",
+  "actions": [
+    "Read"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+}]

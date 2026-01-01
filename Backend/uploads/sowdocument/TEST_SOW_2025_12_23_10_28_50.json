@@ -1,0 +1,371 @@
+[{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a1"
+  },
+  "roleName": "Super Admin",
+  "description": "Full system access. Manages all roles, users, permissions, and system-wide settings.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Role",
+      "action": [
+        "View",
+        "Update"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Delete",
+        "View",
+        "Update",
+        "Add"
+      ]
+    },
+    {
+      "moduleName": "Projects",
+      "action": [
+        "Create",
+        "Read",
+        "View",
+        "Update"
+      ]
+    },
+    {
+      "moduleName": "WorkReport",
+      "action": [
+        "Add",
+        "View"
+      ]
+    }
+  ],
+  "Rolelevel": 1,
+  "tokenVersion": 4
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a2"
+  },
+  "roleName": "Admin",
+  "description": "Manages users, projects, APIs, and daily operations without super admin privileges.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export",
+        "Add_customers"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Delete",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Delete_Key",
+        "Update_Key",
+        "Restore_Key",
+        "History_Key"
+      ]
+    },
+    {
+      "moduleName": "Projects",
+      "action": [
+        "Read",
+        "Create",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "WorkReport",
+      "action": [
+        "Add",
+        "View"
+      ]
+    }
+  ],
+  "Rolelevel": 2,
+  "tokenVersion": 1
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a3"
+  },
+  "roleName": "Manager",
+  "description": "Manages all departments including Development, QA, Operations, and Sales (BDE).",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Update_Key",
+        "Add_Key",
+        "Test_api",
+        "View_Logs",
+        "Delete_Key",
+        "Restore_Key",
+        "History_Key"
+      ]
+    },
+    {
+      "moduleName": "Projects",
+      "action": [
+        "Read",
+        "Create",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "WorkReport",
+      "action": [
+        "Add",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    }
+  ],
+  "Rolelevel": 3,
+  "tokenVersion": 3
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a4"
+  },
+  "roleName": "Team Lead",
+  "description": "Leads technical teams and coordinates between Manager and Developers/QA.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "View_Logs"
+      ]
+    }
+  ],
+  "Rolelevel": 4,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68b1727bf22b60fb871889c4"
+  },
+  "roleName": "Developer",
+  "description": "Develops features, APIs, and submits work reports.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Update_Key",
+        "History_Key",
+        "Restore_Key",
+        "Delete_Key"
+      ]
+    },
+    {
+      "moduleName": "WorkReport",
+      "action": [
+        "Add",
+        "View"
+      ]
+    }
+  ],
+  "Rolelevel": 5,
+  "tokenVersion": 3
+},
+{
+  "_id": {
+    "$oid": "68c114ffe60d790bc01002d3"
+  },
+  "roleName": "BDE",
+  "description": "Handles business development, lead generation, and client coordination.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Update_Key",
+        "History_Key",
+        "Restore_Key",
+        "Delete_Key"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Add",
+        "Update",
+        "Delete",
+        "View"
+      ]
+    }
+  ],
+  "Rolelevel": 6,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "6940390fd530f336cffed823"
+  },
+  "roleName": "QA",
+  "description": "Tests applications, validates fixes, and ensures quality.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Projects",
+      "action": [
+        "View",
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "WorkReport",
+      "action": [
+        "Add",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    }
+  ],
+  "Rolelevel": 7,
+  "tokenVersion": 3
+},
+{
+  "_id": {
+    "$oid": "6943b0cf4e60ef32db75d627"
+  },
+  "roleName": "Data Entry",
+  "description": "Responsible for data input, validation, and record maintenance.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-12-18T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    }
+  ],
+  "Rolelevel": 8,
+  "tokenVersion": 0
+}]

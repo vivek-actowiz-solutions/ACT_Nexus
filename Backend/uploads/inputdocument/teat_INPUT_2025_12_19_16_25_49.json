@@ -1,0 +1,76 @@
+[{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be372"
+  },
+  "moduleName": "Dashboard",
+  "actions": [
+    "Read"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+},
+{
+  "_id": {
+    "$oid": "68a2bb8b3bd4571df00be378"
+  },
+  "moduleName": "Role",
+  "actions": [
+    "View",
+    "Update"
+  ],
+  "description": "Manage application settings"
+},
+{
+  "_id": {
+    "$oid": "68ad9022a72740f9ebbdcbbc"
+  },
+  "moduleName": "User",
+  "actions": [
+    "Add",
+    "Update",
+    "Delete",
+    "View"
+  ],
+  "description": "User application settings"
+},
+{
+  "_id": {
+    "$oid": "690c36930f89eaafb0ac2bb7"
+  },
+  "moduleName": "Projects",
+  "actions": [
+    "Read",
+    "Create",
+    "View",
+    "Update"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+},
+{
+  "_id": {
+    "$oid": "6940dc4ed530f336cffed826"
+  },
+  "moduleName": "WorkReport",
+  "actions": [
+    "Add",
+    "View"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+}]": "User",
+  "actions": [
+    "Add",
+    "Update",
+    "Delete",
+    "View"
+  ],
+  "description": "User application settings"
+},
+{
+  "_id": {
+    "$oid": "690c36930f89eaafb0ac2bb7"
+  },
+  "moduleName": "NaverDashboard",
+  "actions": [
+    "Read"
+  ],
+  "description": "\"Provides an overview of system activity, API performance, and key metrics in a visual format."
+}]

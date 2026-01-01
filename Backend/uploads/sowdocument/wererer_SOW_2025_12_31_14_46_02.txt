@@ -1,0 +1,82 @@
+import curlify,requests
+
+cookies = {
+    '_gcl_au': '1.1.1695796351.1762500748',
+    '_QPWSDCXHZQA': '56938427-3070-4a99-9631-a51c1067f778',
+    'REC7iLP4Q': '5659f007-0c1e-4e1b-96af-3ab91f1e7d28',
+    'SPC_F': 'WLvJ1eKcVDpxqa6n4FQ1Tj8dJMgcs7a7',
+    'REC_T_ID': 'ea682b9f-bbab-11f0-9130-5eb1787c1212',
+    'SPC_CLIENTID': 'V0x2SjFlS2NWRHB4vkrmtlrkwsvoywzc',
+    '_fbp': 'fb.2.1762500750006.645597373173896263',
+    'language': 'zhHans',
+    'SPC_ST': '.V0pVeFZDd3dSMFVhcGhSRqn11LbG8xOA2AVGm1KiRUuz/myjxvx8W1bGJajvO45UijDFJdU2lZMacrz+1Au7yZbsbMwykTZtKbYVsRu1viRWfE/eR3o2rciDVP8OFghVfOO+4IsgKfYCw3Vil4+kpg3Ch40VXfkpzIY7CsIe6NxRLNhzoFwP8nTMqVrp/tD188hfQkkDvaLQ1EERGc2mn57HPGvhTZ5A2VEUN/sAB3qoH1QTdAkM7ACmHwiGuYYl2jeIAtqR8c9iDIpeet5kyHEeeWxN47mD7y/wRspdXdk=',
+    'SPC_U': '4517690225',
+    'SPC_R_T_ID': 'LY/6lt5IWHHNc5pfE2JLTKDT9QqYMif5ouNyjkqDulIE4gCbBu22SN3dxNrVLt1MMWAOM9+qG7nPo/nZhgNiZ/NeUvhVbvPrnk1HWUcV5sDlQml/A5E4HVG0xUTyw4xs4hQ9ck+q4ywWdG3iflMYLfdG0oxF1TwhIJINY/0yYrw=',
+    'SPC_R_T_IV': 'UGFIMGY0M2d6YzFSMnJNeQ==',
+    'SPC_T_ID': 'LY/6lt5IWHHNc5pfE2JLTKDT9QqYMif5ouNyjkqDulIE4gCbBu22SN3dxNrVLt1MMWAOM9+qG7nPo/nZhgNiZ/NeUvhVbvPrnk1HWUcV5sDlQml/A5E4HVG0xUTyw4xs4hQ9ck+q4ywWdG3iflMYLfdG0oxF1TwhIJINY/0yYrw=',
+    'SPC_T_IV': 'UGFIMGY0M2d6YzFSMnJNeQ==',
+    'csrftoken': '1lehqlETUANZe6rZujIftF5muHPJW1hv',
+    '_sapid': '38c504a9b46509c03d98c8ab5716ced00e5547ef8f1938c674de6e5e',
+    'SPC_DT_TRANSLATED': '0',
+    'SPC_SI': 'MwIxaQAAAABibzRZdEpmbymOYAIAAAAAY1Rkd1lXSmU=',
+    'SPC_SEC_SI': 'v1-UnhmWTh5cUdDN1ZFbkNCOCdgDCD7B+YNN3NoeCpXtu1atIbyaj2vazqRhurBlwlLEZP6d0ZA1MHKksWE4fSAppAmrDgPOtfc8fkj26MNL/4=',
+    'SPC_CDS_CHAT': 'a7e66064-b22b-401a-9a4a-2dbe29267aa0',
+    'AMP_TOKEN': '%24NOT_FOUND',
+    '_gid': 'GA1.3.1140442434.1766389385',
+    'AC_CERT_D': 'U2FsdGVkX1+NdjPN3hDBu19FAxLwdIMh48eQLHw7anUE2BTZ6yAoJWueesXT6enyzdbxXzq3IsxeOGuZ6brhP8QHJ82AGvBh/TDbscbRHeo80BsMZmX0tKEWtUqoBhlzDLJyLfSStqdtncCAHOM0AihsjjjIDbzCsB6FTVr2co0wiJbCmD/hO3JIEEu3fbl3mFNnU6PgH0o3meoNzxBmFTnyiSXLSeVkvoeL1ly8Hxm9tf258fNs7FAdCIVpNg3Ly/3UzVZmPn+ExA/hF75i0nulSNQr8OLuIW8h2xsy9dJkvQbmEFuff2yMJ6daHk7EBfwO6m4Qe6uyBagocRIaDy9R02aUMG1HyQJXTm7T9J059KQ4SyXkWiSiODtkC/zab8hnr1PF+ypVkia/oIOlDzC+FY7raSFMgnupcjvi0cCqt6POhcckxTrL/vpyfg53atooM0KWUSAnwvD8WaK95fRLOarnlztlFxczHFpHg0XlM8SydClzEzKQ9zzeFSzoyCEvzANAq5h9IRGpWXWzZf6jHK+vCkzGLw3cgYP+8E21ytIh2KXpQMBODB4Q+Mszrf3yDjKjZh/ZNjehN2MdsIxAYUBrdzKFTK0wdQictRDgSMyWmWzVvSu4arz9+Ui0P3SNhYbpFAszpHO8avWHGEJUdE7wySCz42LF1Jf9IKgpMN+aVxQ+UoPka4KC+E/vK4DP/HIfgh6vuURd7Rl83BItYBYNbzNr8TnRUrMd8W7rlg9pr3kmR9iVOgPJPwg3g63kZwUBnDfOUnRB4OQOXqu6Ozk83Km9Qcslc9rr+yRP9KLbe6sZ649YmKIqvGqA4R436q6aRvxCF6RZHdgpJ0IZg7xW2Zh5tTj9h5JEJzq70O/hybJGKqAuDqJD98La/FbPmfaTpT1YI59IuuBctCodbm6BW+AXgwnvMO1ONwQV1rSTyQXWl6i6f+M3lu+kY88cijrjRY0qNEDlIowb5rAeNsXWVDkW1htXRB9Pofa6kIs6D9AHlDhNRcxu47dMX07eaFx9zVIIa5UYnIo16w==',
+    '_ga_NEYMG30JL4': 'GS2.1.s1766389382$o3$g1$t1766389434$j8$l1$h424148104',
+    '_ga': 'GA1.3.1618105403.1762500751',
+    'shopee_webUnique_ccd': 'eLYJ3BduTtKZEbOKUsmE1A%3D%3D%7C4FsQ2gdNiX7HBn4W%2BzBSLAdsdKfy8H%2Fs9Qgj07VOqCKCR8q62Ex09Kj5%2BJdNklT5ucYzu97r4mhBtA%3D%3D%7C34Y0l8UdKH7enOCL%7C08%7C3',
+    'ds': '55b81cc555494785260211fe32ccb8da',
+    'SPC_EC': '.dGQycURZaVFrZmhHbnM0ZsbT56XRvNy29Ggptn+ki0Woo12XGQ6ovYskD+x8Zx7Fv5GWcPLeUZf5K9vOUbs59Ud2qTeYfJxnMKNnRQ6Wf0ewUC+5FoGAx5WGPqpdL6kYweKHz5HPnjyLpzDtKeRG6u459d1pvGyfnPzMkEEMDm49LbYKssdoNaVX6J8KepVfvy7XyBLGODKTsmjHkYwrM79NxgXvZbuwCgRLyxJABmmXWlTUdpjW5SZOJfIH2mMewf2BYbhx3O6Yj9ZryMUX5QgECvCOhgLbiF1hrx2jEHo=',
+}
+
+headers = {
+    'accept': 'application/json',
+    'accept-language': 'en-US,en;q=0.9',
+    'af-ac-enc-dat': 'd5fb22792713874f',
+    'af-ac-enc-sz-token': 'eLYJ3BduTtKZEbOKUsmE1A==|4FsQ2gdNiX7HBn4W+zBSLAdsdKfy8H/s9Qgj07VOqCKCR8q62Ex09Kj5+JdNklT5ucYzu97r4mhBtA==|34Y0l8UdKH7enOCL|08|3',
+    'content-type': 'application/json',
+    # 'd-nonptcha-sync': 'AAAG5hc2ZeQAAA8AABBaAauYl1asiwkEIAGAAAAOOQO7AUYAAA6CA7QBQwAADocDrAE9AAAOlQOoATsAAA6gA5gBMAAADs8DlgEvAAAO1AOUAS0AAA7XA5MBLQAADuIDkQErAAAO6gONASsAAA7xA4YBKwAADvkDfwEoAAAO/wN3ASYAAA8HA3YBJgAADw8=',
+    'priority': 'u=1, i',
+    'referer': "https://shopee.com.my/Sneakers-men's-and-women's-shoes-sup-i.1315407833.28313946663",
+    'sec-ch-ua': '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'sz-token': 'eLYJ3BduTtKZEbOKUsmE1A==|4FsQ2gdNiX7HBn4W+zBSLAdsdKfy8H/s9Qgj07VOqCKCR8q62Ex09Kj5+JdNklT5ucYzu97r4mhBtA==|34Y0l8UdKH7enOCL|08|3',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+    'x-api-source': 'pc',
+    'x-csrftoken': '1lehqlETUANZe6rZujIftF5muHPJW1hv',
+    'x-requested-with': 'XMLHttpRequest',
+    'x-sap-ri': 'c4f64869182b6155fc37ce3c080133cbc8f198880cc19b700e21',
+    'x-sap-sec': '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',
+    'x-shopee-language': 'zh-Hans',
+    'x-sz-sdk-version': '1.12.26-5',
+    # 'cookie': '_gcl_au=1.1.1695796351.1762500748; _QPWSDCXHZQA=56938427-3070-4a99-9631-a51c1067f778; REC7iLP4Q=5659f007-0c1e-4e1b-96af-3ab91f1e7d28; SPC_F=WLvJ1eKcVDpxqa6n4FQ1Tj8dJMgcs7a7; REC_T_ID=ea682b9f-bbab-11f0-9130-5eb1787c1212; SPC_CLIENTID=V0x2SjFlS2NWRHB4vkrmtlrkwsvoywzc; _fbp=fb.2.1762500750006.645597373173896263; language=zhHans; SPC_ST=.V0pVeFZDd3dSMFVhcGhSRqn11LbG8xOA2AVGm1KiRUuz/myjxvx8W1bGJajvO45UijDFJdU2lZMacrz+1Au7yZbsbMwykTZtKbYVsRu1viRWfE/eR3o2rciDVP8OFghVfOO+4IsgKfYCw3Vil4+kpg3Ch40VXfkpzIY7CsIe6NxRLNhzoFwP8nTMqVrp/tD188hfQkkDvaLQ1EERGc2mn57HPGvhTZ5A2VEUN/sAB3qoH1QTdAkM7ACmHwiGuYYl2jeIAtqR8c9iDIpeet5kyHEeeWxN47mD7y/wRspdXdk=; SPC_U=4517690225; SPC_R_T_ID=LY/6lt5IWHHNc5pfE2JLTKDT9QqYMif5ouNyjkqDulIE4gCbBu22SN3dxNrVLt1MMWAOM9+qG7nPo/nZhgNiZ/NeUvhVbvPrnk1HWUcV5sDlQml/A5E4HVG0xUTyw4xs4hQ9ck+q4ywWdG3iflMYLfdG0oxF1TwhIJINY/0yYrw=; SPC_R_T_IV=UGFIMGY0M2d6YzFSMnJNeQ==; SPC_T_ID=LY/6lt5IWHHNc5pfE2JLTKDT9QqYMif5ouNyjkqDulIE4gCbBu22SN3dxNrVLt1MMWAOM9+qG7nPo/nZhgNiZ/NeUvhVbvPrnk1HWUcV5sDlQml/A5E4HVG0xUTyw4xs4hQ9ck+q4ywWdG3iflMYLfdG0oxF1TwhIJINY/0yYrw=; SPC_T_IV=UGFIMGY0M2d6YzFSMnJNeQ==; csrftoken=1lehqlETUANZe6rZujIftF5muHPJW1hv; _sapid=38c504a9b46509c03d98c8ab5716ced00e5547ef8f1938c674de6e5e; SPC_DT_TRANSLATED=0; SPC_SI=MwIxaQAAAABibzRZdEpmbymOYAIAAAAAY1Rkd1lXSmU=; SPC_SEC_SI=v1-UnhmWTh5cUdDN1ZFbkNCOCdgDCD7B+YNN3NoeCpXtu1atIbyaj2vazqRhurBlwlLEZP6d0ZA1MHKksWE4fSAppAmrDgPOtfc8fkj26MNL/4=; SPC_CDS_CHAT=a7e66064-b22b-401a-9a4a-2dbe29267aa0; AMP_TOKEN=%24NOT_FOUND; _gid=GA1.3.1140442434.1766389385; AC_CERT_D=U2FsdGVkX1+NdjPN3hDBu19FAxLwdIMh48eQLHw7anUE2BTZ6yAoJWueesXT6enyzdbxXzq3IsxeOGuZ6brhP8QHJ82AGvBh/TDbscbRHeo80BsMZmX0tKEWtUqoBhlzDLJyLfSStqdtncCAHOM0AihsjjjIDbzCsB6FTVr2co0wiJbCmD/hO3JIEEu3fbl3mFNnU6PgH0o3meoNzxBmFTnyiSXLSeVkvoeL1ly8Hxm9tf258fNs7FAdCIVpNg3Ly/3UzVZmPn+ExA/hF75i0nulSNQr8OLuIW8h2xsy9dJkvQbmEFuff2yMJ6daHk7EBfwO6m4Qe6uyBagocRIaDy9R02aUMG1HyQJXTm7T9J059KQ4SyXkWiSiODtkC/zab8hnr1PF+ypVkia/oIOlDzC+FY7raSFMgnupcjvi0cCqt6POhcckxTrL/vpyfg53atooM0KWUSAnwvD8WaK95fRLOarnlztlFxczHFpHg0XlM8SydClzEzKQ9zzeFSzoyCEvzANAq5h9IRGpWXWzZf6jHK+vCkzGLw3cgYP+8E21ytIh2KXpQMBODB4Q+Mszrf3yDjKjZh/ZNjehN2MdsIxAYUBrdzKFTK0wdQictRDgSMyWmWzVvSu4arz9+Ui0P3SNhYbpFAszpHO8avWHGEJUdE7wySCz42LF1Jf9IKgpMN+aVxQ+UoPka4KC+E/vK4DP/HIfgh6vuURd7Rl83BItYBYNbzNr8TnRUrMd8W7rlg9pr3kmR9iVOgPJPwg3g63kZwUBnDfOUnRB4OQOXqu6Ozk83Km9Qcslc9rr+yRP9KLbe6sZ649YmKIqvGqA4R436q6aRvxCF6RZHdgpJ0IZg7xW2Zh5tTj9h5JEJzq70O/hybJGKqAuDqJD98La/FbPmfaTpT1YI59IuuBctCodbm6BW+AXgwnvMO1ONwQV1rSTyQXWl6i6f+M3lu+kY88cijrjRY0qNEDlIowb5rAeNsXWVDkW1htXRB9Pofa6kIs6D9AHlDhNRcxu47dMX07eaFx9zVIIa5UYnIo16w==; _ga_NEYMG30JL4=GS2.1.s1766389382$o3$g1$t1766389434$j8$l1$h424148104; _ga=GA1.3.1618105403.1762500751; shopee_webUnique_ccd=eLYJ3BduTtKZEbOKUsmE1A%3D%3D%7C4FsQ2gdNiX7HBn4W%2BzBSLAdsdKfy8H%2Fs9Qgj07VOqCKCR8q62Ex09Kj5%2BJdNklT5ucYzu97r4mhBtA%3D%3D%7C34Y0l8UdKH7enOCL%7C08%7C3; ds=55b81cc555494785260211fe32ccb8da; SPC_EC=.dGQycURZaVFrZmhHbnM0ZsbT56XRvNy29Ggptn+ki0Woo12XGQ6ovYskD+x8Zx7Fv5GWcPLeUZf5K9vOUbs59Ud2qTeYfJxnMKNnRQ6Wf0ewUC+5FoGAx5WGPqpdL6kYweKHz5HPnjyLpzDtKeRG6u459d1pvGyfnPzMkEEMDm49LbYKssdoNaVX6J8KepVfvy7XyBLGODKTsmjHkYwrM79NxgXvZbuwCgRLyxJABmmXWlTUdpjW5SZOJfIH2mMewf2BYbhx3O6Yj9ZryMUX5QgECvCOhgLbiF1hrx2jEHo=',
+}
+
+params = {
+    'item_id': '28313946663',
+    'shop_id': '1315407833',
+    'tz_offset_in_minutes': '330',
+    'detail_level': '0',
+    'incoming_pdp_page_source': '0',
+    'incoming_pdp_page_scenario': '0',
+}
+
+
+proxies = {
+ "http": f"http://2xt-customer-1rhoZbZDAfj-proxy-krushil:3udpd1wqdir@proxy.2extract.net:5555",
+ "https": f"http://2xt-customer-1rhoZbZDAfj-proxy-krushil:3udpd1wqdir@proxy.2extract.net:5555",
+}
+
+response = requests.get('https://shopee.com.my/api/v4/pdp/get_pc',
+                        params=params,
+                        cookies=cookies,
+                        headers=headers,
+                        proxies=proxies,
+                        verify=False
+                        )

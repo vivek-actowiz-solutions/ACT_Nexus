@@ -1,0 +1,347 @@
+[{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a1"
+  },
+  "roleName": "Super Admin",
+  "description": "Full system access with ability to manage admins, roles, and system-wide settings.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export",
+        "Add_customers"
+      ]
+    },
+    {
+      "moduleName": "Role",
+      "action": [
+        "View",
+        "Update"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Update_Key",
+        "Delete_Key",
+        "Restore_Key",
+        "History_Key"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Delete",
+        "View",
+        "Update",
+        "Add"
+      ]
+    },
+    {
+      "moduleName": "NaverDashboard",
+      "action": [
+        "Read"
+      ]
+    }
+  ],
+  "Rolelevel": 1,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a2"
+  },
+  "roleName": "Admin",
+  "description": "Can manage users, moderate content, and view reports but cannot modify superadmin settings.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export",
+        "Add_customers"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Delete",
+        "View"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Delete_Key",
+        "Update_Key",
+        "Restore_Key",
+        "History_Key"
+      ]
+    }
+  ],
+  "Rolelevel": 1,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a3"
+  },
+  "roleName": "Manager",
+  "description": "Manages team members, assigns tasks, and monitors performance.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Update_Key",
+        "Add_Key",
+        "Test_api",
+        "View_Logs",
+        "Delete_Key",
+        "Restore_Key",
+        "History_Key"
+      ]
+    }
+  ],
+  "Rolelevel": 2,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a4"
+  },
+  "roleName": "Sales",
+  "description": "Handles sales operations, customer interactions, and order management.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "View_Logs"
+      ]
+    }
+  ],
+  "Rolelevel": 3,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68a80e19e54c6bed88b950a5"
+  },
+  "roleName": "Customer",
+  "description": "End user who can browse, place orders, and manage their account.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "View",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "View_Logs"
+      ]
+    }
+  ],
+  "Rolelevel": 4,
+  "tokenVersion": 6
+},
+{
+  "_id": {
+    "$oid": "68b1727bf22b60fb871889c4"
+  },
+  "roleName": "Developer",
+  "description": "End user who can browse, place orders, and manage their account.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Update_Key",
+        "History_Key",
+        "Restore_Key",
+        "Delete_Key"
+      ]
+    }
+  ],
+  "Rolelevel": 5,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "68c114ffe60d790bc01002d3"
+  },
+  "roleName": "QA",
+  "description": "End user who can browse, place orders, and manage their account.",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-08-22T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "Dashboard",
+      "action": [
+        "Read"
+      ]
+    },
+    {
+      "moduleName": "Api_List",
+      "action": [
+        "Create",
+        "View",
+        "View_code",
+        "Update",
+        "Export"
+      ]
+    },
+    {
+      "moduleName": "Api_key_Details",
+      "action": [
+        "Test_api",
+        "Add_Key",
+        "View_Logs",
+        "Update_Key",
+        "History_Key",
+        "Restore_Key",
+        "Delete_Key"
+      ]
+    },
+    {
+      "moduleName": "User",
+      "action": [
+        "Add",
+        "Update",
+        "Delete",
+        "View"
+      ]
+    }
+  ],
+  "Rolelevel": 6,
+  "tokenVersion": 0
+},
+{
+  "_id": {
+    "$oid": "690c38d20f89eaafb0ac2bb9"
+  },
+  "roleName": "Naver",
+  "description": "Naver clinet view ",
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-06T10:00:00.000Z"
+  },
+  "permissions": [
+    {
+      "moduleName": "NaverDashboard",
+      "action": [
+        "Read"
+      ]
+    }
+  ],
+  "Rolelevel": 7,
+  "tokenVersion": 0
+}]
