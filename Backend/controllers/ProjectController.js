@@ -896,6 +896,7 @@ const feedActivestatusupdate = async (req, res) => {
   const { id } = req.params;
 
   console.log("id", id);
+  const feedId = new mongoose.Types.ObjectId(id);
   const { active } = req.body;
   const userId = req.user.id;
 
@@ -904,14 +905,11 @@ const feedActivestatusupdate = async (req, res) => {
     if (!feed) {
       return res.status(404).json({ message: "Feed not found" });
     }
-
-    feed.active = active;
-    await feed.save();
-
+    await Feed.updateOne({ _id: feedId }, { $set: { active } });
     await logFeedActivity({
       userid: userId,
       username: req.user.name,
-      feedId: feed._id,
+      feedId: feedId,
       projectId: feed.projectId,
       newData: active,
       oldData: !active,
@@ -1169,6 +1167,7 @@ const feedupdated = async (req, res) => {
     });
   } catch (error) {
     console.error("Feed update error:", error);
+    console.log("error" , error)
     return res.status(500).json({
       success: false,
       message: "Feed update failed",
@@ -1179,6 +1178,7 @@ const feedstatusupdate = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const feedId = new mongoose.Types.ObjectId(id);
 
     // 🔹 Validate input
     if (!status) {
@@ -1197,8 +1197,7 @@ const feedstatusupdate = async (req, res) => {
       return res.status(200).json({ message: "Status already up to date" });
     }
 
-    feed.status = status;
-    await feed.save();
+    await Feed.updateOne({ _id: feedId }, { $set: { status } });
 
     await logFeedActivity({
       userid: req.user.id,
@@ -1220,6 +1219,7 @@ const feedstatusupdate = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating feed status:", error);
+    console.log(error);
     return res.status(500).json({ message: "Failed to update feed status" });
   }
 };

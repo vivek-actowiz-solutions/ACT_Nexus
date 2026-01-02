@@ -116,7 +116,7 @@ const FeedView = () => {
             <div>
               <div className="fw-semibold">{log.actionTitle}</div>
 
-              {log.actionTitle.includes('Active Status Updated') && log.newData && (
+              {log.actionTitle.includes('Active Status Updated')  && (
                 <div className="text-muted small">
                   {' '}
                   old status : <strong>{formatValue(log.oldData)}</strong> <FaArrowRight /> New status :{' '}
@@ -150,7 +150,7 @@ const FeedView = () => {
           <MainCard
             title={
               <>
-                <FaLayerGroup />
+                <FaLayerGroup /> {""}
                 {feedName}
               </>
             }
@@ -224,43 +224,43 @@ const FeedView = () => {
           <MainCard title="Feed Details ">
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Feed Id:
+                Feed Id :
               </Col>
-              <Col md={8}>{feedCode}</Col>
+              <Col md={8}>{feedCode || '--'}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Feed Name:
+                Feed Name :
               </Col>
               <Col md={8}>{feedName}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Scope Type
+                Scope Type :
               </Col>
               <Col md={8}>{scopeType}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Platform Type
+                Platform Type :
               </Col>
               <Col md={8}>{platformType}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Region
+                Region :
               </Col>
-              <Col md={8}>{countries.map((c) => ` • ${c.name} (${c.code})`).join(', ')}</Col>
+              <Col md={8}>{countries.map((c) => `${c.name} (${c.code})`).join(', ')}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Posted by
+                Posted by :
               </Col>
               <Col md={8}>{createdBy.name}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Platform Type
+                Platform Type :
               </Col>
               <Col md={8}>{formatDate(createdAt)}</Col>
             </Row>
@@ -272,7 +272,7 @@ const FeedView = () => {
           <MainCard
             title={
               <span className="d-flex align-items-center gap-2">
-                <FaUsers /> Feed Developers
+                <FaUsers /> Assigned To
               </span>
             }
           >
@@ -309,7 +309,7 @@ const FeedView = () => {
 
         {/* RIGHT */}
         <Col md={4}>
-          <MainCard title="📜 Project activity">
+          <MainCard title="📜 History">
             <ActivityTimeline activities={latestActivities} />
             {feedActivities.length > 10 && (
               <Button variant="link" size="sm" onClick={() => setShowActivityModal(true)}>
@@ -322,7 +322,7 @@ const FeedView = () => {
 
       <Modal show={showActivityModal} onHide={() => setShowActivityModal(false)} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>All Project Activities</Modal.Title>
+          <Modal.Title>All Feed History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <ActivityTimeline activities={feedActivities} />

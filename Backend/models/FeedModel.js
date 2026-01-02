@@ -47,7 +47,10 @@ const feedSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    frameworkType: {
+      type: String,
+      default: null
+    },
     // 📅 Frequency
     feedfrequency: {
       frequencyType: {

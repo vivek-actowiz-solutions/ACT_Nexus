@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Badge, Spinner, Card, ListGroup, Button, Modal } from 'react-bootstrap';
+import { Row, Col, Badge, Spinner, Card, ListGroup, Button, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import MainCard from '../../components/Card/MainCard';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
@@ -135,7 +135,7 @@ const ProjectView = () => {
                 </div>
               )}
 
-              {log.actionTitle.includes('Active Status Updated') && log.newData && (
+              {log.actionTitle.includes('Active Status Updated')  && (
                 <div className="text-muted small">
                   {' '}
                   old status : <strong>{formatValue(log.oldData)}</strong> <FaArrowRight /> New status :{' '}
@@ -168,7 +168,7 @@ const ProjectView = () => {
     if (val === false) return 'Inactive';
     return val ?? '--';
   };
-  const getStatusVariant  = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
       case 'New':
         return 'success';
@@ -300,24 +300,29 @@ const ProjectView = () => {
               <Col md={4} className="text-dark fw-medium">
                 Project Code:
               </Col>
-              <Col md={8} >
-                {projectCode}
-              </Col>
+              <Col md={8}>{projectCode}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
                 Delivery Type:
               </Col>
-              <Col md={8} >
-                {deliveryType}
-              </Col>
+              <Col md={8}>{deliveryType}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
                 Project Status:
               </Col>
-              <Col md={8} >
-                <Button size="sm" variant={getStatusVariant(status)}  disabled>
+              <Col md={8}>
+                <Button
+                  variant={getStatusVariant(status)}
+                  disabled
+                  style={{
+                    height: '22px',
+                    padding: '0 9px',
+                    fontSize: '12px',
+                    lineHeight: '22px'
+                  }}
+                >
                   {status}
                 </Button>
               </Col>
@@ -340,7 +345,7 @@ const ProjectView = () => {
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Industry:
+                Posted Date:
               </Col>
               <Col md={8} className="content-between-end">
                 {formatDate(createdAt)}
@@ -353,14 +358,14 @@ const ProjectView = () => {
       <Row className="g-3">
         {/* DOCUMENTS */}
         <Col md={4}>
-          <MainCard title="Project Documents">
+          <MainCard title="Attachments">
             {/* SOW Documents */}
             <div className="mb-4">
-              <h6 className="fw-semibold mb-2">SOW Documents</h6>
+              <h6 className="fw-semibold mb-2">SOWs </h6>
               <ListGroup>
                 {sowDocument.length ? (
-                  sowDocument.map((doc, i) => (
-                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
+                  sowDocument.reverse().map((doc, i) => (
+                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2 mb-1">
                       <div className="d-flex align-items-center gap-2 file-name-wrapper">
                         <FaFileAlt className="text-secondary" />
 
@@ -381,17 +386,17 @@ const ProjectView = () => {
                     </ListGroup.Item>
                   ))
                 ) : (
-                  <ListGroup.Item className="text-muted">No SOW documents</ListGroup.Item>
+                  <ListGroup.Item className="text-muted">No SOWs</ListGroup.Item>
                 )}
               </ListGroup>
             </div>
 
             {/* Annotation Documents */}
             <div className="mb-4">
-              <h6 className="fw-semibold mb-2">Annotation Documents</h6>
+              <h6 className="fw-semibold mb-2">Annotations</h6>
               <ListGroup>
                 {annotationDocument.length ? (
-                  annotationDocument.map((doc, i) => (
+                  annotationDocument.reverse().map((doc, i) => (
                     <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
                       <div className="d-flex align-items-center gap-2 file-name-wrapper">
                         <FaFileAlt className="text-secondary" />
@@ -416,17 +421,17 @@ const ProjectView = () => {
                     </ListGroup.Item>
                   ))
                 ) : (
-                  <ListGroup.Item className="text-muted">No Annotation documents</ListGroup.Item>
+                  <ListGroup.Item className="text-muted">No Annotations </ListGroup.Item>
                 )}
               </ListGroup>
             </div>
 
             {/* Input Documents */}
             <div>
-              <h6 className="fw-semibold mb-2">Input Documents</h6>
+              <h6 className="fw-semibold mb-2">Inputs</h6>
               <ListGroup>
                 {inputDocument.length ? (
-                  inputDocument.map((doc, i) => (
+                  inputDocument.reverse().map((doc, i) => (
                     <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
                       <div className="d-flex align-items-center gap-2 file-name-wrapper">
                         <FaFileAlt className="text-secondary" />
@@ -451,7 +456,7 @@ const ProjectView = () => {
                     </ListGroup.Item>
                   ))
                 ) : (
-                  <ListGroup.Item className="text-muted">No Input documents</ListGroup.Item>
+                  <ListGroup.Item className="text-muted">No Inputs</ListGroup.Item>
                 )}
               </ListGroup>
             </div>
@@ -463,7 +468,7 @@ const ProjectView = () => {
               <MainCard
                 title={
                   <span className="d-flex align-items-center gap-2">
-                    <FaUsers /> Project Team
+                    <FaUsers /> Assigned To
                   </span>
                 }
               >
@@ -596,29 +601,27 @@ const ProjectView = () => {
                 )}
 
                 {/* ===== DEVELOPERS ===== */}
+
                 {developers?.length > 0 && (
                   <div className="p-2 rounded border-start border-4 border-warning bg-light">
                     <h6 className="fw-bold text-warning mb-2">Developers</h6>
-
                     <Row className="g-2">
                       {developers.map((dev, i) => (
-                        <Col md={6} key={i}>
-                          <div className="d-flex align-items-center gap-2">
+                        <Col xs="auto" key={i}>
+                          <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-${i}`}>{dev.name}</Tooltip>}>
                             <div
                               className="rounded-circle d-flex justify-content-center align-items-center text-white"
                               style={{
-                                width: '30px',
-                                height: '30px',
+                                width: '32px',
+                                height: '32px',
                                 backgroundColor: '#ffc107',
                                 fontWeight: 'bold',
-                                fontSize: '0.9rem'
+                                cursor: 'pointer'
                               }}
                             >
-                              {dev?.name?.charAt(0).toUpperCase() || 'B'}
+                              {dev?.name?.charAt(0)?.toUpperCase() || 'D'}
                             </div>
-
-                            <small className="fs-6 ">{dev.name}</small>
-                          </div>
+                          </OverlayTrigger>
                         </Col>
                       ))}
                     </Row>
@@ -629,7 +632,7 @@ const ProjectView = () => {
           </Row>
         </Col>
         <Col md={4}>
-          <MainCard title="📜 Project activity">
+          <MainCard title="📜 History">
             <ActivityTimeline activities={latestActivities} />
             {projectActivities.length > 5 && (
               <Button variant="link" size="sm" onClick={() => setShowActivityModal(true)}>
@@ -642,7 +645,7 @@ const ProjectView = () => {
 
       <Modal show={showActivityModal} onHide={() => setShowActivityModal(false)} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>All Project Activities</Modal.Title>
+          <Modal.Title>All  History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <ActivityTimeline activities={projectActivities} />

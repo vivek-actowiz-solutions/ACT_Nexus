@@ -43,24 +43,53 @@ const scopeTypeOptions = [
   { label: 'By Category', value: 'By Category' }
 ];
 const feedStatusOptions = [
+  // 🟢 Planning / Initialization
+  { label: 'Scheduled', value: 'Scheduled' },
   { label: 'New', value: 'New' },
+  { label: 'Assigned to Developer', value: 'Assigned to Developer' },
+
+  // 🔵 Development
   { label: 'Under Development', value: 'Under Development' },
+  { label: 'Bug Fixing', value: 'Bug Fixing' },
+
+  // 🟡 Dependency / Blocking
+  { label: 'Waiting from Client', value: 'Waiting from Client' },
+  { label: 'Blocking Issue', value: 'Blocking Issue' },
+
+  // 🔄 Crawl Execution
   { label: 'Crawl Running', value: 'Crawl Running' },
   { label: 'Crawl Finished', value: 'Crawl Finished' },
+
+  // 🧪 Quality Assurance
   { label: 'In QA', value: 'In QA' },
   { label: 'QA Passed', value: 'QA Passed' },
-  { label: 'Completed', value: 'Completed' },
 
-  // 🔴 Issue / Risk States
-  { label: 'On Hold', value: 'On Hold' },
-  { label: 'Delayed', value: 'Delayed' },
+  // 🟣 Sample / Validation
+  { label: 'Sample Delivered', value: 'Sample Delivered' },
+  { label: 'Sample Approved', value: 'Sample Approved' },
 
-  // ⚠️ Recovery States
-  { label: 'Not Able to Recover', value: 'Not Able to Recover' },
+  // 🔄 Operations / Delivery
+  { label: 'BAU', value: 'BAU' },
+  { label: 'Once off Delivered', value: 'Once off Delivered' },
+
+  // ⚠️ Recovery / Failure
   { label: 'Able to Recover', value: 'Able to Recover' },
+  { label: 'Feed missed', value: 'Feed missed' },
 
-  // ❌ Final Failure
-  { label: 'Incapability', value: 'Incapability' }
+  // 🔴 Closure
+  { label: 'Close', value: 'Close' }
+];
+
+const frameworkTypeList = [
+  { label: 'Selenium', value: 'Selenium' },
+  { label: 'Multithread', value: 'Multithread' },
+  { label: 'Multipart Request', value: 'Multipart Request' },
+  { label: 'Scrapy', value: 'Scrapy' },
+  { label: '.Net', value: '.Net' },
+  { label: 'Django', value: 'Django' },
+  { label: 'Playwright', value: 'Playwright' },
+  { label: 'Fastapi', value: 'Fastapi' },
+  { label: 'Other', value: 'Other' }
 ];
 // const industryOptions = [
 //   { label: 'E-com', value: 'E-com' },
@@ -124,6 +153,7 @@ const ApiconfigrationList = () => {
     platformName: '',
     platformType: '',
     scopeType: '',
+    frameworkType: '',
     frequencyType: '',
     countries: [],
     description: ''
@@ -332,6 +362,7 @@ const ApiconfigrationList = () => {
       platformName: feed.platformName || '',
       platformType: feed.platformType || '',
       scopeType: feed.scopeType || '',
+      frameworkType: feed.frameworkType || '',
       frequencyType: feed.feedfrequency?.frequencyType || '',
       countries: feed.countries || [],
       description: feed.description || ''
@@ -463,6 +494,7 @@ const ApiconfigrationList = () => {
       platformName: editFormData.platformName,
       platformType: editFormData.platformType,
       scopeType: editFormData.scopeType,
+      frameworkType: editFormData.frameworkType,
       description: editFormData.description,
       countries: editFormData.countries,
       developers: editDevelopers.map((d) => d.value)
@@ -477,6 +509,7 @@ const ApiconfigrationList = () => {
       platformName: editFeed.platformName,
       platformType: editFeed.platformType,
       scopeType: editFeed.scopeType,
+      frameworkType: editFeed.frameworkType,
       description: editFeed.description,
       countries: editFeed.countries,
       developers: editFeed.developers?.map((d) => d._id),
@@ -702,68 +735,104 @@ const ApiconfigrationList = () => {
   };
 
   const feedStatusStyle = {
-    New: {
-      bg: '#6c757d',
+    // 🟢 Planning / Initialization
+    Scheduled: {
+      bg: '#6f42c1', // purple
       color: '#fff'
     },
+    New: {
+      bg: '#6c757d', // secondary
+      color: '#fff'
+    },
+    'Assigned to Developer': {
+      bg: '#0d6efd', // primary
+      color: '#fff'
+    },
+
+    // 🔵 Development
     'Under Development': {
-      bg: '#0dcaf0',
+      bg: '#0dcaf0', // info
       color: '#000'
     },
+    'Bug Fixing': {
+      bg: '#6610f2', // indigo
+      color: '#fff'
+    },
+
+    // 🟡 Dependency / Blocking
+    'Waiting from Client': {
+      bg: '#ffc107', // warning
+      color: '#000'
+    },
+    'Blocking Issue': {
+      bg: '#fd7e14', // orange
+      color: '#fff'
+    },
+
+    // 🔄 Crawl Execution
     'Crawl Running': {
-      bg: '#0d6efd',
+      bg: '#0d6efd', // primary
       color: '#fff'
     },
     'Crawl Finished': {
-      bg: '#212529',
+      bg: '#198754', // success
       color: '#fff'
     },
+
+    // 🧪 Quality Assurance
     'In QA': {
-      bg: '#ffc107',
+      bg: '#20c997', // teal
       color: '#000'
     },
     'QA Passed': {
-      bg: '#198754',
-      color: '#fff'
-    },
-    Completed: {
-      bg: '#198754',
+      bg: '#198754', // success
       color: '#fff'
     },
 
-    // ⚠️ Risk
-    'On Hold': {
-      bg: '#fd7e14',
+    // 🟣 Sample Phase
+    'Sample Delivered': {
+      bg: '#6f42c1', // purple
       color: '#fff'
     },
-    Delayed: {
-      bg: '#dc3545',
+    'Sample Approved': {
+      bg: '#198754', // success
       color: '#fff'
     },
 
-    // 🔁 Recovery
-    'Able to Recover': {
-      bg: '#20c997',
+    // 🔄 Operations / Delivery
+    BAU: {
+      bg: '#0dcaf0', // info
       color: '#000'
     },
-    'Not Able to Recover': {
-      bg: '#dc3545',
+    'Once off Delivered': {
+      bg: '#0d6efd', // primary
       color: '#fff'
     },
 
-    // ❌ Failure
-    Incapability: {
-      bg: '#343a40',
+    // ⚠️ Recovery / Failure
+    'Able to Recover': {
+      bg: '#20c997', // teal
+      color: '#000'
+    },
+    'Feed missed': {
+      bg: '#dc3545', // danger
+      color: '#fff'
+    },
+
+    // 🔴 Closure
+    Close: {
+      bg: '#212529', // dark
       color: '#fff'
     }
   };
+
   const columns = [
     {
       name: 'No',
       width: '60px',
       cell: (_, index) => <TooltipText text={String((page - 1) * limit + index + 1)} width="50px" />
     },
-  {
+    {
       name: 'Feed Id',
       width: '100px',
       cell: (row) => <TooltipText text={row.feedCode} />
@@ -773,7 +842,7 @@ const ApiconfigrationList = () => {
       width: '300px',
       cell: (row) => <TooltipText text={row.feedName} />
     },
-  
+
     {
       name: 'Platform',
       width: '150px',
@@ -1382,7 +1451,8 @@ const ApiconfigrationList = () => {
             </LocalizationProvider>
 
             {/* COUNTRY */}
-            <Col md={12} className="mt-3">
+
+            <Col md={8} className="mt-3">
               <Form.Label className="required">Country</Form.Label>
               <Select
                 options={countryList}
@@ -1399,7 +1469,21 @@ const ApiconfigrationList = () => {
                 }
               />
             </Col>
+            <Col md={4} className="mt-3">
+              <Form.Label>Framework Type</Form.Label>
 
+              <Select
+                options={frameworkTypeList}
+                value={frameworkTypeList.find((opt) => opt.value === editFormData.frameworkType)}
+                onChange={(selectedOption) =>
+                  setEditFormData({
+                    ...editFormData,
+                    frameworkType: selectedOption?.value || ''
+                  })
+                }
+                placeholder="Select Framework Type"
+              />
+            </Col>
             {/* DESCRIPTION */}
             <Col md={12} className="mt-3">
               <Form.Label className="required">Description</Form.Label>
