@@ -22,9 +22,8 @@ import {
   FaFileAlt,
   FaStickyNote,
   FaDownload
-  
 } from 'react-icons/fa';
-import { RiDeleteBin5Line } from "react-icons/ri";
+import { RiDeleteBin5Line } from 'react-icons/ri';
 import { FaArrowRight } from 'react-icons/fa6';
 import axios from 'axios';
 
@@ -89,7 +88,7 @@ const ProjectView = () => {
     feedCount,
     createdAt
   } = project;
-  const latestActivities = projectActivities.slice(0, 10);
+  const latestActivities = projectActivities.slice(0, 5);
 
   const getActivityIcon = (title) => {
     if (title.includes('Created')) return <FaPlusCircle className="text-success" />;
@@ -135,7 +134,7 @@ const ProjectView = () => {
                   New create Feed : <strong>{log.newData.FeedName}</strong>
                 </div>
               )}
-           
+
               {log.actionTitle.includes('Active Status Updated') && log.newData && (
                 <div className="text-muted small">
                   {' '}
@@ -143,16 +142,16 @@ const ProjectView = () => {
                   <strong>{formatValue(log.newData)}</strong>
                 </div>
               )}
-                 {log.actionTitle.includes('Project Status Updated') && log.newData && (
+              {log.actionTitle.includes('Project Status Updated') && log.newData && (
                 <div className="text-muted small">
                   {' '}
                   old status : <strong>{log.oldData}</strong> <FaArrowRight /> New status : <strong>{log.newData}</strong>
                 </div>
               )}
-                 {log.actionTitle.includes('Feed Deleted') && log.oldData && (
+              {log.actionTitle.includes('Feed Deleted') && log.oldData && (
                 <div className="text-muted small">
                   {' '}
-                  Feed have been deleted : <strong>{log.oldData}</strong> 
+                  Feed have been deleted : <strong>{log.oldData}</strong>
                 </div>
               )}
               <div className="text-muted small">
@@ -169,135 +168,191 @@ const ProjectView = () => {
     if (val === false) return 'Inactive';
     return val ?? '--';
   };
+  const getStatusVariant  = (status) => {
+    switch (status) {
+      case 'New':
+        return 'success';
+
+      case 'Under Development':
+        return 'warning';
+
+      default:
+        return 'status-secondary';
+    }
+  };
+
   return (
     <>
       {/* ===== HEADER ===== */}
-
-      <MainCard
-        title={
-          <div>
-            <h4 className=" mb-1 d-flex align-items-center gap-2" style={{ color: '#a9b7d0' }}>
-              <FaLayerGroup />[{projectCode}] {projectName}
-              <Badge bg="warning" text="dark" className="ms-2">
-                <span style={{ fontSize: '13px' }}> {status ? status.charAt(0).toUpperCase() + status.slice(1) : ''}</span>
-              </Badge>
-            </h4>
-
-            <small style={{ color: '#a9b7d0' }}>
-              • Created By {createdBy?.name || '--'} on {formatDate(createdAt)}
-            </small>
-          </div>
-        }
-      >
-        {/* ===== BASIC INFO ===== */}
-        <Row className="g-1 mb-2">
-          {[
-            { label: 'Industry', value: industryType, icon: <FaIndustry /> },
-            { label: 'Department', value: department, icon: <FaBuilding /> },
-            { label: 'Delivery Type', value: deliveryType, icon: <FaTruck /> },
-            {
-              label: 'Priority',
-              value: projectPriority,
-              icon: <FaFlag />
+      <Row>
+        <Col md={8}>
+          {' '}
+          <MainCard
+            title={
+              <>
+                <FaLayerGroup />[{projectCode}] {projectName}
+              </>
             }
-          ].map((item, idx) => (
-            <Col md={3} sm={6} xs={6} key={idx}>
-              <Card className={`h-100 ${item.highlight ? 'border border-danger' : ''} p-3 `}>
-                <Card.Body className="p-1">
-                  <small className="text-semibold d-flex align-items-center gap-1">
-                    {item.icon}
-                    {item.label}
-                  </small>
-                  <div className="fw-semibold small mt-1">{item.value || '--'}</div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-
-        {/* ===== DELIVERY INFO ===== */}
-        <Row className="g-2 mb-1">
-          <Col xs={12} sm={6} md={3}>
-            <Card style={{ minHeight: '120px' }} className="p-3">
-              <Card.Body className="py-2 px-2">
-                <small className="text-semibold d-flex align-items-center gap-2">
-                  <FaRegUserCircle /> Project Manager
-                </small>
-                <h6 className="fw-bold mt-1 mb-0">{projectManager?.name || '--'}</h6>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col xs={12} sm={6} md={3}>
-            <Card style={{ minHeight: '120px' }} className="p-3">
-              <Card.Body className="py-2 px-2">
-                <small className="text-semibold d-flex align-items-center gap-2">
-                  <FaCalendarAlt /> Delivery Schedule
-                </small>
-                <h6 className="fw-bold mt-1 mb-0">{projectFrequency?.frequencyType || '--'}</h6>
-                <small className="text-muted">
-                  {projectFrequency?.frequencyType === 'Daily' && (
-                    <small className="text-muted"> Every Day {projectFrequency?.deliveryTime}</small>
-                  )}
-                  {(projectFrequency?.frequencyType === 'Weekly' || projectFrequency?.frequencyType === 'Bi-Weekly') && (
-                    <small className="text-muted">
-                      {' '}
-                      Every Week {projectFrequency?.deliveryDay} On {projectFrequency?.deliveryTime}
+          >
+            <Row className="g-1 mb-2">
+              <Col xs={12} sm={6} md={6}>
+                <Card style={{ minHeight: '120px' }} className="p-3">
+                  <Card.Body className="py-2 px-2">
+                    <small className="text-semibold d-flex align-items-center gap-2">
+                      <FaCalendarAlt /> Delivery Schedule
                     </small>
-                  )}
-                  {(projectFrequency?.frequencyType === 'Monthly' || projectFrequency?.frequencyType === 'Bi-Monthly') && (
+                    <h6 className="fw-bold mt-1 mb-0">{projectFrequency?.frequencyType || '--'}</h6>
                     <small className="text-muted">
-                      Every Month {projectFrequency?.deliveryDate} {projectFrequency?.firstDate}th  & 
-                     {" "} {projectFrequency?.secondDate}th On {projectFrequency?.deliveryTime}
+                      {projectFrequency?.frequencyType === 'Daily' && (
+                        <small className="text-muted"> Every Day {projectFrequency?.deliveryTime}</small>
+                      )}
+                      {(projectFrequency?.frequencyType === 'Weekly' || projectFrequency?.frequencyType === 'Bi-Weekly') && (
+                        <small className="text-muted">
+                          {' '}
+                          Every Week {projectFrequency?.deliveryDay} On {projectFrequency?.deliveryTime}
+                        </small>
+                      )}
+                      {(projectFrequency?.frequencyType === 'Monthly' || projectFrequency?.frequencyType === 'Bi-Monthly') && (
+                        <small className="text-muted">
+                          Every Month {projectFrequency?.deliveryDate} {projectFrequency?.firstDate}th & {projectFrequency?.secondDate}th On{' '}
+                          {projectFrequency?.deliveryTime}
+                        </small>
+                      )}
+                      {(projectFrequency?.frequencyType === 'Custom' || projectFrequency?.frequencyType === 'Bi-Monthly') && (
+                        <small className="text-muted">
+                          {' '}
+                          {projectFrequency?.deliveryDate} On {projectFrequency?.deliveryTime}
+                        </small>
+                      )}
                     </small>
-                  )}
-                  {(projectFrequency?.frequencyType === 'Custom' || projectFrequency?.frequencyType === 'Bi-Monthly') && (
-                    <small className="text-muted">
-                      {' '}
-                      {projectFrequency?.deliveryDate} On {projectFrequency?.deliveryTime}
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xs={12} sm={6} md={6}>
+                <Card
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/Project-feeds/${projectId}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/Project-feeds/${projectId}`)}
+                  className=" clickable-card p-3"
+                  style={{
+                    minHeight: '120px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Card.Body className="py-2 px-2">
+                    <small className="text-semibold d-flex align-items-center gap-2">
+                      <FaLayerGroup /> Total Feeds
                     </small>
-                  )}
-                </small>
-              </Card.Body>
-            </Card>
-          </Col>
+                    <h6 className="fw-bold mt-1 mb-0">{feedCount ?? 0}</h6>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xs={12} sm={6} md={3}>
+                <Card style={{ minHeight: '120px' }} className="p-3">
+                  <Card.Body className="py-2 px-2">
+                    <small className="text-semibold d-flex align-items-center gap-2">
+                      <FaRegUserCircle /> Project Manager
+                    </small>
+                    <h6 className="fw-bold mt-1 mb-0">{projectManager?.name || '--'}</h6>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={3} sm={6} xs={6}>
+                <Card style={{ minHeight: '120px' }} className={` p-3 `}>
+                  <Card.Body className="p-1">
+                    <small className="text-semibold d-flex align-items-center gap-1">
+                      <FaBuilding />
+                      Department
+                    </small>
+                    <div className="fw-semibold small mt-1">{department || '--'}</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={3} sm={6} xs={6}>
+                <Card style={{ minHeight: '120px' }} className={` p-3 `}>
+                  <Card.Body className="p-1">
+                    <small className="text-semibold d-flex align-items-center gap-1">
+                      <FaFlag />
+                      Priority
+                    </small>
+                    <div className="fw-semibold small mt-1">{projectPriority || '--'}</div>
+                  </Card.Body>
+                </Card>
+              </Col>
 
-          <Col xs={12} sm={6} md={3}>
-            <Card style={{ minHeight: '120px' }} className="p-3">
-              <Card.Body className="py-2 px-2">
-                <small className="text-semibold d-flex align-items-center gap-2">
-                  <FaTruck /> Delivery Mode
-                </small>
-                <h6 className="fw-bold mt-1 mb-0">{deliveryMode || '--'}</h6>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col xs={12} sm={6} md={3}>
-            <Card
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(`/Project-feeds/${projectId}`)}
-              onKeyDown={(e) => e.key === 'Enter' && navigate(`/Project-feeds/${projectId}`)}
-              className=" clickable-card p-3"
-              style={{
-                minHeight: '120px',
-                cursor: 'pointer'
-              }}
-            >
-              <Card.Body className="py-2 px-2">
-                <small className="text-semibold d-flex align-items-center gap-2">
-                  <FaLayerGroup /> Total Feeds
-                </small>
-                <h6 className="fw-bold mt-1 mb-0">{feedCount ?? 0}</h6>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </MainCard>
+              <Col xs={12} sm={6} md={3}>
+                <Card style={{ minHeight: '120px' }} className="p-3">
+                  <Card.Body className="py-2 px-2">
+                    <small className="text-semibold d-flex align-items-center gap-2">
+                      <FaTruck /> Delivery Mode
+                    </small>
+                    <h6 className="fw-bold mt-1 mb-0">{deliveryMode || '--'}</h6>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </MainCard>
+        </Col>
+        <Col md={4}>
+          <MainCard title="Project Details">
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Project Code:
+              </Col>
+              <Col md={8} >
+                {projectCode}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Delivery Type:
+              </Col>
+              <Col md={8} >
+                {deliveryType}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Project Status:
+              </Col>
+              <Col md={8} >
+                <Button size="sm" variant={getStatusVariant(status)}  disabled>
+                  {status}
+                </Button>
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Industry:
+              </Col>
+              <Col md={8} className="content-between-end">
+                {industryType}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Posted by :
+              </Col>
+              <Col md={8} className="content-between-end">
+                {createdBy.name}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Industry:
+              </Col>
+              <Col md={8} className="content-between-end">
+                {formatDate(createdAt)}
+              </Col>
+            </Row>
+          </MainCard>
+        </Col>
+      </Row>
       {/* ===== DOCUMENTS & TEAM ===== */}
       <Row className="g-3">
         {/* DOCUMENTS */}
-        <Col md={8}>
+        <Col md={4}>
           <MainCard title="Project Documents">
             {/* SOW Documents */}
             <div className="mb-4">
@@ -305,11 +360,16 @@ const ProjectView = () => {
               <ListGroup>
                 {sowDocument.length ? (
                   sowDocument.map((doc, i) => (
-                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center gap-2">
-                        <FaFileAlt />
-                        <span>{doc.split('/').pop()}</span>
+                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
+                      <div className="d-flex align-items-center gap-2 file-name-wrapper">
+                        <FaFileAlt className="text-secondary" />
+
+                        {/* 👇 Long text handler */}
+                        <span className="file-name text-truncate" title={doc.split('/').pop()}>
+                          {doc.split('/').pop()}
+                        </span>
                       </div>
+
                       <a
                         href={`${import.meta.env.VITE_BACKEND_FILES_URL}${doc}`}
                         target="_blank"
@@ -332,13 +392,20 @@ const ProjectView = () => {
               <ListGroup>
                 {annotationDocument.length ? (
                   annotationDocument.map((doc, i) => (
-                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center gap-2">
-                        <FaFileAlt />
-                        <span>{doc.split('/').pop()}</span>
+                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
+                      <div className="d-flex align-items-center gap-2 file-name-wrapper">
+                        <FaFileAlt className="text-secondary" />
+
+                        {/* 👇 Long text handler */}
+                        <span
+                          className="file-name text-truncate"
+                          title={doc.split('/').pop()} // tooltip full name
+                        >
+                          {doc.split('/').pop()}
+                        </span>
                       </div>
+
                       <a
-                        h
                         href={`${import.meta.env.VITE_BACKEND_FILES_URL}${doc}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -360,11 +427,19 @@ const ProjectView = () => {
               <ListGroup>
                 {inputDocument.length ? (
                   inputDocument.map((doc, i) => (
-                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center gap-2">
-                        <FaFileAlt />
-                        <span>{doc.split('/').pop()}</span>
+                    <ListGroup.Item key={i} className="d-flex justify-content-between align-items-center gap-2">
+                      <div className="d-flex align-items-center gap-2 file-name-wrapper">
+                        <FaFileAlt className="text-secondary" />
+
+                        {/* 👇 Long text handler */}
+                        <span
+                          className="file-name text-truncate"
+                          title={doc.split('/').pop()} // tooltip full name
+                        >
+                          {doc.split('/').pop()}
+                        </span>
                       </div>
+
                       <a
                         href={`${import.meta.env.VITE_BACKEND_FILES_URL}${doc}`}
                         target="_blank"
@@ -381,7 +456,8 @@ const ProjectView = () => {
               </ListGroup>
             </div>
           </MainCard>
-
+        </Col>
+        <Col md={4}>
           <Row className="g-3">
             <Col xs={12} md={12}>
               <MainCard
@@ -392,10 +468,10 @@ const ProjectView = () => {
                 }
               >
                 {/* ===== PROJECT MANAGER ===== */}
-                 {bde && (
+                {bde && (
                   <div className="mb-3 p-2 rounded border-start border-4 border-danger bg-light">
                     <h6 className="mb-2" style={{ color: '#6f42c1' }}>
-                      Business  Development Executive
+                      Business Development Executive
                     </h6>
 
                     <div className="d-flex align-items-center gap-2">
@@ -412,7 +488,7 @@ const ProjectView = () => {
                         {bde?.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <small className='fs-6 '>{bde.name}</small>
+                        <small className="fs-6 ">{bde.name}</small>
                       </div>
                     </div>
                   </div>
@@ -434,8 +510,7 @@ const ProjectView = () => {
                         {projectManager?.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <small className='fs-6 '>{projectManager.name}</small>
-                   
+                        <small className="fs-6 ">{projectManager.name}</small>
                       </div>
                     </div>
                   </div>
@@ -461,7 +536,7 @@ const ProjectView = () => {
                         {projectTechManager?.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <small className='fs-6 '>{projectTechManager.name}</small>
+                        <small className="fs-6 ">{projectTechManager.name}</small>
                       </div>
                     </div>
                   </div>
@@ -485,12 +560,11 @@ const ProjectView = () => {
                         {projectCoordinator?.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <small className='fs-6 '>{projectCoordinator.name}</small>
+                        <small className="fs-6 ">{projectCoordinator.name}</small>
                       </div>
                     </div>
                   </div>
                 )}
-               
 
                 {/* ===== TEAM LEADS ===== */}
                 {teamLead?.length > 0 && (
@@ -499,7 +573,7 @@ const ProjectView = () => {
 
                     <Row className="g-2">
                       {teamLead.map((tl, i) => (
-                        <Col md={3} key={i}>
+                        <Col md={6} key={i}>
                           <div className="d-flex align-items-center gap-2">
                             <div
                               className="rounded-circle d-flex justify-content-center align-items-center text-white"
@@ -513,7 +587,7 @@ const ProjectView = () => {
                             >
                               {tl?.name?.charAt(0).toUpperCase() || 'B'}
                             </div>
-                            <small className='fs-6'>{tl.name}</small>
+                            <small className="fs-6">{tl.name}</small>
                           </div>
                         </Col>
                       ))}
@@ -528,7 +602,7 @@ const ProjectView = () => {
 
                     <Row className="g-2">
                       {developers.map((dev, i) => (
-                        <Col md={3} key={i}>
+                        <Col md={6} key={i}>
                           <div className="d-flex align-items-center gap-2">
                             <div
                               className="rounded-circle d-flex justify-content-center align-items-center text-white"
@@ -543,7 +617,7 @@ const ProjectView = () => {
                               {dev?.name?.charAt(0).toUpperCase() || 'B'}
                             </div>
 
-                            <small className='fs-6 '>{dev.name}</small>
+                            <small className="fs-6 ">{dev.name}</small>
                           </div>
                         </Col>
                       ))}
@@ -557,7 +631,7 @@ const ProjectView = () => {
         <Col md={4}>
           <MainCard title="📜 Project activity">
             <ActivityTimeline activities={latestActivities} />
-            {projectActivities.length > 10 && (
+            {projectActivities.length > 5 && (
               <Button variant="link" size="sm" onClick={() => setShowActivityModal(true)}>
                 View All
               </Button>

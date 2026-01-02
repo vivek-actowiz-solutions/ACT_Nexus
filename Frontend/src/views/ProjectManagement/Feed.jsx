@@ -763,11 +763,17 @@ const ApiconfigrationList = () => {
       width: '60px',
       cell: (_, index) => <TooltipText text={String((page - 1) * limit + index + 1)} width="50px" />
     },
+  {
+      name: 'Feed Id',
+      width: '100px',
+      cell: (row) => <TooltipText text={row.feedCode} />
+    },
     {
       name: 'Feed Name',
       width: '300px',
       cell: (row) => <TooltipText text={row.feedName} />
     },
+  
     {
       name: 'Platform',
       width: '150px',
@@ -934,7 +940,7 @@ const ApiconfigrationList = () => {
           <Card title="Feed List">
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Control placeholder="Search feed..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Form.Control placeholder="Search feed name & Feed Code..." value={search} onChange={(e) => setSearch(e.target.value)} />
               </Col>
 
               <Col md={6} className="text-end">

@@ -327,3 +327,15 @@ td {
   font-size: 14px;
   white-space: nowrap;
 }
+.file-name-wrapper {
+  flex: 1;
+  min-width: 0; /* 🔥 very important for flex truncation */
+}
+
+.file-name {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}

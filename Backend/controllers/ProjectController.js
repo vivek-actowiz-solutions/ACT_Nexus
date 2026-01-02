@@ -568,36 +568,61 @@ const getFeedsByProject = async (req, res) => {
     const projectId = req.params.id;
     const permission = res.locals.permissions;
     const rolelevel = req.user.Rolelevel;
-    const { Active } = req.query;
+
+    let { page = 1, limit = 10, search = "" } = req.query;
+    console.log(req.query);
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const skip = (page - 1) * limit;
+
     if (!projectId) {
       return res.status(400).json({
         success: false,
         message: "Project ID is required",
       });
     }
+
+    /** -------------------------
+     * Base Filter
+     * ------------------------- */
     const query = { projectId };
 
-    // ✅ Apply active filter ONLY if provided
-    if (Active !== undefined) {
-      query.active = Active === "true"; // convert string → boolean
-    }
-  
+    // ✅ Role-based filter (Developer only sees assigned feeds)
     if (rolelevel === 6) {
       query.developers = { $in: [req.user.id] };
     }
-    // Fetch feeds for the given projectId
-    const feeds = await Feed.find(query)
-      .populate({
-        path: "developers",
-        select: "name",
-      })
-      .sort({ createdAt: -1 })
-      .lean();
+
+    // ✅ Search filter
+    if (search) {
+      query.$or = [
+        { feedName: { $regex: search, $options: "i" } },
+        { feedCode: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    /** -------------------------
+     * Fetch Feeds + Count
+     * ------------------------- */
+    const [feeds, totalRecords] = await Promise.all([
+      Feed.find(query)
+        .populate("developers", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      Feed.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
       data: feeds,
-      count: feeds.length,
+      pagination: {
+        totalRecords,
+        totalPages: Math.ceil(totalRecords / limit),
+        currentPage: page,
+        limit,
+      },
       permission,
     });
   } catch (error) {
@@ -654,7 +679,6 @@ const getassignusers = async (req, res) => {
       return res.status(404).json({ message: "TL role not found" });
     }
 
-    
     const filterTl = {
       roleId: tlRole._id,
       department: department,
@@ -662,10 +686,9 @@ const getassignusers = async (req, res) => {
     };
     const filterPc = {
       roleId: pcRole._id,
-    
+
       status: true,
     };
-
 
     if (rolelevel === 3) {
       filterTl.reportingTo = userId;
@@ -802,18 +825,35 @@ const createFeed = async (req, res) => {
       message: "Invalid projectFrequencyConfig JSON format",
     });
   }
-  const capFirst = (text = '') =>
-  text.charAt(0).toUpperCase() + text.slice(1);
+  const capFirst = (text = "") => text.charAt(0).toUpperCase() + text.slice(1);
 
-  
   const FeedName = `${capFirst(platformName)}|${countries
     .map((country) => country.code)
     .join(",")}|${platformType}|${scopeType}|${frequencyType}`;
   console.log("req.body", req.body, FeedName);
 
+  const existingFeed = await Feed.findOne({ feedName: FeedName });
+  if (existingFeed) {
+    return res.status(400).json({
+      success: false,
+      message: "Feed with the same name already exists",
+    });
+  }
+  const generateFeedCode = () =>
+    String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+
+  let feedCode;
+  let exists = true;
+
+  while (exists) {
+    feedCode = generateFeedCode();
+    exists = await Feed.exists({ feedCode });
+  }
+
   const feed = await Feed.create({
     projectId: projectId,
     feedName: FeedName,
+    feedCode,
     platformName,
     platformType,
     scopeType,
@@ -1038,10 +1078,9 @@ const feedupdated = async (req, res) => {
     if (!oldFeed) {
       return res.status(404).json({ message: "Feed not found" });
     }
-  
-    const capFirst = (text = '') =>
-      text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 
+    const capFirst = (text = "") =>
+      text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 
     const feedNameFieldsChanged =
       updates.platformName ||
@@ -1051,27 +1090,24 @@ const feedupdated = async (req, res) => {
       updates.countries;
 
     if (feedNameFieldsChanged) {
-      console.log("this is call ")
-      const platformName =
-        updates.platformName ?? oldFeed.platformName;
+      console.log("this is call ");
+      const platformName = updates.platformName ?? oldFeed.platformName;
 
-      const platformType =
-        updates.platformType ?? oldFeed.platformType;
+      const platformType = updates.platformType ?? oldFeed.platformType;
 
-      const scopeType =
-        updates.scopeType ?? oldFeed.scopeType;
+      const scopeType = updates.scopeType ?? oldFeed.scopeType;
 
       const frequencyType =
-        updates.feedfrequency.frequencyType ?? oldFeed.feedfrequency.frequencyType;
-console.log("frequencyType",frequencyType)
-      const countries =
-        updates.countries ?? oldFeed.countries;
+        updates.feedfrequency.frequencyType ??
+        oldFeed.feedfrequency.frequencyType;
+      console.log("frequencyType", frequencyType);
+      const countries = updates.countries ?? oldFeed.countries;
 
       updates.feedName = `${capFirst(platformName)}|${countries
         .map((c) => c.code)
-        .join(',')}|${capFirst(platformType)}|${capFirst(
-        scopeType
-      )}|${capFirst(frequencyType)}`;
+        .join(",")}|${capFirst(platformType)}|${capFirst(scopeType)}|${capFirst(
+        frequencyType
+      )}`;
     }
     const updatedFeed = await Feed.findByIdAndUpdate(
       id,
@@ -1146,52 +1182,45 @@ const feedstatusupdate = async (req, res) => {
 
     // 🔹 Validate input
     if (!status) {
-      return res.status(400).json({ message: 'Status is required' });
+      return res.status(400).json({ message: "Status is required" });
     }
-
- 
-
 
     const feed = await Feed.findById(id);
 
     if (!feed) {
-      return res.status(404).json({ message: 'Feed not found' });
+      return res.status(404).json({ message: "Feed not found" });
     }
-
 
     const oldStatus = feed.status;
 
-   
     if (oldStatus === status) {
-      return res.status(200).json({ message: 'Status already up to date' });
+      return res.status(200).json({ message: "Status already up to date" });
     }
 
- 
     feed.status = status;
     await feed.save();
 
-   
     await logFeedActivity({
       userid: req.user.id,
       username: req.user.name,
       feedId: feed._id,
       projectId: feed.projectId,
-      actionTitle: 'Feed Status Updated',
+      actionTitle: "Feed Status Updated",
       oldData: oldStatus,
-      newData: status
+      newData: status,
     });
 
     return res.status(200).json({
-      message: 'Feed status updated successfully',
+      message: "Feed status updated successfully",
       data: {
         feedId: feed._id,
         oldStatus,
-        newStatus: status
-      }
+        newStatus: status,
+      },
     });
   } catch (error) {
-    console.error('Error updating feed status:', error);
-    return res.status(500).json({ message: 'Failed to update feed status' });
+    console.error("Error updating feed status:", error);
+    return res.status(500).json({ message: "Failed to update feed status" });
   }
 };
 const getfeedbyId = async (req, res) => {
@@ -1275,7 +1304,7 @@ const feeddeleted = async (req, res) => {
   try {
     const { id } = req.params;
     const oldfeed = await Feed.findById(id).select("projectId feedName");
-  console.log("oldfeed" , oldfeed)
+    console.log("oldfeed", oldfeed);
     const feed = await Feed.findByIdAndDelete(id);
     if (!feed) {
       return res.status(404).json({ message: "Feed not found" });
@@ -1284,9 +1313,9 @@ const feeddeleted = async (req, res) => {
       userid: req.user.id,
       username: req.user.name,
       projectId: oldfeed.projectId,
-      oldData : oldfeed.feedName,
+      oldData: oldfeed.feedName,
       actionTitle: "Feed Deleted",
-    })
+    });
     return res.status(200).json({ message: "Feed deleted successfully" });
   } catch (error) {
     console.error("Feed delete error:", error);
@@ -1309,5 +1338,6 @@ module.exports = {
   projectUpdated,
   feedupdated,
   getfeedbyId,
-  feedstatusupdate,feeddeleted
+  feedstatusupdate,
+  feeddeleted,
 };

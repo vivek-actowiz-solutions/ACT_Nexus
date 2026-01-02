@@ -69,6 +69,7 @@ const FeedView = () => {
 
   const {
     feedName,
+    feedCode,
     status,
     platformName,
     platformType,
@@ -144,118 +145,134 @@ const FeedView = () => {
   };
   return (
     <>
-      <MainCard
-        title={
-          <div>
-            <h4 className=" mb-1 d-flex align-items-center gap-2" style={{ color: '#a9b7d0' }}>
-              <FaLayerGroup />
-              {feedName}
-              <Badge bg="warning" text="dark" className="ms-2">
-                <span style={{ fontSize: '13px' }}> {status ? status.charAt(0).toUpperCase() + status.slice(1) : ''}</span>
-              </Badge>
-            </h4>
-
-            <small style={{ color: '#a9b7d0' }}>
-              Created By {createdBy?.name || '--'} on {formatDate(createdAt)}
-            </small>
-          </div>
-        }
-      >
-        {/* ===== BASIC INFO ===== */}
-        <Row className="g-1 mb-2">
-          {[
-            { label: 'Platform Name', value: platformName, icon: <FaLayerGroup /> },
-            { label: 'Platform Type', value: platformType, icon: <FaClipboardList /> },
-            { label: 'Scope Type', value: scopeType, icon: <FaStickyNote /> }
-          ].map((item, idx) => (
-            <Col md={4} sm={6} xs={6} key={idx}>
-              <Card className="h-100 p-3">
-                <Card.Body className="p-1">
-                  <small className="text-semibold d-flex align-items-center gap-1">
-                    {item.icon}
-                    {item.label}
-                  </small>
-                  <div className="fw-semibold small mt-1">{item.value || '--'}</div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-
-        {/* ===== FREQUENCY INFO ===== */}
-        <Row className="g-2 mb-1">
-          <Col md={4}>
-            <Card className="h-100 p-3">
-              <Card.Body className="py-2 px-2">
-                <small className="text-semibold d-flex align-items-center gap-2">
-                  <FaCalendarAlt /> Frequency
-                </small>
-                <h6 className="fw-bold mt-1 mb-0">{feedfrequency?.frequencyType || '--'}</h6>
-                <small className="text-muted">
-                  {feedfrequency?.frequencyType === 'Daily' && (
-                    <small className="text-muted"> Every Day •{feedfrequency?.deliveryTime}</small>
-                  )}
-                  {(feedfrequency?.frequencyType === 'Weekly' || feedfrequency?.frequencyType === 'Bi-Weekly') && (
-                    <small className="text-muted">
-                      {' '}
-                      every Week {feedfrequency?.deliveryDay} • {feedfrequency?.deliveryTime}
+      <Row className="g-3">
+        <Col md={8}>
+          <MainCard
+            title={
+              <>
+                <FaLayerGroup />
+                {feedName}
+              </>
+            }
+          >
+            <Row className="g-1 mb-2">
+              <Col md={6}>
+                <Card className="h-100 p-3">
+                  <Card.Body className="py-2 px-2">
+                    <small className="text-semibold d-flex align-items-center gap-2">
+                      <FaCalendarAlt /> Frequency
                     </small>
-                  )}
-                  {(feedfrequency?.frequencyType === 'Monthly' || feedfrequency?.frequencyType === 'Bi-Monthly') && (
+                    <h6 className="fw-bold mt-1 mb-0">{feedfrequency?.frequencyType || '--'}</h6>
                     <small className="text-muted">
-                      {' '}
-                      every Month {feedfrequency?.deliveryDate}th {feedfrequency?.firstDate}th & {feedfrequency?.secondDate}th •{' '}
-                      {feedfrequency?.deliveryTime}
+                      {feedfrequency?.frequencyType === 'Daily' && (
+                        <small className="text-muted"> Every Day •{feedfrequency?.deliveryTime}</small>
+                      )}
+                      {(feedfrequency?.frequencyType === 'Weekly' || feedfrequency?.frequencyType === 'Bi-Weekly') && (
+                        <small className="text-muted">
+                          {' '}
+                          every Week {feedfrequency?.deliveryDay} • {feedfrequency?.deliveryTime}
+                        </small>
+                      )}
+                      {(feedfrequency?.frequencyType === 'Monthly' || feedfrequency?.frequencyType === 'Bi-Monthly') && (
+                        <small className="text-muted">
+                          {' '}
+                          every Month {feedfrequency?.deliveryDate}th {feedfrequency?.firstDate}th & {feedfrequency?.secondDate}th •{' '}
+                          {feedfrequency?.deliveryTime}
+                        </small>
+                      )}
+                      {feedfrequency?.frequencyType === 'Custom' && (
+                        <small className="text-muted">
+                          {' '}
+                          {feedfrequency?.deliveryDate} • {feedfrequency?.deliveryTime}
+                        </small>
+                      )}
                     </small>
-                  )}
-                  {feedfrequency?.frequencyType === 'Custom' && (
-                    <small className="text-muted">
-                      {' '}
-                      {feedfrequency?.deliveryDate} • {feedfrequency?.deliveryTime}
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={6} sm={6} xs={6}>
+                <Card className="h-100 p-3">
+                  <Card.Body className="p-1">
+                    <small className="text-semibold d-flex align-items-center gap-1">
+                      <FaLayerGroup />
+                      Platform Name
                     </small>
-                  )}
-                </small>
-              </Card.Body>
-            </Card>
-          </Col>
+                    <div className="fw-semibold small mt-1">{platformName || '--'}</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+            <Row className="g-2 mb-1">
+              <Col md={12}>
+                <Card className="h-100 p-3 ">
+                  <Card.Body className="p-2">
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <MdDescription size={18} />
+                      <h6 className="mb-0 fw-semibold">Description</h6>
+                    </div>
 
-          <Col md={4}>
-            <Card className="h-100 p-3">
-              <Card.Body className="p-2">
-                <small className="text-muted d-flex align-items-center gap-2">
-                  <FaGlobe /> Region
-                </small>
-                <div className="fw-semibold small mt-1">
-                  {countries?.length ? countries.map((c) => ` • ${c.name} (${c.code})`).join(', ') : '--'}
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-        <Row className="g-2 mb-1">
-          <Col md={12}>
-            <Card className="h-100 p-3 ">
-              <Card.Body className="p-2">
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <MdDescription size={18} />
-                  <h6 className="mb-0 fw-semibold">Description</h6>
-                </div>
-
-                <p className="mb-0 text-muted" style={{ lineHeight: '1.6' }}>
-                  {description?.trim() ? description : 'No description provided'}
-                </p>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </MainCard>
-
+                    <p className="mb-0 text-muted" style={{ lineHeight: '1.6' }}>
+                      {description?.trim() ? description : 'No description provided'}
+                    </p>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </MainCard>
+        </Col>
+        <Col md={4}>
+          <MainCard title="Feed Details ">
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Feed Id:
+              </Col>
+              <Col md={8}>{feedCode}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Feed Name:
+              </Col>
+              <Col md={8}>{feedName}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Scope Type
+              </Col>
+              <Col md={8}>{scopeType}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Platform Type
+              </Col>
+              <Col md={8}>{platformType}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Region
+              </Col>
+              <Col md={8}>{countries.map((c) => ` • ${c.name} (${c.code})`).join(', ')}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Posted by
+              </Col>
+              <Col md={8}>{createdBy.name}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Platform Type
+              </Col>
+              <Col md={8}>{formatDate(createdAt)}</Col>
+            </Row>
+          </MainCard>
+        </Col>
+      </Row>
       <Row className="g-3">
         <Col md={8}>
           <MainCard
             title={
               <span className="d-flex align-items-center gap-2">
-                <FaUsers /> Feed Details
+                <FaUsers /> Feed Developers
               </span>
             }
           >

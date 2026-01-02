@@ -118,7 +118,7 @@ const projectSchema = new mongoose.Schema(
     feedIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Feeds",
+        ref: "Feed",
       },
     ],
     isActive: {

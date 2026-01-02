@@ -13,6 +13,10 @@ const feedSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    feedCode: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
       default: "pending",
