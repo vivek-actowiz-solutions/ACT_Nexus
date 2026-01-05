@@ -256,12 +256,7 @@ const getProjectbyId = async (req, res) => {
           as: "projectCoordinator",
         },
       },
-      {
-        $unwind: {
-          path: "$projectCoordinator",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+    
 
       /* ================= BDE ================= */
       {
@@ -717,11 +712,13 @@ const getassignusers = async (req, res) => {
   }
 };
 const assignteam = async (req, res) => {
-  console.log("req.body ", req.body);
-  try {
-    const { projectId, teamLeadIds, projectCoordinatorId } = req.body;
+  console.log("req.body", req.body);
 
-    // Validate
+  try {
+    const { projectId, teamLeadIds = [], projectCoordinatorId = [] } = req.body;
+    console.log(req.body);
+
+    // ---------------- VALIDATION ----------------
     if (!projectId) {
       return res.status(400).json({
         success: false,
@@ -729,32 +726,44 @@ const assignteam = async (req, res) => {
       });
     }
 
+    if (teamLeadIds.length === 0 || teamLeadIds.length > 3) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum 1 and maximum 3 Team Leads allowed",
+      });
+    }
+
+    if (projectCoordinatorId.length > 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Maximum 2 Project Coordinators allowed",
+      });
+    }
+
     const projId = new mongoose.Types.ObjectId(projectId);
 
-    // Convert Team Leads to ObjectId array
-    const teamLeadObjectIds = (teamLeadIds || []).map(
+    // Convert IDs to ObjectId
+    const teamLeadObjectIds = teamLeadIds.map(
       (id) => new mongoose.Types.ObjectId(id)
     );
 
-    const pcId = projectCoordinatorId
-      ? new mongoose.Types.ObjectId(projectCoordinatorId)
-      : null;
-    const status = "Under Development";
+    const projectCoordinatorObjectIds = projectCoordinatorId.map(
+      (id) => new mongoose.Types.ObjectId(id)
+    );
 
-    // Update Project
+    // ---------------- UPDATE PROJECT ----------------
     const updatedProject = await Project.findByIdAndUpdate(
       projId,
       {
-        // ✅ add multiple Team Leads without duplicates
-        $addToSet: {
-          teamLead: { $each: teamLeadObjectIds },
+        $set: {
+          status: "Under Development",
         },
 
-        // ✅ set Project Coordinator
-        ...(pcId && { projectCoordinator: pcId }),
-
-        // ✅ update project status
-        status: status,
+        // Prevent duplicates
+        $addToSet: {
+          teamLead: { $each: teamLeadObjectIds },
+          projectCoordinator: { $each: projectCoordinatorObjectIds },
+        },
       },
       { new: true }
     ).populate("teamLead projectCoordinator");
@@ -766,37 +775,42 @@ const assignteam = async (req, res) => {
       });
     }
 
-    const NewData = {
-      teamLead: updatedProject.teamLead?.map((tl) => tl.name) || [],
-      projectCoordinator: updatedProject.projectCoordinator
-        ? updatedProject.projectCoordinator.name
-        : null,
+    // ---------------- ACTIVITY LOG ----------------
+    const newData = {
+      teamLead: updatedProject.teamLead.map((tl) => tl.name),
+      projectCoordinator: updatedProject.projectCoordinator.map(
+        (pc) => pc.name
+      ),
     };
+
     await logProjectActivity({
       userid: req.user.id,
       username: req.user.name,
       projectId: updatedProject._id,
-      newData: NewData,
-      actionTitle: "Team Lead(s) & Project Coordinator assigned",
+      newData,
+      actionTitle: "Team Leads & Project Coordinators Assigned",
     });
+
     await logProjectActivity({
       userid: req.user.id,
       username: req.user.name,
       projectId: updatedProject._id,
-      newData: updatedProject.status,
       oldData: "New",
+      newData: updatedProject.status,
       actionTitle: "Project Status Updated",
     });
+
     return res.status(200).json({
       success: true,
-      message: "Team Lead(s) & Project Coordinator assigned successfully",
+      message: "Team Leads & Project Coordinators assigned successfully",
       data: updatedProject,
     });
   } catch (error) {
     console.error("assign project TL/PC error:", error);
+    console.log("error", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to assign Team Lead / Project Coordinator",
+      message: "Failed to assign Team Leads / Project Coordinators",
     });
   }
 };
@@ -1096,7 +1110,7 @@ const feedupdated = async (req, res) => {
       const scopeType = updates.scopeType ?? oldFeed.scopeType;
 
       const frequencyType =
-        updates.feedfrequency.frequencyType ??
+        updates.feedfrequency?.frequencyType ??
         oldFeed.feedfrequency.frequencyType;
       console.log("frequencyType", frequencyType);
       const countries = updates.countries ?? oldFeed.countries;
@@ -1167,7 +1181,7 @@ const feedupdated = async (req, res) => {
     });
   } catch (error) {
     console.error("Feed update error:", error);
-    console.log("error" , error)
+    console.log("error", error);
     return res.status(500).json({
       success: false,
       message: "Feed update failed",

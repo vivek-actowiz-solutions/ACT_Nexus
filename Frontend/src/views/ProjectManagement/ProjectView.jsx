@@ -135,7 +135,7 @@ const ProjectView = () => {
                 </div>
               )}
 
-              {log.actionTitle.includes('Active Status Updated')  && (
+              {log.actionTitle.includes('Active Status Updated') && (
                 <div className="text-muted small">
                   {' '}
                   old status : <strong>{formatValue(log.oldData)}</strong> <FaArrowRight /> New status :{' '}
@@ -546,7 +546,7 @@ const ProjectView = () => {
                     </div>
                   </div>
                 )}
-                {projectCoordinator && (
+                {/* {projectCoordinator && (
                   <div className="mb-3 p-2 rounded border-start border-4 border-success bg-light">
                     <h6 className="fw-bold mb-2" style={{ color: '#198754' }}>
                       Project Coordinator
@@ -569,8 +569,34 @@ const ProjectView = () => {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
+                {projectCoordinator?.length > 0 && (
+                  <div className="mb-3 p-2 rounded border-start border-4 border-info bg-light">
+                    <h6 className="fw-bold text-info mb-2">Project Coordinator</h6>
 
+                    <Row className="g-2">
+                      {projectCoordinator.map((pc, i) => (
+                        <Col md={6} key={i}>
+                          <div className="d-flex align-items-center gap-2">
+                            <div
+                              className="rounded-circle d-flex justify-content-center align-items-center text-white"
+                              style={{
+                                width: '30px',
+                                height: '30px',
+                                backgroundColor: '#198754',
+                                fontWeight: 'bold',
+                                fontSize: '0.9rem'
+                              }}
+                            >
+                              {pc?.name?.charAt(0).toUpperCase() || 'B'}
+                            </div>
+                            <small className="fs-6">{pc.name}</small>
+                          </div>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                )}
                 {/* ===== TEAM LEADS ===== */}
                 {teamLead?.length > 0 && (
                   <div className="mb-3 p-2 rounded border-start border-4 border-info bg-light">
@@ -645,7 +671,7 @@ const ProjectView = () => {
 
       <Modal show={showActivityModal} onHide={() => setShowActivityModal(false)} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>All  History</Modal.Title>
+          <Modal.Title>All History</Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <ActivityTimeline activities={projectActivities} />

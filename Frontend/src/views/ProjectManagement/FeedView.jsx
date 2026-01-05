@@ -79,7 +79,7 @@ const FeedView = () => {
     countries = [],
     description,
     createdBy,
-    createdAt
+    createdAt,frameworkType
   } = feed;
   const latestActivities = feedActivities.slice(0, 10);
   const ActivityTimeline = ({ activities }) => {
@@ -242,6 +242,12 @@ const FeedView = () => {
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
+                frameworkType :
+              </Col>
+              <Col md={8}>{frameworkType}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
                 Platform Type :
               </Col>
               <Col md={8}>{platformType}</Col>
@@ -260,7 +266,7 @@ const FeedView = () => {
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
-                Platform Type :
+                Posted on :
               </Col>
               <Col md={8}>{formatDate(createdAt)}</Col>
             </Row>

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import Select from 'react-select';
 import { api } from 'views/api';
+import { MdContentCopy } from 'react-icons/md';
 
 const UserList = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const UserList = () => {
     { value: 'Sales', label: 'Sales' },
     { value: 'QA', label: 'QA' },
     { value: 'Data Entry', label: 'Data Entry' },
-    { value: 'Marketing', label: 'Marketing' },
+    { value: 'Marketing', label: 'Marketing' }
   ];
 
   const designations = [
@@ -80,7 +81,7 @@ const UserList = () => {
     // { value: 'Graphic Designer', label: 'Graphic Designer' },
     { value: 'Business Analyst', label: 'Business Analyst' },
     { value: 'Project Coordinator', label: 'Project Coordinator' },
-    { value: 'Admin', label: 'Admin' },
+    { value: 'Admin', label: 'Admin' }
   ];
 
   // Fetch Users
@@ -89,7 +90,7 @@ const UserList = () => {
     try {
       const res = await axios.get(`${api}/get-user`, {
         params: { page, limit, search: keyword, roleId },
-        withCredentials: true,
+        withCredentials: true
       });
       setUsers(res.data.data || []);
       setPermission(res.data.permission || []);
@@ -122,21 +123,68 @@ const UserList = () => {
   // Fetch Reporting Users
   const fetchReportingUsers = async (roleId) => {
     try {
-      const res = await axios.get(`${api}/get-reporting-users?roleId=${roleId}&department=${encodeURIComponent(selectedDepartment)}`, { withCredentials: true });
+      const res = await axios.get(`${api}/get-reporting-users?roleId=${roleId}&department=${encodeURIComponent(selectedDepartment)}`, {
+        withCredentials: true
+      });
       setReportingUsers(res.data.data || []);
     } catch (error) {
       toast.error('Failed to fetch reporting users');
     }
   };
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchUsers(1, perPage, search, filterRole);
+    }, 500); // debounce 500ms
 
+    return () => clearTimeout(delay);
+  }, [search]);
   useEffect(() => {
     fetchUsers(currentPage, perPage, search, filterRole);
-  }, [currentPage, filterRole]);
+  }, [currentPage, filterRole, perPage]);
 
   useEffect(() => {
     fetchRoles();
   }, []);
+  const copyToClipboard = (text, label) => {
+    if (!text) {
+      toast.error('Nothing to copy');
+      return;
+    }
 
+    // Modern Clipboard API (HTTPS only)
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => toast.success(`${label} copied`))
+        .catch(() => fallbackCopy(text, label));
+    } else {
+      // HTTP / IP fallback
+      fallbackCopy(text, label);
+    }
+  };
+
+  const fallbackCopy = (text, label) => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      if (successful) {
+        toast.success(`${label} copied`);
+      } else {
+        toast.error('Copy failed');
+      }
+    } catch (err) {
+      toast.error('Copy not supported');
+    }
+  };
   // Add User
   const handleAddUser = async (e) => {
     e.preventDefault();
@@ -154,7 +202,7 @@ const UserList = () => {
           designation: newDesignation,
           department: selectedDepartment,
           roleId: selectedRole,
-          reportingTo: selectedReporting,
+          reportingTo: selectedReporting
         },
         { withCredentials: true }
       );
@@ -185,11 +233,7 @@ const UserList = () => {
     }
     setLoading(true);
     try {
-      await axios.put(
-        `${api}/update-user-role/${selectedUser._id}`,
-        { roleId: selectedRole },
-        { withCredentials: true }
-      );
+      await axios.put(`${api}/update-user-role/${selectedUser._id}`, { roleId: selectedRole }, { withCredentials: true });
       toast.success('User role updated');
       setShowUpdateRoleModal(false);
       setSelectedUser(null);
@@ -206,11 +250,7 @@ const UserList = () => {
     if (!selectedUser) return;
     setLoading(true);
     try {
-      await axios.put(
-        `${api}/user-status/${selectedUser._id}`,
-        { status: !selectedUser.status },
-        { withCredentials: true }
-      );
+      await axios.put(`${api}/user-status/${selectedUser._id}`, { status: !selectedUser.status }, { withCredentials: true });
       toast.success(`Status changed to ${!selectedUser.status ? 'Active' : 'Inactive'}`);
       setShowStatusModal(false);
       fetchUsers(currentPage, perPage, search, filterRole);
@@ -222,13 +262,82 @@ const UserList = () => {
   };
 
   const columns = [
-    { name: 'No.', selector: (_, i) => i + 1 + (currentPage - 1) * perPage, width: '60px' },
+    {
+      name: 'No.',
+      selector: (_, i) => i + 1 + (currentPage - 1) * perPage,
+      width: '60px'
+    },
     { name: 'Name', selector: (row) => row.name },
-    { name: 'Email', selector: (row) => row.email },
+    {
+      name: 'Email',
+      width: '260px', // ✅ proper fixed width
+      cell: (row) => (
+        <div className="d-flex align-items-center justify-content-between" style={{ width: '100%' }}>
+          <span
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: '200px'
+            }}
+            title={row.email}
+          >
+            {row.email}
+          </span>
+
+          <MdContentCopy
+            size={18}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer', flexShrink: 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              copyToClipboard(row.email, 'Email');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                copyToClipboard(row.email, 'Email');
+              }
+            }}
+          />
+        </div>
+      )
+    },
     { name: 'Designation', selector: (row) => row.designation },
-    { name: 'department', selector: (row) => row.department },
-    { name: 'reporting', selector: (row) => row.reportingTo || 'N/A' },
-    { name: 'Key', selector: (row) => row.originalPassword || 'N/A' },
+    { name: 'Department', selector: (row) => row.department },
+    {
+      name: 'Reporting',
+      selector: (row) => row.reportingTo?.name || 'N/A'
+    },
+    {
+      name: 'Key',
+      cell: (row) =>
+        row.originalPassword ? (
+          <div className="d-flex align-items-center gap-2">
+            <span>******</span>
+            <MdContentCopy
+              size={18}
+              role="button"
+              tabIndex={0}
+              style={{ cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation(); // prevents row click issues
+                copyToClipboard(row.originalPassword, 'Key');
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  copyToClipboard(row.originalPassword, 'Key');
+                }
+              }}
+            />
+            {/* <Button size="sm" variant="outline-secondary" onClick={() => copyToClipboard(row.originalPassword, 'Key')}>
+              Copy
+            </Button> */}
+          </div>
+        ) : (
+          'N/A'
+        )
+    },
     {
       name: 'Status',
       cell: (row) =>
@@ -246,7 +355,7 @@ const UserList = () => {
         ) : (
           <span>{row.status ? 'Active' : 'Inactive'}</span>
         ),
-      width: '120px',
+      width: '120px'
     },
     {
       name: 'Role',
@@ -265,8 +374,8 @@ const UserList = () => {
           </Button>
         ) : (
           <span>{row.roleName || 'N/A'}</span>
-        ),
-    },
+        )
+    }
   ];
 
   return (
@@ -277,18 +386,22 @@ const UserList = () => {
           <Card title="User List">
             <Row className="align-items-center mb-3">
               <Col md={6}>
-                <Form onSubmit={(e) => { e.preventDefault(); fetchUsers(1, perPage, search, filterRole); }} className="d-flex">
-                  <Form.Control
-                    type="text"
-                    placeholder="Search by Name or Email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="me-1"
-                  />
-                </Form>
+                <Form.Control
+                  type="text"
+                  placeholder="Search by Name or Email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </Col>
               <Col md={3}>
-                <Form.Select value={filterRole} onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}>
+                <Form.Select
+                  value={filterRole}
+                  onChange={(e) => {
+                    setFilterRole(e.target.value);
+                    setCurrentPage(1);
+                    fetchUsers(1, perPage, search, e.target.value);
+                  }}
+                >
                   <option value="">All Roles</option>
                   {roles.map((role) => (
                     <option key={role._id} value={role._id}>
@@ -317,9 +430,10 @@ const UserList = () => {
                 pagination
                 paginationServer
                 paginationTotalRows={totalRows}
+                paginationPerPage={perPage}
                 paginationDefaultPage={currentPage}
                 onChangePage={(page) => fetchUsers(page, perPage, search, filterRole)}
-                onChangeRowsPerPage={(newPerPage, page) => fetchUsers(page, newPerPage, search, filterRole)}
+                onChangeRowsPerPage={(newPerPage) => fetchUsers(1, newPerPage, search, filterRole)}
                 responsive
                 striped
                 highlightOnHover
@@ -337,11 +451,13 @@ const UserList = () => {
         </Modal.Header>
         <Modal.Body>
           Are you sure you want to change the status of <strong>{selectedUser?.email}</strong> from{' '}
-          <strong>{selectedUser?.status ? 'Active' : 'Inactive'}</strong> to{' '}
-          <strong>{selectedUser?.status ? 'Inactive' : 'Active'}</strong>?
+          <strong>{selectedUser?.status ? 'Active' : 'Inactive'}</strong> to <strong>{selectedUser?.status ? 'Inactive' : 'Active'}</strong>
+          ?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowStatusModal(false)}>Cancel</Button>
+          <Button variant="secondary" onClick={() => setShowStatusModal(false)}>
+            Cancel
+          </Button>
           <Button variant="primary" onClick={handleStatusChange}>
             {loading ? <Spinner animation="border" size="sm" /> : 'Confirm'}
           </Button>
@@ -349,97 +465,87 @@ const UserList = () => {
       </Modal>
 
       {/* Add User Modal */}
-   <Modal show={showAddUserModal} onHide={() => setShowAddUserModal(false)}>
-  <Form onSubmit={handleAddUser}>
-    <Modal.Header closeButton>
-      <Modal.Title>Add User</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      {/* Name */}
-      <Form.Group className="mb-3">
-        <Form.Label>Name</Form.Label>
-        <Form.Control
-          type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Enter name"
-        />
-      </Form.Group>
+      <Modal show={showAddUserModal} onHide={() => setShowAddUserModal(false)}>
+        <Form onSubmit={handleAddUser}>
+          <Modal.Header closeButton>
+            <Modal.Title>Add User</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {/* Name */}
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <Form.Control type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Enter name" />
+            </Form.Group>
 
-      {/* Email */}
-      <Form.Group className="mb-3">
-        <Form.Label>Email</Form.Label>
-        <Form.Control
-          type="email"
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          placeholder="Enter email"
-        />
-      </Form.Group>
+            {/* Email */}
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <Form.Control type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter email" />
+            </Form.Group>
 
-      {/* Designation */}
-      <Form.Group className="mb-3">
-        <Form.Label>Designation</Form.Label>
-        <Select
-          options={designations}
-          value={designations.find((d) => d.value === newDesignation) || null}
-          onChange={(selected) => setNewDesignation(selected?.value || '')}
-          placeholder="Select Designation"
-          isClearable
-        />
-      </Form.Group>
+            {/* Designation */}
+            <Form.Group className="mb-3">
+              <Form.Label>Designation</Form.Label>
+              <Select
+                options={designations}
+                value={designations.find((d) => d.value === newDesignation) || null}
+                onChange={(selected) => setNewDesignation(selected?.value || '')}
+                placeholder="Select Designation"
+                isClearable
+              />
+            </Form.Group>
 
-      {/* Department */}
-      <Form.Group className="mb-3">
-        <Form.Label>Department</Form.Label>
-        <Select
-          options={departments}
-          value={departments.find((d) => d.value === selectedDepartment) || null}
-          onChange={(selected) => setSelectedDepartment(selected?.value || '')}
-          placeholder="Select Department"
-          isClearable
-        />
-      </Form.Group>
+            {/* Department */}
+            <Form.Group className="mb-3">
+              <Form.Label>Department</Form.Label>
+              <Select
+                options={departments}
+                value={departments.find((d) => d.value === selectedDepartment) || null}
+                onChange={(selected) => setSelectedDepartment(selected?.value || '')}
+                placeholder="Select Department"
+                isClearable
+              />
+            </Form.Group>
 
-      {/* Role */}
-      <Form.Group className="mb-3">
-        <Form.Label>Role</Form.Label>
-        <Select
-          options={roles.map((r) => ({ value: r._id, label: r.roleName }))}
-          value={roles.map((r) => ({ value: r._id, label: r.roleName })).find((r) => r.value === selectedRole) || null}
-          onChange={(selected) => {
-            setSelectedRole(selected?.value || '');
-            setSelectedReporting('');
-            fetchReportingUsers(selected?.value);
-          }}
-          placeholder="Select Role"
-          isClearable
-        />
-      </Form.Group>
+            {/* Role */}
+            <Form.Group className="mb-3">
+              <Form.Label>Role</Form.Label>
+              <Select
+                options={roles.map((r) => ({ value: r._id, label: r.roleName }))}
+                value={roles.map((r) => ({ value: r._id, label: r.roleName })).find((r) => r.value === selectedRole) || null}
+                onChange={(selected) => {
+                  setSelectedRole(selected?.value || '');
+                  setSelectedReporting('');
+                  fetchReportingUsers(selected?.value);
+                }}
+                placeholder="Select Role"
+                isClearable
+              />
+            </Form.Group>
 
-      {/* Reporting To */}
-      <Form.Group className="mb-3">
-        <Form.Label>Reporting To</Form.Label>
-        <Select
-          options={reportingUsers.map((u) => ({ value: u._id, label: u.name }))}
-          value={reportingUsers.map((u) => ({ value: u._id, label: u.name })).find((u) => u.value === selectedReporting) || null}
-          onChange={(selected) => setSelectedReporting(selected?.value || '')}
-          placeholder="Select Reporting Manager"
-          isClearable
-        />
-      </Form.Group>
-    </Modal.Body>
+            {/* Reporting To */}
+            <Form.Group className="mb-3">
+              <Form.Label>Reporting To</Form.Label>
+              <Select
+                options={reportingUsers.map((u) => ({ value: u._id, label: u.name }))}
+                value={reportingUsers.map((u) => ({ value: u._id, label: u.name })).find((u) => u.value === selectedReporting) || null}
+                onChange={(selected) => setSelectedReporting(selected?.value || '')}
+                placeholder="Select Reporting Manager"
+                isClearable
+              />
+            </Form.Group>
+          </Modal.Body>
 
-    <Modal.Footer>
-      <Button variant="secondary" onClick={() => setShowAddUserModal(false)}>
-        Cancel
-      </Button>
-      <Button variant="primary" type="submit">
-        {loading ? <Spinner animation="border" size="sm" /> : 'Add User'}
-      </Button>
-    </Modal.Footer>
-  </Form>
-</Modal>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowAddUserModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              {loading ? <Spinner animation="border" size="sm" /> : 'Add User'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
 
       {/* Update Role Modal */}
       <Modal show={showUpdateRoleModal} onHide={() => setShowUpdateRoleModal(false)} centered>
@@ -448,17 +554,27 @@ const UserList = () => {
             <Modal.Title>Update Role</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Updating role for: <strong>{selectedUser?.email}</strong></p>
+            <p>
+              Updating role for: <strong>{selectedUser?.email}</strong>
+            </p>
             <Form.Group>
               <Form.Label>Select Role</Form.Label>
               <Form.Select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
-                <option value="" hidden>Select Role</option>
-                {roles.map((role) => <option key={role._id} value={role._id}>{role.roleName}</option>)}
+                <option value="" hidden>
+                  Select Role
+                </option>
+                {roles.map((role) => (
+                  <option key={role._id} value={role._id}>
+                    {role.roleName}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowUpdateRoleModal(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setShowUpdateRoleModal(false)}>
+              Cancel
+            </Button>
             <Button variant="primary" type="submit">
               {loading ? <Spinner animation="border" size="sm" /> : 'Update Role'}
             </Button>

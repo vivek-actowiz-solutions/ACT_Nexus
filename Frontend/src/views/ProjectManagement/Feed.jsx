@@ -43,40 +43,37 @@ const scopeTypeOptions = [
   { label: 'By Category', value: 'By Category' }
 ];
 const feedStatusOptions = [
-  // 🟢 Planning / Initialization
   { label: 'Scheduled', value: 'Scheduled' },
   { label: 'New', value: 'New' },
   { label: 'Assigned to Developer', value: 'Assigned to Developer' },
 
-  // 🔵 Development
   { label: 'Under Development', value: 'Under Development' },
   { label: 'Bug Fixing', value: 'Bug Fixing' },
 
-  // 🟡 Dependency / Blocking
   { label: 'Waiting from Client', value: 'Waiting from Client' },
   { label: 'Blocking Issue', value: 'Blocking Issue' },
 
-  // 🔄 Crawl Execution
+
   { label: 'Crawl Running', value: 'Crawl Running' },
   { label: 'Crawl Finished', value: 'Crawl Finished' },
 
-  // 🧪 Quality Assurance
+
   { label: 'In QA', value: 'In QA' },
   { label: 'QA Passed', value: 'QA Passed' },
 
-  // 🟣 Sample / Validation
+
   { label: 'Sample Delivered', value: 'Sample Delivered' },
   { label: 'Sample Approved', value: 'Sample Approved' },
 
-  // 🔄 Operations / Delivery
+
   { label: 'BAU', value: 'BAU' },
   { label: 'Once off Delivered', value: 'Once off Delivered' },
 
-  // ⚠️ Recovery / Failure
+ 
   { label: 'Able to Recover', value: 'Able to Recover' },
   { label: 'Feed missed', value: 'Feed missed' },
 
-  // 🔴 Closure
+
   { label: 'Close', value: 'Close' }
 ];
 
@@ -91,6 +88,7 @@ const frameworkTypeList = [
   { label: 'Fastapi', value: 'Fastapi' },
   { label: 'Other', value: 'Other' }
 ];
+
 // const industryOptions = [
 //   { label: 'E-com', value: 'E-com' },
 //   { label: 'Food', value: 'Food' },
@@ -527,7 +525,6 @@ const ApiconfigrationList = () => {
     }
     try {
       await axios.put(`${api}/feed-update/${editFeed._id}`, changes, { withCredentials: true });
-
       toast.success('Feed updated successfully');
       setShowEditModal(false);
       fetchFeeds();
@@ -980,7 +977,7 @@ const ApiconfigrationList = () => {
             </OverlayTrigger>
           )}
           {/* Add Developer */}
-          {permission?.[0]?.action?.includes('AssignDeveloper') && !row?.developers?.length && (
+          {permission?.[0]?.action?.includes('AssignDeveloper') && !row?.developers?.length && row?.active === true && (
             <OverlayTrigger placement="top" overlay={<Tooltip id={`add-dev-${row._id}`}>Add Developer</Tooltip>}>
               <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
                 <FaUserPlus size={18} color="orange" onClick={() => openAssignDeveloperModal(row)} />

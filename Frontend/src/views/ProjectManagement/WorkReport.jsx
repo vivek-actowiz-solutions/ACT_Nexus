@@ -17,7 +17,7 @@ const WorkReportList = () => {
 
   /* ------------------- Table Data ------------------- */
   const [reports, setReports] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [totalRows, setTotalRows] = useState(0);
   const [page, setPage] = useState(1);
@@ -55,15 +55,15 @@ const WorkReportList = () => {
 
   /* ------------------- Fetch Users ------------------- */
 
-useEffect(() => {
-  const handler = setTimeout(() => {
-    setDebouncedSearch(searchText.trim());
-    setPage(1);
-    setResetPaginationToggle((p) => !p);
-  }, 500);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+      setPage(1);
+      setResetPaginationToggle((p) => !p);
+    }, 500);
 
-  return () => clearTimeout(handler);
-}, [searchText]);
+    return () => clearTimeout(handler);
+  }, [searchText]);
   /* ------------------- Fetch Reports ------------------- */
   const fetchReports = async () => {
     setLoading(true);
@@ -266,32 +266,35 @@ useEffect(() => {
             <Spinner />
           </div>
         ) : (
-      <DataTable
-  columns={columns}
-  data={reports}
-  pagination
-  paginationServer
-  paginationTotalRows={totalRows}
-  paginationDefaultPage={page}
-  paginationResetDefaultPage={resetPaginationToggle}
-  onChangePage={(p) => setPage(p)}
-  onChangeRowsPerPage={(l, p) => {
-    setLimit(l);
-    setPage(1);
-    setResetPaginationToggle((x) => !x);
-  }}
-  progressPending={loading}
-  responsive
-  striped
-  highlightOnHover
-  noHeader
-/>
+          <DataTable
+            columns={columns}
+            data={reports}
+            pagination
+            paginationServer
+            paginationTotalRows={totalRows}
+            paginationDefaultPage={page}
+            paginationPerPage={limit} // ✅ VERY IMPORTANT
+            paginationResetDefaultPage={resetPaginationToggle}
+            onChangePage={(p) => {
+              setPage(p);
+            }}
+            onChangeRowsPerPage={(newLimit, p) => {
+              setLimit(newLimit);
+              setPage(1); // ✅ always reset page
+              setResetPaginationToggle((x) => !x);
+            }}
+            progressPending={loading}
+            responsive
+            striped
+            highlightOnHover
+            noHeader
+          />
         )}
       </MainCard>
 
       {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="xl" centered>
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="d-flex justify-content-between">
           <Modal.Title>
             {selectedDeveloper?.name} <span className="text-muted">({selectedDate})</span>
           </Modal.Title>
@@ -326,6 +329,22 @@ useEffect(() => {
               </tbody>
             </table>
           )}
+          <div className="d-flex justify-content-end">
+            <Button
+              variant="dark"
+              size="sm"
+              onClick={() =>
+                navigate('/Edit-Work-Report', {
+                  state: {
+                    developerId: selectedDeveloper.id,
+                    date: selectedDate
+                  }
+                })
+              }
+            >
+              Edit
+            </Button>
+          </div>
         </Modal.Body>
       </Modal>
     </>

@@ -36,7 +36,7 @@ const Project = () => {
   const [selectedTLs, setSelectedTLs] = useState([]);
 
   // project coordinator (single)
-  const [selectedCoordinator, setSelectedCoordinator] = useState(null);
+  const [selectedCoordinator, setSelectedCoordinator] = useState([]);
 
   const [teamLeads, setTeamLeads] = useState([]);
   const [coordinators, setCoordinators] = useState([]);
@@ -299,7 +299,12 @@ const Project = () => {
       })) || []
     );
 
-    setSelectedCoordinator(row.projectCoordinator ? { label: row.projectCoordinator.name, value: row.projectCoordinator._id } : null);
+    setSelectedCoordinator(
+      row.projectCoordinator?.map((pc) => ({
+        label: pc.name,
+        value: pc._id
+      })) || []
+    );
 
     setShowAssignModal(true);
     fetchAssignUsers(row);
@@ -328,8 +333,19 @@ const Project = () => {
     }
   };
   const handleAssignTeam = async () => {
-    if (!selectedTLs.length) {
-      toast.error('Please select at least one Team Lead');
+    if (selectedTLs.length === 0) {
+      toast.error('Please select at least 1 Team Lead');
+      return;
+    }
+
+    if (selectedTLs.length > 3) {
+      toast.error('You can assign maximum 3 Team Leads');
+      return;
+    }
+
+    // Project Coordinator validation
+    if (selectedCoordinator.length > 2) {
+      toast.error('You can assign maximum 2 Project Coordinators');
       return;
     }
 
@@ -339,7 +355,7 @@ const Project = () => {
         {
           projectId: selectedProject._id,
           teamLeadIds: selectedTLs.map((tl) => tl.value),
-          projectCoordinatorId: selectedCoordinator?.value || null
+          projectCoordinatorId: selectedCoordinator.map((pc) => pc.value)
         },
         { withCredentials: true }
       );
@@ -477,6 +493,7 @@ const Project = () => {
             )}
             {permission?.[0]?.action?.includes('AssignTeam') &&
               userDepartment !== 'Sales' &&
+              row?.isActive &&
               (!row?.teamLead?.length || !row?.projectCoordinator) && (
                 <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign Team</Tooltip>}>
                   <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignModal(row)}>
@@ -603,18 +620,36 @@ const Project = () => {
           {/* MULTIPLE TEAM LEADS */}
           <Form.Group className="mb-3">
             <Form.Label className="required">Team Leads</Form.Label>
-            <Select isMulti options={teamLeads} value={selectedTLs} onChange={setSelectedTLs} placeholder="Select Team Leads" />
+            <Select
+              isMulti
+              options={teamLeads}
+              value={selectedTLs}
+              placeholder="Select Team Leads"
+              onChange={(selected) => {
+                if (selected.length <= 3) {
+                  setSelectedTLs(selected);
+                } else {
+                  toast.error('You can select maximum 3 Team Leads');
+                }
+              }}
+            />
           </Form.Group>
 
           {/* PROJECT COORDINATOR */}
           <Form.Group>
             <Form.Label>Project Coordinator</Form.Label>
             <Select
+              isMulti
               options={coordinators}
               value={selectedCoordinator}
-              onChange={setSelectedCoordinator}
-              placeholder="Select Project Coordinator"
-              isClearable
+              placeholder="Select Project Coordinators"
+              onChange={(selected) => {
+                if (selected.length <= 2) {
+                  setSelectedCoordinator(selected);
+                } else {
+                  toast.error('You can select maximum 2 Project Coordinators');
+                }
+              }}
             />
           </Form.Group>
         </Modal.Body>

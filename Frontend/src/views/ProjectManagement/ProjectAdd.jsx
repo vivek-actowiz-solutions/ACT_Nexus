@@ -41,7 +41,10 @@ const deliveryModeOptions = [
   { label: 'FTP Server', value: 'FTP' },
   { label: 'SFTP Server', value: 'SFTP' },
   { label: 'AWS S3 Bucket', value: 'S3' },
-  { label: 'Google Drive', value: 'GOOGLE_DRIVE' }
+  { label: 'Google Drive', value: 'GOOGLE DRIVE' },
+  { label: 'Azure Blob Storage (ABS)', value: 'ABS' },
+  { label: 'Database-Level Delivery ', value: 'DB Delivery' },
+  { label: 'Google Cloud Storage (GCS)', value: 'GCS' }
 ];
 
 const industryOptions = [
@@ -435,7 +438,30 @@ const CreateProject = () => {
           <Row className="mb-3">
             <Col md={3}>
               <Form.Label className="required">Project Name</Form.Label>
-              <Form.Control value={formData.projectName} onChange={(e) => setFormData({ ...formData, projectName: e.target.value })} />
+              <Form.Control
+                value={formData.projectName}
+                maxLength={30}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  // Allow only letters, numbers and space
+                  const validChars = /^[a-zA-Z0-9 _()]*$/;
+
+                  // Check if value is only numbers
+                  const onlyNumbers = /^[0-9 ]+$/;
+
+                  if (!validChars.test(value)) return;
+
+                  // ❌ Block if input is only numbers
+                  if (onlyNumbers.test(value)) {
+                    setFormData({ ...formData, projectName: '' });
+                    return;
+                  }
+
+                  setFormData({ ...formData, projectName: value });
+                }}
+                placeholder="Enter project name"
+              />
             </Col>
             <Col md={3}>
               <Form.Label className="required">Project Code</Form.Label>
@@ -514,8 +540,10 @@ const CreateProject = () => {
                     onChange={(v) =>
                       setSchedule({
                         ...schedule,
-                        firstDate: v ? dayjs(v).format('DD') : ''
+                        firstDate: v ? dayjs(v).format('DD') : '',
+                        secondDate: '' 
                       })
+
                     }
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                     inputFormat="DD"
@@ -529,6 +557,8 @@ const CreateProject = () => {
                   <DatePicker
                     views={['day']} // Only day selection
                     value={schedule.secondDate ? dayjs().date(parseInt(schedule.secondDate)) : null}
+                    maxDate={schedule.firstDate ? dayjs().date(parseInt(schedule.firstDate)).add(30, 'day') : null}
+                    minDate={schedule.firstDate ? dayjs().date(Number(schedule.firstDate)).add(1, 'day') : null}
                     onChange={(v) =>
                       setSchedule({
                         ...schedule,
@@ -698,7 +728,7 @@ const CreateProject = () => {
 
           <div className="d-flex justify-content-end align-items-center mt-3">
             <Button variant="dark" onClick={() => navigator(-1)}>
-             <IoArrowBack /> Back
+              <IoArrowBack /> Back
             </Button>
 
             <Button variant="dark" type="submit" disabled={loading}>

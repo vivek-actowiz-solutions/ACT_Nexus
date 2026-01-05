@@ -109,6 +109,13 @@ const allMenuItems = {
               type: 'item',
               url: '/work-report-details/:id',
               permission: 'WorkReport'
+            },
+            {
+              id: 'editworkreport',
+              title: 'Edit Work Report ',
+              type: 'item',
+              url: '/Edit-Work-Report',
+              permission: 'WorkReport'
             }
           ]
         }

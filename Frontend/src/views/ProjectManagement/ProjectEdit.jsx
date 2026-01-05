@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { Row, Col, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import Card from '../../components/Card/MainCard';
 import Select from 'react-select';
 import axios from 'axios';
@@ -96,7 +96,7 @@ const EditProject = () => {
   const [removedSow, setRemovedSow] = useState([]);
   const [removedInput, setRemovedInput] = useState([]);
   const [removedAnnotation, setRemovedAnnotation] = useState([]);
-
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   /* ================= FETCH PROJECT ================= */
 
   useEffect(() => {
@@ -130,7 +130,13 @@ const EditProject = () => {
               label: u.name
             }))
           : [],
-        projectCoordinator: p.projectCoordinator ? { value: p.projectCoordinator._id, label: p.projectCoordinator.name } : null
+        projectCoordinator: Array.isArray(p.projectCoordinator)
+          ? p.projectCoordinator.map((u) => ({
+              value: u._id,
+              label: u.name
+            }))
+          : [],
+        // projectCoordinator: p.projectCoordinator ? { value: p.projectCoordinator._id, label: p.projectCoordinator.name } : null
       });
 
       setSchedule({
@@ -210,7 +216,100 @@ const EditProject = () => {
   };
 
   /* ================= SUBMIT ================= */
+const validateBeforeSubmit = () => {
+  if (!formData.IndustryType) {
+    toast.error('Industry Type is required');
+    return false;
+  }
 
+  if (!formData.projectFrequency) {
+    toast.error('Project Frequency is required');
+    return false;
+  }
+
+  if (!formData.deliveryType) {
+    toast.error('Delivery Type is required');
+    return false;
+  }
+
+  if (!formData.deliveryMode) {
+    toast.error('Delivery Mode is required');
+    return false;
+  }
+
+  if (!formData.projectTechManager?.value) {
+    toast.error('Project Technical Manager is required');
+    return false;
+  }
+
+  // ===== SOW DOCUMENT (MANDATORY) =====
+  if (!sowFile || sowFile.length === 0) {
+    toast.error('SOW Document is required');
+    return false;
+  }
+
+  // ===== FREQUENCY BASED VALIDATION =====
+  const freq = formData.projectFrequency;
+
+  if (freq === 'Weekly') {
+    if (!schedule.day) {
+      toast.error('Delivery Day is required for Weekly frequency');
+      return false;
+    }
+  }
+
+  if (freq === 'Bi-Weekly') {
+    if (!schedule.day) {
+      toast.error('Delivery Days are required for Bi-Weekly frequency');
+      return false;
+    }
+
+    const daysCount = schedule.day.split(',').length;
+    if (daysCount > 2) {
+      toast.error('You can select only 2 days for Bi-Weekly frequency');
+      return false;
+    }
+  }
+
+  if (freq === 'Monthly') {
+    if (!schedule.date) {
+      toast.error('Delivery Date is required for Monthly frequency');
+      return false;
+    }
+  }
+
+  if (freq === 'Bi-Monthly') {
+    if (!schedule.firstDate || !schedule.secondDate) {
+      toast.error('Both delivery dates are required for Bi-Monthly frequency');
+      return false;
+    }
+
+    if (schedule.firstDate === schedule.secondDate) {
+      toast.error('Bi-Monthly dates cannot be the same');
+      return false;
+    }
+  }
+
+  if (freq === 'Custom') {
+    if (!schedule.date) {
+      toast.error('Delivery Date is required for Custom frequency');
+      return false;
+    }
+  }
+
+  // ===== TIME REQUIRED FOR ALL FREQUENCIES =====
+  if (!schedule.time) {
+    toast.error('Delivery Time is required');
+    return false;
+  }
+
+  if (!sowFile || sowFile.length === 0) {
+    toast.error('SoW Document is required ');
+    return false;
+  }
+
+  return true;
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -226,36 +325,35 @@ const EditProject = () => {
       toast.info('No changes detected');
       return;
     }
-
+  if (!validateBeforeSubmit()) return;
     try {
       setLoading(true);
       const form = new FormData();
       form.append('projectName', formData.projectName);
-     Object.entries(updatedFields).forEach(([key, value]) => {
+      Object.entries(updatedFields).forEach(([key, value]) => {
+        // ✅ MULTI SELECT (teamLead)
+        if (Array.isArray(value) && value.length && value[0]?.value) {
+          value.forEach((v) => {
+            form.append(`${key}[]`, v.value);
+          });
+          return;
+        }
 
-  // ✅ MULTI SELECT (teamLead)
-  if (Array.isArray(value) && value.length && value[0]?.value) {
-    value.forEach((v) => {
-      form.append(`${key}[]`, v.value);
-    });
-    return;
-  }
+        // ✅ SINGLE SELECT
+        if (value?.value) {
+          form.append(key, value.value);
+          return;
+        }
 
-  // ✅ SINGLE SELECT
-  if (value?.value) {
-    form.append(key, value.value);
-    return;
-  }
+        // ✅ OBJECT
+        if (typeof value === 'object') {
+          form.append(key, JSON.stringify(value));
+          return;
+        }
 
-  // ✅ OBJECT
-  if (typeof value === 'object') {
-    form.append(key, JSON.stringify(value));
-    return;
-  }
-
-  // ✅ STRING / NUMBER
-  form.append(key, value);
-});
+        // ✅ STRING / NUMBER
+        form.append(key, value);
+      });
 
       // new uploaded files
       sowFile.forEach((f) => f instanceof File && form.append('sowDocument', f));
@@ -270,6 +368,7 @@ const EditProject = () => {
       const res = await axios.put(`${api}/Project-update/${id}`, form, { withCredentials: true });
       if (res.status === 200) {
         toast.success('Project updated successfully');
+        navigate('/Projects');
       }
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Update failed');
@@ -605,24 +704,26 @@ const EditProject = () => {
             </Col>
           </Row>
           {formData.teamLead && formData.projectCoordinator && (
-              <Row className="mb-3">
-            <Col md={6}>
-              <Form.Label>Team Lead</Form.Label>
-              <Select options={teamLeads} value={formData.teamLead} onChange={(v) => handleChange('teamLead', v)} isMulti isClearable />
-            </Col>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Label>Team Lead</Form.Label>
+                <Select options={teamLeads} value={formData.teamLead} onChange={(v) => handleChange('teamLead', v)} isMulti isClearable />
+              </Col>
 
-            <Col md={6}>
-              <Form.Label>Project Coordinator</Form.Label>
-              <Select
-                options={coordinators}
-                value={formData.projectCoordinator}
-                onChange={(v) => handleChange('projectCoordinator', v)}
-                isClearable
-              />
-            </Col>
-          </Row>
+              <Col md={6}>
+                <Form.Label>Project Coordinator</Form.Label>
+                <Select
+                 isMulti
+                  options={coordinators}
+                  value={formData.projectCoordinator}
+                  onChange={(v) => handleChange('projectCoordinator', v)}
+                 
+                  isClearable
+                />
+              </Col>
+            </Row>
           )}
-        
+
           <Row className="mb-3">
             <Col md={4}>
               <FileDropZone label="SOW Document" file={sowFile} setFile={setSowFile} />
@@ -652,12 +753,56 @@ const EditProject = () => {
             <Button variant="dark" disabled={loading} onClick={() => navigate(-1)}>
               <IoArrowBack /> Back
             </Button>
-            <Button type="submit" variant="dark" disabled={loading}>
+            <Button type="button" variant="dark" disabled={loading} onClick={() => setShowUpdateModal(true)}>
               {loading ? <Spinner size="sm" /> : 'Update Project'}
             </Button>
           </div>
         </Form>
       </Card>
+
+      <Modal show={showUpdateModal} onHide={() => setShowUpdateModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Update</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p className="mb-2">Are you sure you want to update this project?</p>
+
+          <ul>
+            {Object.keys(updatedFields).length > 0 && (
+              <li>
+                <strong>Form fields updated </strong>
+              </li>
+            )}
+
+            {(sowFile.some((f) => f instanceof File) ||
+              inputFile.some((f) => f instanceof File) ||
+              annotationFile.some((f) => f instanceof File)) && (
+              <li>
+                <strong>Documents updated</strong>
+              </li>
+            )}
+          </ul>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowUpdateModal(false)}>
+            Cancel
+          </Button>
+
+          <Button
+            variant="dark"
+            disabled={loading}
+            onClick={(e) => {
+              setShowUpdateModal(false);
+              handleSubmit(e);
+            }}
+          >
+
+            Confirm Update
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

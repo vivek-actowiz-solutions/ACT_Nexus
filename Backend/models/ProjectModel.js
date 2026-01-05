@@ -28,11 +28,11 @@ const projectSchema = new mongoose.Schema(
     },
 
     inputDocument: {
-      type: [String], 
+      type: [String],
       default: [],
     },
     annotationDocument: {
-      type: [String], 
+      type: [String],
       default: [],
     },
     industryType: {
@@ -46,7 +46,6 @@ const projectSchema = new mongoose.Schema(
     },
     deliveryMode: {
       type: String,
-   
     },
 
     department: {
@@ -66,7 +65,6 @@ const projectSchema = new mongoose.Schema(
       },
       firstDate: {
         type: String,
-     
       },
       secondDate: {
         type: String,
@@ -106,10 +104,12 @@ const projectSchema = new mongoose.Schema(
       },
     ],
 
-    projectCoordinator: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+    projectCoordinator: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
 
     bde: {
       type: mongoose.Schema.Types.ObjectId,

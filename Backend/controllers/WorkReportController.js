@@ -136,6 +136,107 @@ const AddWorkReport = async (req, res) => {
     });
   }
 };
+const updateWorkReport = async (req, res) => {
+  console.log("updateWorkReport called with body:", req.body);
+
+  try {
+    const { works, developerId, date } = req.body;
+
+    /* ---------------- VALIDATIONS ---------------- */
+
+    if (!developerId) {
+      return res.status(400).json({ message: "Developer ID is required" });
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: "Work date is required" });
+    }
+
+    if (!Array.isArray(works)) {
+      return res.status(400).json({ message: "Works must be an array" });
+    }
+
+    /* ---------------- HELPERS ---------------- */
+
+    const formatToHHMM = (hours, minutes) => {
+      const totalMinutes = Number(hours) * 60 + Number(minutes);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    };
+
+    const hhmmToMinutes = (time) => {
+      if (!time) return 0;
+      const [h, m] = time.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    /* ---------------- FORMAT REPORTS ---------------- */
+
+    const reports = works.map((work) => {
+      if (
+        !work.projectId ||
+        !work.feedId ||
+        work.hours === undefined ||
+        work.minutes === undefined
+      ) {
+        throw new Error("Invalid work entry data");
+      }
+
+      return {
+        projectId: new mongoose.Types.ObjectId(work.projectId),
+        feedId: new mongoose.Types.ObjectId(work.feedId),
+        timeSpent: formatToHHMM(work.hours, work.minutes),
+        description: work.description?.trim() || "",
+        taskType: work.taskType || "development",
+      };
+    });
+
+    /* ---------------- TOTAL TIME ---------------- */
+
+    const totalMinutes = reports.reduce(
+      (sum, r) => sum + hhmmToMinutes(r.timeSpent),
+      0
+    );
+
+    const totalTime = formatToHHMM(
+      Math.floor(totalMinutes / 60),
+      totalMinutes % 60
+    );
+
+    /* ---------------- UPSERT WORK REPORT ---------------- */
+
+    const updatedDoc = await WorkReport.findOneAndUpdate(
+      { developerId, workDate: date },
+      {
+        $set: {
+          reports,
+          totalTime,
+        },
+      },
+      {
+        new: true,
+        upsert: true, // create if not exists
+      }
+    );
+
+    /* ---------------- RESPONSE ---------------- */
+
+    res.status(200).json({
+      success: true,
+      message: "Work report updated successfully",
+      data: updatedDoc,
+    });
+  } catch (error) {
+    console.error("updateWorkReport error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update work report",
+      error: error.message,
+    });
+  }
+};
+
 const GetWorkReports = async (req, res) => {
   const permission = res.locals.permissions;
   const Rolelevel = req.user.Rolelevel;
@@ -202,12 +303,16 @@ const GetWorkReports = async (req, res) => {
     }
 
     // 🔹 Team Lead (5) → Own developers
-    if (Rolelevel === 5) {
-      developerFilter.reportingTo = userId;
-    }
+if (Rolelevel === 5) {
+  developerFilter.$or = [
+    { reportingTo: userId },
+    { _id: userId }
+  ];
+}
+
 
     // 🔹 Manager (3) → TLs → Developers
-    if (Rolelevel === 3) {
+    if (Rolelevel === 3 ) {
       const tls = await mongoose.connection.db
         .collection("users")
         .find({ reportingTo: userId })
@@ -589,6 +694,60 @@ const getProjectlistworkreport = async (req, res) => {
     });
   }
 };
+
+const getworklistbydate = async (req, res) => {
+  try {
+    const { date, developerId } = req.query;
+
+    // 🔒 Validate user
+    if (!developerId || !mongoose.Types.ObjectId.isValid(developerId)) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized user",
+      });
+    }
+
+    // 🔒 Validate date
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+
+    // Convert to ObjectId safely
+    const devObjectId = new mongoose.Types.ObjectId(developerId);
+
+    // ✅ Query (lean for performance)
+    const workReports = await WorkReport.find({
+      developerId: devObjectId,
+      workDate: date,
+    })
+      .populate({
+        path: "reports.feedId",
+        select: "feedName",
+      })
+      .populate({
+        path: "reports.projectId",
+        select: "projectName projectCode",
+      })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: workReports.length,
+      data: workReports,
+    });
+  } catch (error) {
+    console.error("getWorkListByDate error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch work reports",
+    });
+  }
+};
+
 module.exports = {
   AddWorkReport,
   GetWorkReports,
@@ -597,4 +756,6 @@ module.exports = {
   getworkreportDetails,
   getuserslist,
   getFeedsByProjectworkreport,
+  getworklistbydate,
+  updateWorkReport,
 };

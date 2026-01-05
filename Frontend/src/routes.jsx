@@ -121,6 +121,12 @@ const routes = [
       },
        {
         exact: 'true',
+        path: '/Edit-Work-Report',
+        element: lazy(() => import('./views/ProjectManagement/WorkReportEdit')),
+        isPrivate: true
+      },
+       {
+        exact: 'true',
         path: '/work-report-details/:id',
         element: lazy(() => import('./views/ProjectManagement/WrokReportDetaliis')),
         isPrivate: true
