@@ -88,6 +88,7 @@ const ProjectView = () => {
     feedCount,
     createdAt
   } = project;
+
   const latestActivities = projectActivities.slice(0, 5);
 
   const getActivityIcon = (title) => {
@@ -626,28 +627,29 @@ const ProjectView = () => {
                   </div>
                 )}
 
-                {/* ===== DEVELOPERS ===== */}
+               
 
                 {developers?.length > 0 && (
                   <div className="p-2 rounded border-start border-4 border-warning bg-light">
                     <h6 className="fw-bold text-warning mb-2">Developers</h6>
                     <Row className="g-2">
                       {developers.map((dev, i) => (
-                        <Col xs="auto" key={i}>
-                          <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-${i}`}>{dev.name}</Tooltip>}>
+                        <Col md={6} key={i}>
+                          <div className="d-flex align-items-center gap-2">
                             <div
                               className="rounded-circle d-flex justify-content-center align-items-center text-white"
                               style={{
-                                width: '32px',
-                                height: '32px',
-                                backgroundColor: '#ffc107',
+                                width: '30px',
+                                height: '30px',
+                                backgroundColor: '#38cee6',
                                 fontWeight: 'bold',
-                                cursor: 'pointer'
+                                fontSize: '0.9rem'
                               }}
                             >
-                              {dev?.name?.charAt(0)?.toUpperCase() || 'D'}
+                              {dev?.name?.charAt(0).toUpperCase() || 'B'}
                             </div>
-                          </OverlayTrigger>
+                            <small className="fs-6">{dev?.name}</small>
+                          </div>
                         </Col>
                       ))}
                     </Row>
