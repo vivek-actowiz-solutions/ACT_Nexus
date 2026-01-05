@@ -269,6 +269,10 @@ const validateBeforeSubmit = () => {
       toast.error('You can select only 2 days for Bi-Weekly frequency');
       return false;
     }
+       if (daysCount < 2) {
+      toast.error('Please select 2 days for Bi-Weekly frequency');
+      return false;
+    }
   }
 
   if (freq === 'Monthly') {
