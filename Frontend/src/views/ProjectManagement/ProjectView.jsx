@@ -648,7 +648,7 @@ const ProjectView = () => {
                             >
                               {dev?.name?.charAt(0).toUpperCase() || 'B'}
                             </div>
-                            <small className="fs-6">{dev?.name}</small>
+                            {/* <small className="fs-6">{dev?.name}</small> */}
                           </div>
                         </Col>
                       ))}

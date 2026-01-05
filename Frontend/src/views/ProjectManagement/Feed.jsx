@@ -977,7 +977,7 @@ const ApiconfigrationList = () => {
             </OverlayTrigger>
           )}
           {/* Add Developer */}
-          {permission?.[0]?.action?.includes('AssignDeveloper') && !row?.developers?.length && row?.active === true && (
+          {permission?.[0]?.action?.includes('AssignDeveloper') && !row?.developers?.length > 0 && row?.active === true && (
             <OverlayTrigger placement="top" overlay={<Tooltip id={`add-dev-${row._id}`}>Add Developer</Tooltip>}>
               <span style={{ cursor: 'pointer', display: 'inline-flex' }}>
                 <FaUserPlus size={18} color="orange" onClick={() => openAssignDeveloperModal(row)} />
