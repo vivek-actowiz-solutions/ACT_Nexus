@@ -193,9 +193,10 @@ const login = async (req, res) => {
   }
 
   try {
-    console.log("emial" ,email)
-    const user = await User.findOne({ email });
-    console.log("user"  , user);
+    const Email = email.trim();
+
+    const user = await User.findOne({ Email });
+
     if (!user) return res.status(404).json({ Message: "User not found" });
 
     if (!user.status) {
@@ -203,9 +204,9 @@ const login = async (req, res) => {
         Message: "Your account is not active. Please contact the support team.",
       });
     }
-console.log("user" , user)
+
     // ✅ Password check
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password.trim(), user.password);
     if (!isMatch) return res.status(400).json({ Message: "Invalid password" });
 
     // ✅ Fetch permissions from roles collection

@@ -307,7 +307,7 @@ const UserList = () => {
     { name: 'Department', selector: (row) => row.department },
     {
       name: 'Reporting',
-      selector: (row) => row.reportingTo?.name || 'N/A'
+      selector: (row) => row.reportingTo || 'N/A'
     },
     {
       name: 'Key',
