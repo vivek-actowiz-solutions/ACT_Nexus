@@ -313,7 +313,7 @@ const ProjectView = () => {
                   style={{ cursor: 'pointer', minHeight: '120px' }}
                   onClick={() => setShowWorkModal(true)}
                 >
-                  <small className="text-semibold d-flex align-items-center gap-1"> <IoMdTime />Overall Project Effort</small>
+                  <small className="text-semibold d-flex align-items-center gap-1"> <IoMdTime />Overall Effort</small>
                   <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
                 </Card>
               </Col>
