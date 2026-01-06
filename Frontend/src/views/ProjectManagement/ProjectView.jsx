@@ -6,6 +6,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import dayjs from 'dayjs';
 import { FaCheckCircle, FaEdit, FaPlusCircle } from 'react-icons/fa';
 import { FaRegUserCircle } from 'react-icons/fa';
+import { IoMdTime } from "react-icons/io";
 import { api } from 'views/api';
 
 /* ===== ICONS ===== */
@@ -34,7 +35,11 @@ const ProjectView = () => {
   const [projectActivities, setProjectActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [workReports, setWorkReports] = useState([]);
+  const [totalDevelopers, setTotalDevelopers] = useState(0);
+  const [totalProjectTime, setTotalProjectTime] = useState('00:00');
 
+  const [showWorkModal, setShowWorkModal] = useState(false);
   useEffect(() => {
     fetchProject();
     // eslint-disable-next-line
@@ -46,6 +51,26 @@ const ProjectView = () => {
       const json = await res.data;
       setProject(json?.data || null);
       setProjectActivities(json?.projectActivities || []);
+      const reports = json?.workReports || [];
+      setWorkReports(reports);
+
+      // total developers
+      setTotalDevelopers(reports.length);
+
+      // calculate total project time
+      const toMinutes = (t) => {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+      };
+
+      const toTime = (mins) => {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      };
+
+      const totalMinutes = reports.reduce((sum, r) => sum + toMinutes(r.totalTime), 0);
+      setTotalProjectTime(toTime(totalMinutes));
     } catch (err) {
       console.error('Project fetch error:', err);
     } finally {
@@ -218,7 +243,7 @@ const ProjectView = () => {
                           {projectFrequency?.deliveryTime}
                         </small>
                       )}
-                      {(projectFrequency?.frequencyType === 'Custom' || projectFrequency?.frequencyType === 'Bi-Monthly') && (
+                      {(projectFrequency?.frequencyType === 'Custom') && (
                         <small className="text-muted">
                           {' '}
                           {projectFrequency?.deliveryDate} On {projectFrequency?.deliveryTime}
@@ -272,23 +297,24 @@ const ProjectView = () => {
               <Col md={3} sm={6} xs={6}>
                 <Card style={{ minHeight: '120px' }} className={` p-3 `}>
                   <Card.Body className="p-1">
-                    <small className="text-semibold d-flex align-items-center gap-1">
-                      <FaFlag />
-                      Priority
+                    <small className="text-bold d-flex align-items-center gap-1">
+                      <FaRegUserCircle />
+                      Total Developer Effort
                     </small>
-                    <div className="fw-semibold small mt-1">{projectPriority || '--'}</div>
+                    <div className="fw-bold small mt-1">{totalDevelopers || '0'}</div>
                   </Card.Body>
                 </Card>
               </Col>
 
               <Col xs={12} sm={6} md={3}>
-                <Card style={{ minHeight: '120px' }} className="p-3">
-                  <Card.Body className="py-2 px-2">
-                    <small className="text-semibold d-flex align-items-center gap-2">
-                      <FaTruck /> Delivery Mode
-                    </small>
-                    <h6 className="fw-bold mt-1 mb-0">{deliveryMode || '--'}</h6>
-                  </Card.Body>
+                <Card
+                  className="p-3"
+                  role="button"
+                  style={{ cursor: 'pointer', minHeight: '120px' }}
+                  onClick={() => setShowWorkModal(true)}
+                >
+                  <small className="text-semibold d-flex align-items-center gap-1"> <IoMdTime />Overall Project Effort</small>
+                  <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
                 </Card>
               </Col>
             </Row>
@@ -329,10 +355,26 @@ const ProjectView = () => {
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
+                Priority:
+              </Col>
+              <Col md={8} className="content-between-end">
+                {projectPriority}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
                 Industry:
               </Col>
               <Col md={8} className="content-between-end">
                 {industryType}
+              </Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Delivery Mode:
+              </Col>
+              <Col md={8} className="content-between-end">
+                {deliveryMode}
               </Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
@@ -676,6 +718,55 @@ const ProjectView = () => {
         <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <ActivityTimeline activities={projectActivities} />
         </Modal.Body>
+      </Modal>
+      <Modal show={showWorkModal} onHide={() => setShowWorkModal(false)} size="md" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>📊 Project Work Summary</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {/* TOTAL SUMMARY */}
+          <Card className="mb-3 p-3 bg-light">
+            <Row>
+              <Col xs={6}>
+                <small className="text-muted">Total Developers</small>
+                <h6 className="fw-bold mb-0">{totalDevelopers}</h6>
+              </Col>
+              <Col xs={6} className="text-end">
+                <small className="text-muted">Total Time</small>
+                <h6 className="fw-bold text-primary mb-0">{totalProjectTime}</h6>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* DEVELOPER LIST */}
+          {workReports.length === 0 ? (
+            <div className="text-muted text-center py-3">No work report data available</div>
+          ) : (
+            workReports.map((dev, index) => (
+              <Card key={index} className="mb-2 shadow-sm">
+                <Card.Body className="py-2">
+                  <Row className="align-items-center">
+                    <Col xs={8}>
+                      <div className="fw-semibold">{dev.developerName}</div>
+                    </Col>
+                    <Col xs={4} className="text-end">
+                      <Badge bg="primary" pill>
+                        {dev.totalTime}
+                      </Badge>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ))
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowWorkModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       <div className="mt-3  d-flex justify-content-end align-items-center">

@@ -3,6 +3,7 @@ const Feed = require("../models/FeedModel");
 const User = require("../models/UserModel");
 const ProjectActivity = require("../models/ProjectActivityLog");
 const FeedActivity = require("../models/FeedActivityLog");
+const WorkReport = require("../models/WorkReportModel");
 const logProjectActivity = require("../utils/ProjectactivityLogger");
 const logFeedActivity = require("../utils/FeedactivityLogger");
 const fs = require("fs");
@@ -256,7 +257,6 @@ const getProjectbyId = async (req, res) => {
           as: "projectCoordinator",
         },
       },
-    
 
       /* ================= BDE ================= */
       {
@@ -310,11 +310,110 @@ const getProjectbyId = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("ActionUserId", "name profileImage")
       .lean();
+const projectObjectId = new mongoose.Types.ObjectId(id);
+
+const developerEffort = await WorkReport.aggregate([
+  // 1️⃣ Match project
+  {
+    $match: {
+      "reports.projectId": projectObjectId,
+    },
+  },
+
+  // 2️⃣ Unwind reports
+  {
+    $unwind: "$reports",
+  },
+
+  // 3️⃣ Match again
+  {
+    $match: {
+      "reports.projectId": projectObjectId,
+    },
+  },
+
+  // 4️⃣ Lookup developer
+  {
+    $lookup: {
+      from: "users",
+      localField: "developerId",
+      foreignField: "_id",
+      as: "developer",
+    },
+  },
+  { $unwind: "$developer" },
+
+  // 5️⃣ Convert HH:MM → minutes
+  {
+    $addFields: {
+      timeInMinutes: {
+        $add: [
+          {
+            $multiply: [
+              { $toInt: { $arrayElemAt: [{ $split: ["$reports.timeSpent", ":"] }, 0] } },
+              60,
+            ],
+          },
+          {
+            $toInt: { $arrayElemAt: [{ $split: ["$reports.timeSpent", ":"] }, 1] },
+          },
+        ],
+      },
+    },
+  },
+
+  // 6️⃣ Group by developer
+  {
+    $group: {
+      _id: "$developer._id",
+      developerName: { $first: "$developer.name" },
+      totalMinutes: { $sum: "$timeInMinutes" },
+    },
+  },
+
+  // 7️⃣ Convert minutes → HH:MM
+  {
+    $project: {
+      _id: 0,
+      developerName: 1,
+      totalTime: {
+        $concat: [
+          {
+            $toString: {
+              $floor: { $divide: ["$totalMinutes", 60] },
+            },
+          },
+          ":",
+          {
+            $cond: [
+              { $lt: [{ $mod: ["$totalMinutes", 60] }, 10] },
+              {
+                $concat: [
+                  "0",
+                  { $toString: { $mod: ["$totalMinutes", 60] } },
+                ],
+              },
+              { $toString: { $mod: ["$totalMinutes", 60] } },
+            ],
+          },
+        ],
+      },
+    },
+  },
+
+  // 8️⃣ Sort by total time (optional)
+  {
+    $sort: { developerName: 1 },
+  },
+]);
+
+    console.log("workreport data", developerEffort);
 
     return res.status(200).json({
       success: true,
       data: project[0],
       projectActivities,
+      workReports : developerEffort,
     });
   } catch (error) {
     console.error("Get Project By ID Error:", error);
