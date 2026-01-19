@@ -317,6 +317,18 @@ const getFeedFrequency = async (req, res) => {
           },
         },
       },
+      // LOOKUP to join Project collection
+      {
+        $lookup: {
+          from: "projects", // your collection name for projects
+          localField: "projectId", // field in Feed collection
+          foreignField: "_id", // field in Project collection
+          as: "projectInfo", // output array
+        },
+      },
+
+      // Optionally unwind if you only expect one project per feed
+      { $unwind: { path: "$projectInfo", preserveNullAndEmptyArrays: true } },
 
       {
         $project: {
@@ -325,6 +337,7 @@ const getFeedFrequency = async (req, res) => {
           platformName: 1,
           status: 1,
           feedfrequency: 1,
+          projectName: "$projectInfo.projectName", // project name from Project collection
           // Debug fields (optional, remove in prod if needed)
           // matchType: "$feedfrequency.frequencyType"
         },

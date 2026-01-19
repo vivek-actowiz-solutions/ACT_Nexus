@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { FaClock } from 'react-icons/fa6';
 
 /* ===================== STATUS OPTIONS ===================== */
 const feedStatusOptions = [
@@ -217,12 +218,12 @@ const ProjectFeedDashboard = () => {
       wrap: true,
       grow: 2
     },
-    // {
-    //   name: 'Platform',
-    //   selector: (row) => row.platformName,
-    //   sortable: false,
-    //   wrap: true
-    // },
+    {
+      name: 'Project',
+      selector: (row) => row.projectName,
+      sortable: false,
+      wrap: true
+    },
     {
       name: 'Status',
       cell: (row) => (
@@ -234,26 +235,78 @@ const ProjectFeedDashboard = () => {
     },
     {
       name: 'Frequency',
-      selector: (row) => row.feedfrequency?.frequencyType,
-      sortable: false
-    },
-    {
-      name: 'Schedule',
+      width: '300px',
       cell: (row) => {
         const f = row.feedfrequency;
         if (!f) return '-';
-        if (f.frequencyType === 'Weekly' || f.frequencyType === 'Bi-Weekly') return f.deliveryDay;
-        if (f.frequencyType === 'Monthly') return `Day ${f.deliveryDate}`;
-        if (f.frequencyType === 'Bi-Monthly') return `Day ${f.firstDate}, ${f.secondDate}`;
-        if (f.frequencyType === 'Custom') return f.deliveryDate;
-        return 'Daily';
-      },
-      wrap: true
-    },
-    {
-      name: 'Time',
-      selector: (row) => row.feedfrequency?.deliveryTime
+
+        return (
+          <div>
+            <div className="fw-semibold">{f?.frequencyType}</div>
+
+            {f?.frequencyType === 'Weekly' && f?.deliveryDay && (
+              <small className="text-muted">
+                <FaClock /> Every Week {f?.deliveryDay} • {f?.deliveryTime}
+              </small>
+            )}
+
+            {f?.frequencyType === 'Daily' && f?.deliveryTime && (
+              <small className="text-muted">
+                {' '}
+                <FaClock /> Every Day • {f?.deliveryTime}
+              </small>
+            )}
+
+            {f?.frequencyType === 'Monthly' && f?.deliveryDate && (
+              <small className="text-muted">
+                {' '}
+                <FaClock /> Every Month {f?.deliveryDate}th • {f?.deliveryTime}
+              </small>
+            )}
+            {f.frequencyType === 'Bi-Monthly' && (
+              <small className="text-muted">
+                {' '}
+                <FaClock /> Every Month {f.firstDate}th & {f.secondDate}th • {f.deliveryTime}
+              </small>
+            )}
+
+            {f.frequencyType === 'Bi-Weekly' && (
+              <small className="text-muted">
+                <FaClock /> Every Week {f.deliveryDay} • {f.deliveryTime}
+              </small>
+            )}
+            {f.frequencyType === 'Custom' && (
+              <small className="text-muted">
+                {' '}
+                <FaClock /> {f.deliveryDate} • {f.deliveryTime}
+              </small>
+            )}
+          </div>
+        );
+      }
     }
+    // {
+    //   name: 'Frequency',
+    //   selector: (row) => row.feedfrequency?.frequencyType,
+    //   sortable: false
+    // },
+    // {
+    //   name: 'Schedule',
+    //   cell: (row) => {
+    //     const f = row.feedfrequency;
+    //     if (!f) return '-';
+    //     if (f.frequencyType === 'Weekly' || f.frequencyType === 'Bi-Weekly') return f.deliveryDay;
+    //     if (f.frequencyType === 'Monthly') return `Day ${f.deliveryDate}`;
+    //     if (f.frequencyType === 'Bi-Monthly') return `Day ${f.firstDate}, ${f.secondDate}`;
+    //     if (f.frequencyType === 'Custom') return f.deliveryDate;
+    //     return 'Daily';
+    //   },
+    //   wrap: true
+    // },
+    // {
+    //   name: 'Time',
+    //   selector: (row) => row.feedfrequency?.deliveryTime
+    // }
   ];
 
   if (loading) {
@@ -309,34 +362,37 @@ const ProjectFeedDashboard = () => {
         <Card className="border-0">
           <Card.Body className="p-3">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <Row className="g-1 mb-4 align-items-center p-2">
-                {/* ===================== DATE RANGE BUTTONS ===================== */}
-                <Col md={6} className="d-flex flex-wrap align-items-center gap-1 ">
-                  {dateFilterOptions.map((option) => (
-                    <Button
-                      key={option.value}
-                      size="sm"
-                      variant={filter?.value === option.value ? 'dark' : 'outline-dark'}
-                      onClick={() => setFilter(option)}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </Col>
+              <Row className="mb-4 p-2">
+                <Col className="d-flex align-items-center justify-content-start flex-wrap gap-2">
+                  {/* LEFT: DATE FILTER BUTTONS */}
+                  <div className="d-flex flex-wrap gap-1">
+                    {dateFilterOptions.map((option) => (
+                      <Button
+                        key={option.value}
+                        size="sm"
+                        // className=""
+                        variant={filter?.value === option.value ? 'dark' : 'outline-dark'}
+                        onClick={() => setFilter(option)}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
 
-                {/* ===================== FREQUENCY DROPDOWN ===================== */}
-                <Col md={3}>
-                  <Select
-                    options={freqOptions}
-                    value={frequencyType}
-                    onChange={setFrequencyType}
-                    placeholder="select frequency"
-                    isClearable
-                  />
+                  {/* RIGHT: FREQUENCY DROPDOWN */}
+                  <div style={{ minWidth: 220 }}>
+                    <Select
+                      options={freqOptions}
+                      value={frequencyType}
+                      onChange={setFrequencyType}
+                      placeholder="select frequency"
+                      isClearable
+                    />
+                  </div>
                 </Col>
 
                 {/* ===================== CUSTOM DATE RANGE (IF SELECTED) ===================== */}
-                {filter?.value === 'custom' && (
+                {/* {filter?.value === 'custom' && (
                   <>
                     <Col md={3}>
                       <Form.Label className="text-muted small fw-bold mb-1">Start Date</Form.Label>
@@ -358,7 +414,7 @@ const ProjectFeedDashboard = () => {
                       />
                     </Col>
                   </>
-                )}
+                )} */}
               </Row>
             </LocalizationProvider>
 

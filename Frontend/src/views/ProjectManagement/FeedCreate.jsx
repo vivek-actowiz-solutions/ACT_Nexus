@@ -57,7 +57,7 @@ const departments = [
 
 const CreateProject = () => {
   document.title = 'Create Project';
-const navigator = useNavigate();
+  const navigator = useNavigate();
   const [loading, setLoading] = useState(false);
   const [Manager, setManager] = useState([]);
   const [sales, setSales] = useState([]);
@@ -306,7 +306,7 @@ const navigator = useNavigate();
         <Form onSubmit={handleSubmit}>
           <Row className="mb-3">
             <Col md={6}>
-              <Form.Label className="required">Project Name</Form.Label>
+              <Form.Label className="required text-bold">Project Name</Form.Label>
               <Form.Control value={formData.projectName} onChange={(e) => setFormData({ ...formData, projectName: e.target.value })} />
             </Col>
             <Col md={6}>
