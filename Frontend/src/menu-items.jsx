@@ -5,8 +5,10 @@ import { CiCircleList } from 'react-icons/ci';
 import { FaCog, FaPlay, FaUser } from 'react-icons/fa';
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { RiUserLine } from 'react-icons/ri';
-import axios from 'axios';
-import { api } from 'views/api';
+import { MdAccountTree } from "react-icons/md";
+import { GoProjectSymlink } from "react-icons/go";
+// import axios from 'axios';
+// import { api } from 'views/api';
 
 // ---- Full Menu with permission keys ----
 const allMenuItems = {
@@ -38,7 +40,7 @@ const allMenuItems = {
           title: 'Projects',
           type: 'item',
           url: '/Projects',
-          icon: FaCog,
+          icon: GoProjectSymlink,
           permission: 'Projects',
           children: [
             {
@@ -100,6 +102,45 @@ const allMenuItems = {
               id: 'addworkreport',
               title: 'Add Work Report',
               type: 'item',
+              url: '/add-work-report',
+              permission: 'WorkReport'
+            },
+            {
+              id: 'workreportDetails',
+              title: 'Work Report Details',
+              type: 'item',
+              url: '/work-report-details/:id',
+              permission: 'WorkReport'
+            },
+            {
+              id: 'editworkreport',
+              title: 'Edit Work Report ',
+              type: 'item',
+              url: '/Edit-Work-Report',
+              permission: 'WorkReport'
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'escalations',
+      title: 'Escalations',
+      type: 'group',
+      icon: AiOutlineApi,
+      children: [
+        {
+          id: 'Escalation',
+          title: 'Escalation',
+          type: 'item',
+          icon: MdAccountTree,
+          url: '/Escalations',
+          permission: 'Escalations',
+          children: [
+            {
+              id: 'addworkreport',
+              title: 'Add Work Report',
+              type: 'item', 
               url: '/add-work-report',
               permission: 'WorkReport'
             },

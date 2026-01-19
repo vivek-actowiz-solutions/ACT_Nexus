@@ -47,11 +47,13 @@ const UserList = () => {
 
   const departments = [
     { value: 'Management', label: 'Management' },
-    { value: 'Operation', label: 'Operation' },
+    { value: 'Development', label: 'Development' },
     { value: 'R&D', label: 'R&D' },
     { value: 'Sales', label: 'Sales' },
+    { value: 'Client Success', label: 'Client Success' },
     { value: 'QA', label: 'QA' },
-    { value: 'Data Entry', label: 'Data Entry' },
+    { value: 'HR', label: 'HR' },
+    { value: 'IT', label: 'IT' },
     { value: 'Marketing', label: 'Marketing' }
   ];
 

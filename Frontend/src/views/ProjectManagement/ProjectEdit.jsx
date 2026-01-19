@@ -12,6 +12,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'react-toastify/dist/ReactToastify.css';
 import { IoArrowBack } from 'react-icons/io5';
 import { CgLogIn } from 'react-icons/cg';
+import { cs } from 'date-fns/locale';
 
 const priorityOptions = [
   { label: 'High', value: 'High' },
@@ -53,11 +54,15 @@ const deliveryModeOptions = [
   { label: 'FTP Server', value: 'FTP' },
   { label: 'SFTP Server', value: 'SFTP' },
   { label: 'AWS S3 Bucket', value: 'S3' },
-  { label: 'Google Drive', value: 'GOOGLE_DRIVE' }
+  { label: 'Google Drive', value: 'GOOGLE DRIVE' },
+  { label: 'Azure Blob Storage (ABS)', value: 'ABS' },
+  { label: 'Database-Level Delivery ', value: 'DB Delivery' },
+  { label: 'Google Cloud Storage (GCS)', value: 'GCS' }
 ];
 
+
 const departments = [
-  { label: 'Operation', value: 'Operation' },
+  { label: 'Development', value: 'Development' },
   { label: 'R&D', value: 'R&D' }
 ];
 
@@ -74,6 +79,7 @@ const EditProject = () => {
   const [loading, setLoading] = useState(false);
   const [managerList, setManagerList] = useState([]);
   const [salesList, setSalesList] = useState([]);
+  const [csmanagerList, setCsManagerList] = useState([]);
 
   const [originalData, setOriginalData] = useState({});
   const [formData, setFormData] = useState({});
@@ -102,6 +108,7 @@ const EditProject = () => {
   useEffect(() => {
     fetchProject();
     fetchSales();
+    fetchcsManagers("Client Success");
   }, [id]);
 
   const fetchProject = async () => {
@@ -123,6 +130,7 @@ const EditProject = () => {
         projectFrequency: p.projectFrequency?.frequencyType || '',
         projectManager: p.projectManager ? { value: p.projectManager._id, label: p.projectManager.name } : null,
         projectTechManager: p.projectTechManager ? { value: p.projectTechManager._id, label: p.projectTechManager.name } : null,
+        csprojectManager: p.csprojectManager ? { value: p.csprojectManager._id, label: p.csprojectManager.name } : null,
         bde: p.bde ? { value: p.bde._id, label: p.bde.name } : null,
         teamLead: Array.isArray(p.teamLead)
           ? p.teamLead.map((u) => ({
@@ -153,7 +161,8 @@ const EditProject = () => {
 
       if (p.department) {
         fetchManagers(p.department);
-        fetchAssignUsers(p.department);
+        fetchAssignTlUsers(p.department , p.projectManager?._id);
+        fetchAssignPCUsers("Client Success" , p.csprojectManager?._id);
       }
     } catch {
       toast.error('Failed to load project');
@@ -166,6 +175,12 @@ const EditProject = () => {
     });
     setManagerList(res.data.data || []);
   };
+  const fetchcsManagers = async (department) => {
+    const res = await axios.get(`${api}/users-list?department=${encodeURIComponent(department)}&manager=true`, {
+      withCredentials: true
+    });
+    setCsManagerList(res.data.data || []);
+  };
 
   const fetchSales = async () => {
     const res = await axios.get(`${api}/users-list?department=Sales&BDE=true`, {
@@ -176,19 +191,30 @@ const EditProject = () => {
 
   const ManagerOptions = managerList.map((u) => ({ value: u._id, label: u.name }));
   const SalesOptions = salesList.map((u) => ({ value: u._id, label: u.name }));
-  const fetchAssignUsers = async (department) => {
+  const csManagerOptions = csmanagerList.map((u) => ({ value: u._id, label: u.name }));
+
+  const fetchAssignTlUsers = async (department , reportingId) => {
     try {
-      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(department)}`, { withCredentials: true });
+      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&teamLead=true`, { withCredentials: true });
 
       setTeamLeads(
-        (res.data.teamLeads || []).map((u) => ({
+        (res.data.data || []).map((u) => ({
           label: u.name,
           value: u._id
         }))
       );
 
+     
+    } catch (err) {
+      toast.error('Failed to load assign users');
+    }
+  };
+  const fetchAssignPCUsers = async (department , reportingId) => {
+    try {
+      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&coordinator=true`, { withCredentials: true });
+
       setCoordinators(
-        (res.data.coordinators || []).map((u) => ({
+        (res.data.data || []).map((u) => ({
           label: u.name,
           value: u._id
         }))
@@ -238,6 +264,10 @@ const validateBeforeSubmit = () => {
   }
 
   if (!formData.projectTechManager?.value) {
+    toast.error('Project Technical Manager is required');
+    return false;
+  }
+  if (!formData.csprojectManager?.value) {
     toast.error('Project Technical Manager is required');
     return false;
   }
@@ -647,7 +677,7 @@ const validateBeforeSubmit = () => {
             </LocalizationProvider>
           </Row>
           <Row className="mb-3">
-            <Col md={4}>
+            <Col md={3}>
               <Form.Label className="required">Delivery Type</Form.Label>
               <Select
                 options={deliveryOptions}
@@ -656,7 +686,7 @@ const validateBeforeSubmit = () => {
                 isClearable
               />
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Label className="required">Delivery Mode</Form.Label>
               <Select
                 options={deliveryModeOptions}
@@ -665,15 +695,22 @@ const validateBeforeSubmit = () => {
                 isClearable
               />
             </Col>
-
-            <Col md={4}>
+  <Col md={3}>
+              <Form.Label className='required'>BDE (Business Development Executive)</Form.Label>
+              <Select options={SalesOptions} value={formData.bde} onChange={(v) => handleChange('bde', v)} />
+            </Col>
+            <Col md={3}>
+              <Form.Label className='required'>Client Success manager </Form.Label>
+              <Select options={csManagerOptions} value={formData.csprojectManager} onChange={(v) => handleChange('csprojectManager', v)} />
+            </Col>
+            {/* <Col md={4}>
               <Form.Label>Priority</Form.Label>
               <Select
                 options={priorityOptions}
                 value={priorityOptions.find((o) => o.value === formData.projectPriority)}
                 onChange={(v) => handleChange('projectPriority', v?.value)}
               />
-            </Col>
+            </Col> */}
           </Row>
           <Row className="mb-3">
             <Col md={3}>
@@ -702,12 +739,9 @@ const validateBeforeSubmit = () => {
                 isClearable
               />
             </Col>
-            <Col md={3}>
-              <Form.Label>Sales Person</Form.Label>
-              <Select options={SalesOptions} value={formData.bde} onChange={(v) => handleChange('bde', v)} />
-            </Col>
+          
           </Row>
-          {formData.teamLead && formData.projectCoordinator && (
+          {formData.teamLead?.length > 0  && formData.projectCoordinator?.length > 0 && (
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Label>Team Lead</Form.Label>

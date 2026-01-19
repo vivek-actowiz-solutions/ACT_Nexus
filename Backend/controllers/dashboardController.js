@@ -1,80 +1,373 @@
 const project = require("../models/ProjectModel");
 const Feed = require("../models/FeedModel");
+const moment = require("moment");
+const mongoose = require("mongoose");
 
 const getProjectAndFeedCount = async (req, res) => {
   try {
-    // 🔹 Project aggregation
-    const projectResult = await project.aggregate([
+    const user = req.user;
+    const userObjectId = new mongoose.Types.ObjectId(user.id);
+    let projectMatch = {};
+
+    // ================= ROLE BASED PROJECT CONDITIONS =================
+
+    if (user?.Rolelevel === 3 && user?.department === "Development") {
+      projectMatch = {
+        department: "Development",
+        $or: [
+          { projectManager: userObjectId },
+          { projectTechManager: userObjectId },
+        ],
+      };
+    } else if (user?.Rolelevel === 3 && user?.department === "Client Success") {
+      projectMatch = { csprojectManager: userObjectId };
+    } else if (user?.Rolelevel === 4) {
+      projectMatch = { projectCoordinator: userObjectId };
+    } else if (user?.Rolelevel === 5) {
+      projectMatch = { teamLead: { $in: [userObjectId] } };
+    } else if (user?.Rolelevel === 6) {
+      projectMatch = { developers: { $in: [userObjectId] } };
+    } else if (user?.Rolelevel === 7) {
+      projectMatch = {
+        $or: [{ bde: userObjectId }, { createdBy: userObjectId }],
+      };
+    }
+
+    // ================= PROJECT AGGREGATION =================
+    console.log("projectMatch", projectMatch);
+    const projectAgg = await project.aggregate([
+      { $match: projectMatch },
       {
         $facet: {
-          totalProjects: [{ $count: "count" }],
+          projectIds: [{ $project: { _id: 1 } }],
+          total: [{ $count: "count" }],
           statusWiseCount: [
             {
               $group: {
                 _id: "$status",
-                count: { $sum: 1 }
-              }
+                count: { $sum: 1 },
+              },
             },
             {
               $project: {
                 _id: 0,
                 status: "$_id",
-                count: 1
-              }
-            }
-          ]
-        }
-      }
+                count: 1,
+              },
+            },
+          ],
+        },
+      },
     ]);
 
-    // 🔹 Feed aggregation
-    const feedResult = await Feed.aggregate([
+    const projectIds = projectAgg[0]?.projectIds.map((p) => p._id) || [];
+    console.log("projectIds", projectIds);
+    // ================= FEED AGGREGATION (BASED ON PROJECT IDS) =================
+
+    const feedAgg = await Feed.aggregate([
+      {
+        $match: {
+          projectId: { $in: projectIds },
+        },
+      },
       {
         $facet: {
-          totalFeeds: [{ $count: "count" }],
+          total: [{ $count: "count" }],
           statusWiseCount: [
             {
               $group: {
                 _id: "$status",
-                count: { $sum: 1 }
-              }
+                count: { $sum: 1 },
+              },
             },
             {
               $project: {
                 _id: 0,
                 status: "$_id",
-                count: 1
-              }
-            }
-          ]
-        }
-      }
+                count: 1,
+              },
+            },
+          ],
+        },
+      },
     ]);
 
+    // ================= RESPONSE =================
+    console.log("feedAgg", feedAgg);
     return res.status(200).json({
       success: true,
 
       projects: {
-        total: projectResult[0]?.totalProjects[0]?.count || 0,
-        statusWiseCount: projectResult[0]?.statusWiseCount || []
+        total: projectAgg[0]?.total[0]?.count || 0,
+        statusWiseCount: projectAgg[0]?.statusWiseCount || [],
       },
 
       feeds: {
-        total: feedResult[0]?.totalFeeds[0]?.count || 0,
-        statusWiseCount: feedResult[0]?.statusWiseCount || []
-      }
+        total: feedAgg[0]?.total[0]?.count || 0,
+        statusWiseCount: feedAgg[0]?.statusWiseCount || [],
+      },
     });
-
   } catch (error) {
-    console.error("Project & Feed count error:", error);
+    console.error("Project & Feed Count Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch project and feed counts",
-      error: error.message
+      error: error.message,
+    });
+  }
+};
+
+const getFeedFrequency = async (req, res) => {
+  try {
+    const {
+      filter,
+      startDate,
+      endDate,
+      frequencyType,
+      time,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Set timezone to IST (UTC+05:30)
+    const IST_OFFSET = "+05:30";
+    let startMoment = moment().utcOffset(IST_OFFSET).startOf("day");
+    let endMoment = moment().utcOffset(IST_OFFSET).endOf("day");
+
+    /* ================= TIME FRAME ================= */
+    switch (filter) {
+      case "today":
+        // Default is today 00:00 to 23:59 IST
+        break;
+
+      case "tomorrow":
+        startMoment.add(1, "days");
+        endMoment.add(1, "days");
+        break;
+
+      case "thisWeek":
+        // Start of current week (Monday) to End of current week (Sunday)
+        startMoment.startOf("isoWeek");
+        endMoment.endOf("isoWeek");
+        break;
+
+      case "nextWeek":
+        startMoment.add(1, "week").startOf("isoWeek");
+        endMoment.add(1, "week").endOf("isoWeek");
+        break;
+
+      case "thisMonth":
+        startMoment.startOf("month");
+        endMoment.endOf("month");
+        break;
+
+      case "custom":
+        if (startDate && endDate) {
+          startMoment = moment(startDate).startOf("day");
+          endMoment = moment(endDate).endOf("day");
+        }
+        break;
+    }
+
+    const startJSDate = startMoment.toDate();
+    const endJSDate = endMoment.toDate();
+
+    // Pre-calculate valid Days of Week and Days of Month for the requested range
+    const validWeekDays = new Set();
+    const validMonthDays = new Set();
+
+    let current = startMoment.clone();
+
+    // Iterate through each day in the range to collect valid matching criteria
+    // Limit iteration to avoid infinite loops if range is huge (though pagination handles output, calculation needs limits)
+    // For typical dashboard usage (month/week view), this loop is small (max 31 days).
+    const maxDays = 366;
+    let daysCount = 0;
+
+    while (current.isSameOrBefore(endMoment) && daysCount < maxDays) {
+      validWeekDays.add(current.format("dddd")); // e.g., "Monday"
+      validMonthDays.add(current.date()); // e.g., 1, 15, 31
+      current.add(1, "day");
+      daysCount++;
+    }
+
+    // If range exceeds a month (e.g. custom long range), all DOMs might be valid,
+    // but the loop handles it by filling the Set.
+
+    const validWeekDaysArray = Array.from(validWeekDays);
+    const validMonthDaysArray = Array.from(validMonthDays);
+
+    /* ================= BASE MATCH ================= */
+    const baseMatch = { active: true };
+    if (frequencyType) baseMatch["feedfrequency.frequencyType"] = frequencyType;
+    if (time) baseMatch["feedfrequency.deliveryTime"] = time;
+
+    const pipeline = [
+      { $match: baseMatch },
+
+      {
+        $match: {
+          $expr: {
+            $or: [
+              /* DAILY → ALWAYS Matches (if range > 0) */
+              { $eq: ["$feedfrequency.frequencyType", "Daily"] },
+
+              /* WEEKLY & BI-WEEKLY → Check if Delivery Day is in Range */
+              {
+                $and: [
+                  {
+                    $in: [
+                      "$feedfrequency.frequencyType",
+                      ["Weekly", "Bi-Weekly"],
+                    ],
+                  },
+                  {
+                    $gt: [
+                      {
+                        $size: {
+                          $setIntersection: [
+                            // Ensure deliveryDay is split into array if CSV
+                            {
+                              $split: [
+                                { $ifNull: ["$feedfrequency.deliveryDay", ""] },
+                                ",",
+                              ],
+                            },
+                            validWeekDaysArray,
+                          ],
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                ],
+              },
+
+              /* MONTHLY → Check if Delivery Date is in Range */
+              {
+                $and: [
+                  { $eq: ["$feedfrequency.frequencyType", "Monthly"] },
+                  {
+                    $in: [
+                      { $toInt: "$feedfrequency.deliveryDate" },
+                      validMonthDaysArray,
+                    ],
+                  },
+                ],
+              },
+
+              /* BI-MONTHLY → Check First or Second Date */
+              {
+                $and: [
+                  { $eq: ["$feedfrequency.frequencyType", "Bi-Monthly"] },
+                  {
+                    $or: [
+                      {
+                        $in: [
+                          { $toInt: "$feedfrequency.firstDate" },
+                          validMonthDaysArray,
+                        ],
+                      },
+                      {
+                        $in: [
+                          { $toInt: "$feedfrequency.secondDate" },
+                          validMonthDaysArray,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+
+              /* CUSTOM → Precise Date Match */
+              {
+                $and: [
+                  { $eq: ["$feedfrequency.frequencyType", "Custom"] },
+                  {
+                    $and: [
+                      {
+                        $gte: [
+                          {
+                            $dateFromString: {
+                              dateString: "$feedfrequency.deliveryDate",
+                            },
+                          },
+                          startJSDate,
+                        ],
+                      },
+                      {
+                        $lte: [
+                          {
+                            $dateFromString: {
+                              dateString: "$feedfrequency.deliveryDate",
+                            },
+                          },
+                          endJSDate,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          feedName: 1,
+          platformName: 1,
+          status: 1,
+          feedfrequency: 1,
+          // Debug fields (optional, remove in prod if needed)
+          // matchType: "$feedfrequency.frequencyType"
+        },
+      },
+
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: skip }, { $limit: limitNum }],
+        },
+      },
+    ];
+
+    const result = await Feed.aggregate(pipeline);
+
+    // Extract data and total count
+    const data = result[0].data || [];
+    const totalCount = result[0].metadata[0] ? result[0].metadata[0].total : 0;
+
+    return res.json({
+      success: true,
+      count: totalCount,
+      data: data,
+      page: pageNum,
+      limit: limitNum,
+      // Returning debug info about partial date matching
+      filterApplied: {
+        matchStart: startMoment.format(),
+        matchEnd: endMoment.format(),
+        validDays: validWeekDaysArray,
+      },
+    });
+  } catch (error) {
+    console.error("Feed frequency filter error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Feed frequency filter failed",
+      error: error.message,
     });
   }
 };
 
 module.exports = {
-  getProjectAndFeedCount
+  getProjectAndFeedCount,
+  getFeedFrequency,
 };

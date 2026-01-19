@@ -47,6 +47,9 @@ const feedSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    feedPriority: {
+      type: String,
+    },
     frameworkType: {
       type: String,
       default: null

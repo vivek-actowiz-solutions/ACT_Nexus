@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { Dropdown, Card, Collapse } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-
+import { IoIosArrowUp } from "react-icons/io";
 import useWindowSize from '../../hooks/useWindowSize';
 
 const MainCard = (props) => {
@@ -39,6 +39,7 @@ const MainCard = (props) => {
           </Dropdown.Toggle>
           <Dropdown.Menu as="ul" className="list-unstyled card-option">
             <Dropdown.Item as="li" className="dropdown-item" onClick={() => setFullCard(!fullCard)}>
+              
               <i className={fullCard ? 'feather icon-minimize' : 'feather icon-maximize'} />
               <Link to="#"> {fullCard ? 'Restore' : 'Maximize'} </Link>
             </Dropdown.Item>

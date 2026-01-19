@@ -29,7 +29,8 @@ const Project = () => {
   const [selectedAPI, setSelectedAPI] = useState(null);
 
   const [loading, setLoading] = useState(false);
-  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showAssignTeamModal, setShowAssignTeamModal] = useState(false);
+  const [showAssignpcModal, setShowAssipcgnModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
   // multi team leads
@@ -289,15 +290,8 @@ const Project = () => {
     );
   };
 
-  const openAssignModal = (row) => {
+  const openAssignpcModal = (row) => {
     setSelectedProject(row);
-
-    setSelectedTLs(
-      row.teamLead?.map((tl) => ({
-        label: tl.name,
-        value: tl._id
-      })) || []
-    );
 
     setSelectedCoordinator(
       row.projectCoordinator?.map((pc) => ({
@@ -306,24 +300,52 @@ const Project = () => {
       })) || []
     );
 
-    setShowAssignModal(true);
-    fetchAssignUsers(row);
+    setShowAssipcgnModal(true);
+
+    fetchAssignpcUsers(row);
   };
-  const fetchAssignUsers = async (row) => {
+  const openAssignTeamModal = (row) => {
+    setSelectedProject(row);
+
+    setSelectedTLs(
+      row.teamLead?.map((tl) => ({
+        label: tl.name,
+        value: tl._id
+      })) || []
+    );
+    setShowAssignTeamModal(true);
+    fetchAssignTlUsers(row);
+  };
+  const fetchAssignTlUsers = async (row) => {
     try {
-      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(row.department)}`, {
-        withCredentials: true
-      });
+      const res = await axios.get(
+        `${api}/project-assign-users?department=${encodeURIComponent(row.department)}&reportingId=${row.projectManager?._id}&teamLead=true`,
+        {
+          withCredentials: true
+        }
+      );
 
       setTeamLeads(
-        res.data.teamLeads.map((u) => ({
+        res.data.data.map((u) => ({
           label: u.name,
           value: u._id
         }))
       );
+    } catch (err) {
+      toast.error('Failed to load assign users');
+    }
+  };
+  const fetchAssignpcUsers = async (row) => {
+    try {
+      const res = await axios.get(
+        `${api}/project-assign-users?department=${encodeURIComponent('Client Success')}&reportingId=${row.csprojectManager?._id}&coordinator=true`,
+        {
+          withCredentials: true
+        }
+      );
 
       setCoordinators(
-        res.data.coordinators.map((u) => ({
+        res.data.data.map((u) => ({
           label: u.name,
           value: u._id
         }))
@@ -343,26 +365,44 @@ const Project = () => {
       return;
     }
 
-    // Project Coordinator validation
+    try {
+      const res = await axios.post(
+        `${api}/project-assign-team?teamlead=true`,
+        {
+          projectId: selectedProject._id,
+          teamLeadIds: selectedTLs.map((tl) => tl.value)
+        },
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        toast.success('Team assigned successfully');
+        setShowAssignTeamModal(false);
+        getApiList(currentPage, perPage, search);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Assign failed');
+    }
+  };
+  const handleAssignpc = async () => {
     if (selectedCoordinator.length > 2) {
       toast.error('You can assign maximum 2 Project Coordinators');
       return;
     }
 
     try {
-      await axios.post(
-        `${api}/project-assign-team`,
+      const res = await axios.post(
+        `${api}/project-assign-team?coordinator=true`,
         {
           projectId: selectedProject._id,
-          teamLeadIds: selectedTLs.map((tl) => tl.value),
           projectCoordinatorId: selectedCoordinator.map((pc) => pc.value)
         },
         { withCredentials: true }
       );
-
-      toast.success('Team assigned successfully');
-      setShowAssignModal(false);
-      getApiList(currentPage, perPage, search);
+      if (res.status === 200) {
+        toast.success('Team assigned successfully');
+        setShowAssipcgnModal(false);
+        getApiList(currentPage, perPage, search);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Assign failed');
     }
@@ -444,7 +484,7 @@ const Project = () => {
       ignoreRowClick: true
     },
     {
-      name: 'Posted Date',
+      name: 'Posted On',
       width: '150px',
       cell: (row) => (row.createdAt ? format(new Date(row.createdAt), 'dd MMM yyyy') : '-'),
       ignoreRowClick: true
@@ -491,19 +531,23 @@ const Project = () => {
                 </span>
               </OverlayTrigger>
             )}
-            {permission?.[0]?.action?.includes('AssignTeam') &&
-              userDepartment !== 'Sales' &&
-              row?.isActive &&
-              (!row?.teamLead?.length || !row?.projectCoordinator) && (
-                <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign Team</Tooltip>}>
-                  <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignModal(row)}>
-                    <FaUserPlus size={18} color="#0d6efd" />
-                  </span>
-                </OverlayTrigger>
-              )}
+            {permission?.[0]?.action?.includes('AssignTeam') && userDepartment !== 'Sales' && row?.isActive && !row?.teamLead?.length && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign Team</Tooltip>}>
+                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignTeamModal(row)}>
+                  <FaUserPlus size={18} color="#0d6efd" />
+                </span>
+              </OverlayTrigger>
+            )}
+            {permission?.[0]?.action?.includes('AssignPc') && userDepartment !== 'Sales' && row?.isActive && !row?.projectCoordinator && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign PC</Tooltip>}>
+                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignpcModal(row)}>
+                  <FaUserPlus size={18} color="black" />
+                </span>
+              </OverlayTrigger>
+            )}
 
             {permission[0]?.action?.includes('Update') && (
-              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>View</Tooltip>}>
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>Edit</Tooltip>}>
                 <span>
                   <FiEdit
                     onClick={() => {
@@ -611,7 +655,7 @@ const Project = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      <Modal show={showAssignModal} onHide={() => setShowAssignModal(false)} centered>
+      <Modal show={showAssignTeamModal} onHide={() => setShowAssignTeamModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Add Project Team</Modal.Title>
         </Modal.Header>
@@ -634,7 +678,22 @@ const Project = () => {
               }}
             />
           </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAssignTeamModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="dark" onClick={handleAssignTeam}>
+            Add Team
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showAssignpcModal} onHide={() => setShowAssipcgnModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Project Coordinator</Modal.Title>
+        </Modal.Header>
 
+        <Modal.Body>
           {/* PROJECT COORDINATOR */}
           <Form.Group>
             <Form.Label>Project Coordinator</Form.Label>
@@ -653,12 +712,11 @@ const Project = () => {
             />
           </Form.Group>
         </Modal.Body>
-
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAssignModal(false)}>
+          <Button variant="secondary" onClick={() => setShowAssipcgnModal(false)}>
             Cancel
           </Button>
-          <Button variant="dark" onClick={handleAssignTeam}>
+          <Button variant="dark" onClick={handleAssignpc}>
             Add Team
           </Button>
         </Modal.Footer>

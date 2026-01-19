@@ -110,25 +110,31 @@ const routes = [
        {
         exact: 'true',
         path: '/Work-Report',
-        element: lazy(() => import('./views/ProjectManagement/WorkReport')),
+        element: lazy(() => import('./views/WorkReportMangement/WorkReport')),
         isPrivate: true
       },
        {
         exact: 'true',
         path: '/Add-Work-Report',
-        element: lazy(() => import('./views/ProjectManagement/WorkReportAdd')),
+        element: lazy(() => import('./views/WorkReportMangement/WorkReportAdd')),
         isPrivate: true
       },
        {
         exact: 'true',
         path: '/Edit-Work-Report',
-        element: lazy(() => import('./views/ProjectManagement/WorkReportEdit')),
+        element: lazy(() => import('./views/WorkReportMangement/WorkReportEdit')),
         isPrivate: true
       },
        {
         exact: 'true',
         path: '/work-report-details/:id',
-        element: lazy(() => import('./views/ProjectManagement/WrokReportDetaliis')),
+        element: lazy(() => import('./views/WorkReportMangement/WrokReportDetaliis')),
+        isPrivate: true
+      },
+       {
+        exact: 'true',
+        path: '/Escalations',
+        element: lazy(() => import('./views/Escalations/Escalation')),
         isPrivate: true
       },
       {

@@ -68,7 +68,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import navigation from '../../../menu-items';
 import { BASE_TITLE } from '../../../config/constant';
-
+import { IoIosHome } from 'react-icons/io';
 /**
  * Extract dynamic IDs manually from URL
  * Works even when React Router gives only "*"
@@ -144,20 +144,17 @@ const Breadcrumb = () => {
     setBreadcrumbs(matchedItems);
 
     if (matchedItems.length) {
-      document.title =
-        matchedItems[matchedItems.length - 1].title + BASE_TITLE;
+      document.title = matchedItems[matchedItems.length - 1].title + BASE_TITLE;
     }
   }, [location.pathname]);
 
   return (
     <div className="page-header mb-3">
-      <h5 className="fw-bold">
-        {breadcrumbs[breadcrumbs.length - 1]?.title || ''}
-      </h5>
+      <h5 className="fw-bold">{breadcrumbs[breadcrumbs.length - 1]?.title || ''}</h5>
 
       <div className="d-flex align-items-center text-muted flex-wrap">
-        <Link to="/" className=" me-2 text-muted">
-          <i className="feather icon-home" />
+        <Link to="/" className=" me-1 text-muted">
+          <IoIosHome className="me-1 pb-1"  size={20}/>
         </Link>
 
         {breadcrumbs.map((crumb, index) => {
@@ -168,10 +165,7 @@ const Breadcrumb = () => {
               {index !== breadcrumbs.length - 1 ? (
                 <>
                   {link ? (
-                    <Link
-                      to={link}
-                      className="text-muted text-decoration-none"
-                    >
+                    <Link to={link} className="text-muted text-decoration-none">
                       {crumb.title}
                     </Link>
                   ) : (
@@ -191,5 +185,3 @@ const Breadcrumb = () => {
 };
 
 export default Breadcrumb;
-
-

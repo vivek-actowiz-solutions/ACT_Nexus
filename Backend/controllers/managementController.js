@@ -139,6 +139,7 @@ const getusers = async (req, res) => {
       .collection("users")
       .aggregate([
         { $match: finalFilter }, // search filter
+            { $sort: { createdAt: -1 } },
         {
           $lookup: {
             from: "roles", // roles collection
@@ -178,6 +179,7 @@ const getusers = async (req, res) => {
         },
         { $skip: skip },
         { $limit: pageLimit },
+        { $sort: { createdAt: -1 } }, 
       ])
       .toArray();
 
@@ -238,7 +240,44 @@ const getReportingUsers = async (req, res) => {
         $lt: [{ $toInt: "$roleInfo.Rolelevel" }, currentRoleLevel],
       },
     };
+    if (currentRoleName === "Admin") {
+      matchCondition.$expr = {
+        $lt: [{ $toInt: "$roleInfo.Rolelevel" }, currentRoleLevel],
+      };
+    }
 
+    // 🔹 MANAGER → ONLY one level below
+    else if (currentRoleName === "Manager") {
+      if (!department) {
+        return res.status(400).json({
+          message: "department is required for Manager role",
+        });
+      }
+
+      matchCondition.$expr = {
+        $or: [
+          // 🔹 One level below Manager (no department restriction)
+          {
+            $eq: [{ $toInt: "$roleInfo.Rolelevel" }, currentRoleLevel - 1],
+          },
+
+          // 🔹 Same Manager level WITH department OR "baka"
+          {
+            $and: [
+              {
+                $eq: [{ $toInt: "$roleInfo.Rolelevel" }, currentRoleLevel],
+              },
+              {
+                $or: [
+                  { $eq: ["$department", department] },
+                  { $eq: ["$department", "Management"] },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+    }
     if (!["Admin", "Manager"].includes(currentRoleName)) {
       if (!department) {
         return res.status(400).json({

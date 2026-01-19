@@ -40,13 +40,17 @@ const getProject = async (req, res) => {
     if (Active !== undefined) {
       matchStage.isActive = Active === "true";
     }
-    if (rolelevel === 3) {
+    if (rolelevel === 3 && department === "Development") {
       matchStage.department = department;
       matchStage.projectManager = userId;
+      matchStage.projectTechManager = userId;
+    }
+    if (rolelevel === 3 && department === "Client Success") {
+      matchStage.csprojectManager = userId;
     }
     if (rolelevel === 4) {
-      matchStage.department = department;
-      matchStage.projectCoordinator = userId;
+      // matchStage.department = department;
+      matchStage.projectCoordinator =  { $in: [userId] }; //userId};
     }
     if (rolelevel === 5) {
       matchStage.department = department;
@@ -92,6 +96,21 @@ const getProject = async (req, res) => {
       {
         $unwind: {
           path: "$projectTechManager",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "csprojectManager",
+          foreignField: "_id",
+          pipeline: [{ $project: { _id: 1, name: 1 } }],
+          as: "csprojectManager",
+        },
+      },
+      {
+        $unwind: {
+          path: "$csprojectManager",
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -224,6 +243,21 @@ const getProjectbyId = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: "users",
+          localField: "csprojectManager",
+          foreignField: "_id",
+          pipeline: [{ $project: { name: 1, email: 1, roleId: 1 } }],
+          as: "csprojectManager",
+        },
+      },
+      {
+        $unwind: {
+          path: "$csprojectManager",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       /* ================= TEAM LEADS ================= */
       {
@@ -310,102 +344,111 @@ const getProjectbyId = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("ActionUserId", "name profileImage")
       .lean();
-const projectObjectId = new mongoose.Types.ObjectId(id);
+    const projectObjectId = new mongoose.Types.ObjectId(id);
 
-const developerEffort = await WorkReport.aggregate([
-  // 1️⃣ Match project
-  {
-    $match: {
-      "reports.projectId": projectObjectId,
-    },
-  },
+    const developerEffort = await WorkReport.aggregate([
+      // 1️⃣ Match project
+      {
+        $match: {
+          "reports.projectId": projectObjectId,
+        },
+      },
 
-  // 2️⃣ Unwind reports
-  {
-    $unwind: "$reports",
-  },
+      // 2️⃣ Unwind reports
+      {
+        $unwind: "$reports",
+      },
 
-  // 3️⃣ Match again
-  {
-    $match: {
-      "reports.projectId": projectObjectId,
-    },
-  },
+      // 3️⃣ Match again
+      {
+        $match: {
+          "reports.projectId": projectObjectId,
+        },
+      },
 
-  // 4️⃣ Lookup developer
-  {
-    $lookup: {
-      from: "users",
-      localField: "developerId",
-      foreignField: "_id",
-      as: "developer",
-    },
-  },
-  { $unwind: "$developer" },
+      // 4️⃣ Lookup developer
+      {
+        $lookup: {
+          from: "users",
+          localField: "developerId",
+          foreignField: "_id",
+          as: "developer",
+        },
+      },
+      { $unwind: "$developer" },
 
-  // 5️⃣ Convert HH:MM → minutes
-  {
-    $addFields: {
-      timeInMinutes: {
-        $add: [
-          {
-            $multiply: [
-              { $toInt: { $arrayElemAt: [{ $split: ["$reports.timeSpent", ":"] }, 0] } },
-              60,
+      // 5️⃣ Convert HH:MM → minutes
+      {
+        $addFields: {
+          timeInMinutes: {
+            $add: [
+              {
+                $multiply: [
+                  {
+                    $toInt: {
+                      $arrayElemAt: [
+                        { $split: ["$reports.timeSpent", ":"] },
+                        0,
+                      ],
+                    },
+                  },
+                  60,
+                ],
+              },
+              {
+                $toInt: {
+                  $arrayElemAt: [{ $split: ["$reports.timeSpent", ":"] }, 1],
+                },
+              },
             ],
           },
-          {
-            $toInt: { $arrayElemAt: [{ $split: ["$reports.timeSpent", ":"] }, 1] },
-          },
-        ],
+        },
       },
-    },
-  },
 
-  // 6️⃣ Group by developer
-  {
-    $group: {
-      _id: "$developer._id",
-      developerName: { $first: "$developer.name" },
-      totalMinutes: { $sum: "$timeInMinutes" },
-    },
-  },
+      // 6️⃣ Group by developer
+      {
+        $group: {
+          _id: "$developer._id",
+          developerName: { $first: "$developer.name" },
+          totalMinutes: { $sum: "$timeInMinutes" },
+        },
+      },
 
-  // 7️⃣ Convert minutes → HH:MM
-  {
-    $project: {
-      _id: 0,
-      developerName: 1,
-      totalTime: {
-        $concat: [
-          {
-            $toString: {
-              $floor: { $divide: ["$totalMinutes", 60] },
-            },
-          },
-          ":",
-          {
-            $cond: [
-              { $lt: [{ $mod: ["$totalMinutes", 60] }, 10] },
+      // 7️⃣ Convert minutes → HH:MM
+      {
+        $project: {
+          _id: 0,
+          developerName: 1,
+          totalTime: {
+            $concat: [
               {
-                $concat: [
-                  "0",
+                $toString: {
+                  $floor: { $divide: ["$totalMinutes", 60] },
+                },
+              },
+              ":",
+              {
+                $cond: [
+                  { $lt: [{ $mod: ["$totalMinutes", 60] }, 10] },
+                  {
+                    $concat: [
+                      "0",
+                      { $toString: { $mod: ["$totalMinutes", 60] } },
+                    ],
+                  },
                   { $toString: { $mod: ["$totalMinutes", 60] } },
                 ],
               },
-              { $toString: { $mod: ["$totalMinutes", 60] } },
             ],
           },
-        ],
+        },
       },
-    },
-  },
 
-  // 8️⃣ Sort by total time (optional)
-  {
-    $sort: { developerName: 1 },
-  },
-]);
+      // 8️⃣ Sort by total time (optional)
+      {
+        $sort: { developerName: 1 },
+      },
+    ]);
 
     console.log("workreport data", developerEffort);
 
@@ -413,7 +456,7 @@ const developerEffort = await WorkReport.aggregate([
       success: true,
       data: project[0],
       projectActivities,
-      workReports : developerEffort,
+      workReports: developerEffort,
     });
   } catch (error) {
     console.error("Get Project By ID Error:", error);
@@ -440,10 +483,12 @@ const ProjectIntegration = async (req, res) => {
       deliveryMode,
       IndustryType,
       department,
-      projectPriority,
+
+      // projectPriority,
       projectFrequencyConfig,
       projectManager,
       projectTechManager,
+      csprojectManager,
       salesPerson,
     } = req.body;
 
@@ -455,8 +500,9 @@ const ProjectIntegration = async (req, res) => {
       !projectManager ||
       !salesPerson ||
       !IndustryType ||
+      !csprojectManager ||
       !projectFrequencyConfig ||
-      !projectPriority ||
+      // !projectPriority ||
       !projectTechManager
     ) {
       return res.status(400).json({
@@ -514,13 +560,14 @@ const ProjectIntegration = async (req, res) => {
       deliveryMode,
       industryType: IndustryType,
       department,
-      projectPriority,
+      // projectPriority,
       projectFrequency: parsedProjectFrequency,
       sowDocument: sowDocumentPaths,
       inputDocument: inputDocumentPaths,
       annotationDocument: annotationDocumentPaths,
       projectTechManager,
       projectManager,
+      csprojectManager,
       bde: salesPerson,
       status: "New",
       isActive: true,
@@ -759,8 +806,7 @@ const Projectstatusupdate = async (req, res) => {
 
 const getassignusers = async (req, res) => {
   const rolelevel = req.user.Rolelevel;
-  const userId = new mongoose.Types.ObjectId(req.user.id);
-  const { department } = req.query;
+  const { department, reportingId, coordinator, teamLead } = req.query;
 
   try {
     const tlRole = await mongoose.connection.db
@@ -772,35 +818,31 @@ const getassignusers = async (req, res) => {
     if (!tlRole) {
       return res.status(404).json({ message: "TL role not found" });
     }
+    let filter = {};
 
-    const filterTl = {
-      roleId: tlRole._id,
-      department: department,
-      status: true,
-    };
-    const filterPc = {
-      roleId: pcRole._id,
-
-      status: true,
-    };
-
-    if (rolelevel === 3) {
-      filterTl.reportingTo = userId;
+    if (teamLead) {
+      filter = {
+        roleId: tlRole._id,
+        department: department,
+        reportingTo: new mongoose.Types.ObjectId(reportingId),
+        status: true,
+      };
+    }
+    if (coordinator) {
+      filter = {
+        roleId: pcRole._id,
+        department: department,
+        reportingTo: new mongoose.Types.ObjectId(reportingId),
+        status: true,
+      };
     }
 
     // 4️⃣ Fetch users
-    const teamLeads = await User.find(filterTl)
-      .select("_id name ")
-      .sort({ name: 1 });
-    const coordinators = await User.find(filterPc)
-      .select("_id name ")
-      .sort({ name: 1 });
-
-    console.log("TeamLeads", teamLeads);
+    const data = await User.find(filter).select("_id name ").sort({ name: 1 });
+    console.log("data", data);
     return res.status(200).json({
       success: true,
-      teamLeads: teamLeads,
-      coordinators: coordinators,
+      data: data,
     });
   } catch (error) {
     console.error("getTeamLeads error:", error);
@@ -811,11 +853,13 @@ const getassignusers = async (req, res) => {
   }
 };
 const assignteam = async (req, res) => {
-  console.log("req.body", req.body);
-
   try {
-    const { projectId, teamLeadIds = [], projectCoordinatorId = [] } = req.body;
-    console.log(req.body);
+    const { teamlead, coordinator } = req.query;
+    const {
+      projectId,
+      teamLeadIds = [],
+      projectCoordinatorId = [],
+    } = req.body;
 
     // ---------------- VALIDATION ----------------
     if (!projectId) {
@@ -825,45 +869,50 @@ const assignteam = async (req, res) => {
       });
     }
 
-    if (teamLeadIds.length === 0 || teamLeadIds.length > 3) {
-      return res.status(400).json({
-        success: false,
-        message: "Minimum 1 and maximum 3 Team Leads allowed",
-      });
+    if (teamlead === "true") {
+      if (teamLeadIds.length === 0 || teamLeadIds.length > 3) {
+        return res.status(400).json({
+          success: false,
+          message: "Minimum 1 and maximum 3 Team Leads allowed",
+        });
+      }
     }
 
-    if (projectCoordinatorId.length > 2) {
-      return res.status(400).json({
-        success: false,
-        message: "Maximum 2 Project Coordinators allowed",
-      });
+    if (coordinator === "true") {
+      if (projectCoordinatorId.length > 2) {
+        return res.status(400).json({
+          success: false,
+          message: "Maximum 2 Project Coordinators allowed",
+        });
+      }
     }
 
     const projId = new mongoose.Types.ObjectId(projectId);
 
-    // Convert IDs to ObjectId
-    const teamLeadObjectIds = teamLeadIds.map(
-      (id) => new mongoose.Types.ObjectId(id)
-    );
+    const updateQuery = {
+      $addToSet: {},
+    };
 
-    const projectCoordinatorObjectIds = projectCoordinatorId.map(
-      (id) => new mongoose.Types.ObjectId(id)
-    );
+    // ---------------- CONDITIONAL ASSIGNMENT ----------------
+    if (teamlead === "true") {
+      updateQuery.$addToSet.teamLead = {
+        $each: teamLeadIds.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+            updateQuery.$set = { status: "Under Development" };
+    }
+
+    if (coordinator === "true") {
+      updateQuery.$addToSet.projectCoordinator = {
+        $each: projectCoordinatorId.map(
+          (id) => new mongoose.Types.ObjectId(id)
+        ),
+      };
+    }
 
     // ---------------- UPDATE PROJECT ----------------
     const updatedProject = await Project.findByIdAndUpdate(
       projId,
-      {
-        $set: {
-          status: "Under Development",
-        },
-
-        // Prevent duplicates
-        $addToSet: {
-          teamLead: { $each: teamLeadObjectIds },
-          projectCoordinator: { $each: projectCoordinatorObjectIds },
-        },
-      },
+      updateQuery,
       { new: true }
     ).populate("teamLead projectCoordinator");
 
@@ -875,21 +924,42 @@ const assignteam = async (req, res) => {
     }
 
     // ---------------- ACTIVITY LOG ----------------
-    const newData = {
-      teamLead: updatedProject.teamLead.map((tl) => tl.name),
-      projectCoordinator: updatedProject.projectCoordinator.map(
-        (pc) => pc.name
-      ),
-    };
+    let activityTitle = "";
+    let newData = {};
 
-    await logProjectActivity({
-      userid: req.user.id,
-      username: req.user.name,
-      projectId: updatedProject._id,
-      newData,
-      actionTitle: "Team Leads & Project Coordinators Assigned",
-    });
+    if (teamlead === "true" && coordinator === "true") {
+      activityTitle = "Team Leads & Project Coordinators Assigned";
+      newData = {
+        teamLead: updatedProject.teamLead.map((tl) => tl.name),
+        projectCoordinator: updatedProject.projectCoordinator.map(
+          (pc) => pc.name
+        ),
+      };
+    } else if (teamlead === "true") {
+      activityTitle = "Team Leads Assigned";
+      newData = {
+        teamLead: updatedProject.teamLead.map((tl) => tl.name),
+      };
+    } else if (coordinator === "true") {
+      activityTitle = "Project Coordinators Assigned";
+      newData = {
+        projectCoordinator: updatedProject.projectCoordinator.map(
+          (pc) => pc.name
+        ),
+      };
+    }
 
+    if (activityTitle) {
+      await logProjectActivity({
+        userid: req.user.id,
+        username: req.user.name,
+        projectId: updatedProject._id,
+        newData,
+        actionTitle: activityTitle,
+      });
+    }
+
+    // ---------------- STATUS ACTIVITY ----------------
     await logProjectActivity({
       userid: req.user.id,
       username: req.user.name,
@@ -901,15 +971,14 @@ const assignteam = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Team Leads & Project Coordinators assigned successfully",
+      message: activityTitle || "Project updated successfully",
       data: updatedProject,
     });
   } catch (error) {
     console.error("assign project TL/PC error:", error);
-    console.log("error", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to assign Team Leads / Project Coordinators",
+      message: "Failed to assign team",
     });
   }
 };
@@ -917,6 +986,7 @@ const createFeed = async (req, res) => {
   const {
     projectId,
     platformName,
+    feedPriority,
     scopeType,
     platformType,
     frequencyType,
@@ -967,6 +1037,7 @@ const createFeed = async (req, res) => {
     projectId: projectId,
     feedName: FeedName,
     feedCode,
+    feedPriority,
     platformName,
     platformType,
     scopeType,

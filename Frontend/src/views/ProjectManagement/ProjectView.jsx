@@ -6,7 +6,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import dayjs from 'dayjs';
 import { FaCheckCircle, FaEdit, FaPlusCircle } from 'react-icons/fa';
 import { FaRegUserCircle } from 'react-icons/fa';
-import { IoMdTime } from "react-icons/io";
+import { IoMdTime } from 'react-icons/io';
 import { api } from 'views/api';
 
 /* ===== ICONS ===== */
@@ -105,6 +105,7 @@ const ProjectView = () => {
     annotationDocument = [],
     projectManager,
     projectTechManager,
+    csprojectManager,
     projectCoordinator,
     bde,
     teamLead,
@@ -243,7 +244,7 @@ const ProjectView = () => {
                           {projectFrequency?.deliveryTime}
                         </small>
                       )}
-                      {(projectFrequency?.frequencyType === 'Custom') && (
+                      {projectFrequency?.frequencyType === 'Custom' && (
                         <small className="text-muted">
                           {' '}
                           {projectFrequency?.deliveryDate} On {projectFrequency?.deliveryTime}
@@ -313,7 +314,11 @@ const ProjectView = () => {
                   style={{ cursor: 'pointer', minHeight: '120px' }}
                   onClick={() => setShowWorkModal(true)}
                 >
-                  <small className="text-semibold d-flex align-items-center gap-1"> <IoMdTime />Overall Effort</small>
+                  <small className="text-semibold d-flex align-items-center gap-1">
+                    {' '}
+                    <IoMdTime />
+                    Overall Effort
+                  </small>
                   <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
                 </Card>
               </Col>
@@ -353,14 +358,14 @@ const ProjectView = () => {
                 </Button>
               </Col>
             </Row>
-            <Row className="py-2 border-bottom align-items-center">
+            {/* <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
                 Priority:
               </Col>
               <Col md={8} className="content-between-end">
                 {projectPriority}
               </Col>
-            </Row>
+            </Row> */}
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
                 Industry:
@@ -516,7 +521,7 @@ const ProjectView = () => {
               >
                 {/* ===== PROJECT MANAGER ===== */}
                 {bde && (
-                  <div className="mb-3 p-2 rounded border-start border-4 border-danger bg-light">
+                  <div className="mb-3 p-1 rounded border-start border-4 border-danger bg-light">
                     <h6 className="mb-2" style={{ color: '#6f42c1' }}>
                       Business Development Executive
                     </h6>
@@ -541,7 +546,7 @@ const ProjectView = () => {
                   </div>
                 )}
                 {projectManager && (
-                  <div className="mb-3 p-2 rounded border-start border-4 border-primary bg-light">
+                  <div className="mb-3 p-1 rounded border-start border-4 border-primary bg-light">
                     <h6 className="fw-bold text-primary mb-2">Project Manager</h6>
                     <div className="d-flex align-items-center gap-2">
                       <div
@@ -565,7 +570,7 @@ const ProjectView = () => {
 
                 {/* ===== TECH MANAGER ===== */}
                 {projectTechManager && (
-                  <div className="mb-3 p-2 rounded border-start border-4 border-purple bg-light">
+                  <div className="mb-3 p-1 rounded border-start border-4 border-purple bg-light">
                     <h6 className="fw-bold mb-2" style={{ color: '#6f42c1' }}>
                       Technical Manager
                     </h6>
@@ -584,6 +589,30 @@ const ProjectView = () => {
                       </div>
                       <div>
                         <small className="fs-6 ">{projectTechManager.name}</small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {csprojectManager && (
+                  <div className="mb-3 p-1 rounded border-start border-4 border-purple bg-light">
+                    <h6 className="fw-bold mb-2" style={{ color: '#6f42c1' }}>
+                      Client Success Manager
+                    </h6>
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="rounded-circle d-flex justify-content-center align-items-center text-white"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          backgroundColor: '#6f42c1',
+                          fontWeight: 'bold',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        {csprojectManager?.name?.charAt(0).toUpperCase() || 'B'}
+                      </div>
+                      <div>
+                        <small className="fs-6 ">{csprojectManager.name}</small>
                       </div>
                     </div>
                   </div>
@@ -613,7 +642,7 @@ const ProjectView = () => {
                   </div>
                 )} */}
                 {projectCoordinator?.length > 0 && (
-                  <div className="mb-3 p-2 rounded border-start border-4 border-info bg-light">
+                  <div className="mb-3 p-1 rounded border-start border-4 border-info bg-light">
                     <h6 className="fw-bold text-info mb-2">Project Coordinator</h6>
 
                     <Row className="g-2">
@@ -641,7 +670,7 @@ const ProjectView = () => {
                 )}
                 {/* ===== TEAM LEADS ===== */}
                 {teamLead?.length > 0 && (
-                  <div className="mb-3 p-2 rounded border-start border-4 border-info bg-light">
+                  <div className="mb-3 p-1 rounded border-start border-4 border-info bg-light">
                     <h6 className="fw-bold text-info mb-2">Team Leads</h6>
 
                     <Row className="g-2">
@@ -671,7 +700,7 @@ const ProjectView = () => {
                 {/* ===== DEVELOPERS ===== */}
 
                 {developers?.length > 0 && (
-                  <div className="p-2 rounded border-start border-4 border-warning bg-light">
+                  <div className="p-1 rounded border-start border-4 border-warning bg-light">
                     <h6 className="fw-bold text-warning mb-2">Developers</h6>
                     <Row className="g-2">
                       {developers.map((dev, i) => (

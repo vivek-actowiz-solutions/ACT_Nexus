@@ -74,6 +74,7 @@ const FeedView = () => {
     platformName,
     platformType,
     scopeType,
+    feedPriority,
     feedfrequency,
     developers = [],
     countries = [],
@@ -239,6 +240,12 @@ const FeedView = () => {
                 Scope Type :
               </Col>
               <Col md={8}>{scopeType}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Feed Priority :
+              </Col>
+              <Col md={8}>{feedPriority}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">

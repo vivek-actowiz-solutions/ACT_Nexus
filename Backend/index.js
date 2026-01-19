@@ -18,6 +18,7 @@ const settingsRoutes = require("./routes/managementRoutes");
 const projectRoutes = require("./routes/ProjectRoutes");
 const workReportRoutes = require("./routes/WorkReportRoutes");
 const dashboardRoutes = require("./routes/DashboardRoutes");
+const escalationRoutes = require("./routes/EscalationRoutes");
 
 const app = express();
 const path = require('path');
@@ -84,6 +85,7 @@ app.use("/api", projectRoutes);
 app.use("/api", settingsRoutes);
 app.use("/api", workReportRoutes);
 app.use("/api", dashboardRoutes);
+app.use("/api", escalationRoutes);
 
 
 /* ===============================

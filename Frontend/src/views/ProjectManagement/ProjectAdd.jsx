@@ -61,7 +61,7 @@ const industryOptions = [
   { label: 'Music & Audio Streaming', value: 'Music' }
 ];
 const departments = [
-  { label: 'Operation', value: 'Operation' },
+  { label: 'Development', value: 'Development' },
   { label: 'R&D', value: 'R&D' }
 ];
 const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => ({ label: d, value: d }));
@@ -73,6 +73,7 @@ const CreateProject = () => {
   const [loading, setLoading] = useState(false);
   const [Manager, setManager] = useState([]);
   const [sales, setSales] = useState([]);
+  const [csManager, setcsManager] = useState([]);
 
   const [sowFile, setSowFile] = useState([]);
   const [inputFile, setInputFile] = useState([]);
@@ -86,10 +87,11 @@ const CreateProject = () => {
     deliveryMode: '',
     IndustryType: '',
     department: '',
-    projectPriority: 'Medium',
+    // projectPriority: 'Medium',
     projectFrequency: '',
     projectManager: null,
     projectTechManager: null,
+    csprojectManager: null,
     salesPerson: null
   });
   console.log('formdata', formData);
@@ -115,6 +117,7 @@ const CreateProject = () => {
 
   useEffect(() => {
     fetchSales('Sales');
+    fetchcsmanager('Client Success');
   }, []);
 
   const fetchmanager = async (department) => {
@@ -138,8 +141,23 @@ const CreateProject = () => {
       toast.error('Failed to fetch users');
     }
   };
+  const fetchcsmanager = async (department) => {
+    try {
+      const res = await axios.get(`${api}/users-list?department=${encodeURIComponent(department)}&manager=true`, {
+        withCredentials: true
+      });
+      console.log("csManager" , res.data.data || []);
+      setcsManager(res.data.data || []);
+    } catch {
+      toast.error('Failed to fetch users');
+    }
+  };
 
   const ManagerOptions = Manager.map((u) => ({
+    value: u._id,
+    label: u.name
+  }));
+  const csManagerOptions = csManager.map((u) => ({
     value: u._id,
     label: u.name
   }));
@@ -181,10 +199,10 @@ const CreateProject = () => {
       return false;
     }
 
-    if (!formData.projectPriority) {
-      toast.error('Project Priority is required');
-      return false;
-    }
+    // if (!formData.projectPriority) {
+    //   toast.error('Project Priority is required');
+    //   return false;
+    // }
 
     if (!formData.projectFrequency) {
       toast.error('Project Frequency is required');
@@ -193,6 +211,10 @@ const CreateProject = () => {
 
     if (!formData.projectManager) {
       toast.error('Project Manager is required');
+      return false;
+    }
+    if (!formData.csprojectManager) {
+      toast.error('CS Manager is required');
       return false;
     }
     if (!formData.projectTechManager) {
@@ -259,8 +281,9 @@ const CreateProject = () => {
         deliveryMode: formData.deliveryMode,
         IndustryType: formData.IndustryType,
         department: formData.department,
-        projectPriority: formData.projectPriority,
+        // projectPriority: formData.projectPriority,
         projectManager: formData.projectManager?.value,
+        csprojectManager: formData.csprojectManager?.value,
         projectTechManager: formData.projectTechManager?.value,
         salesPerson: formData.salesPerson?.value
       };
@@ -310,9 +333,10 @@ const CreateProject = () => {
           deliveryMode: '',
           IndustryType: '',
           department: '',
-          projectPriority: 'Medium',
+          // projectPriority: 'Medium',
           projectFrequency: '',
           projectManager: null,
+          csprojectManager: null,
           projectTechManager: null,
           salesPerson: null
         });
@@ -393,32 +417,33 @@ const CreateProject = () => {
   };
   const generateProjectCode = () => {
     const managerCode = formData.projectManager ? getManagerCode(formData.projectManager.label) : 'XX';
+    const bdecode = formData.salesPerson ? getManagerCode(formData.salesPerson.label) : 'XX';
     const random4Digit = Math.floor(1000 + Math.random() * 9000);
 
-    const code = `ACT-${managerCode}${random4Digit}`;
-
+    const code = `ACT-${bdecode}${managerCode}-${random4Digit}`;
+//ACT-ARSS-1334
     setFormData((prev) => ({
       ...prev,
       projectCode: code
     }));
   };
-  const handleCodeEdit = (e) => {
-    // extract only digits (max 4)
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+const handleCodeEdit = (e) => {
+  // Get only digits (max 4)
+  const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
 
-    // extract prefix ACT-MA
-    const match = (formData.projectcode || '').match(/^([A-Z]+-[A-Z]+)\d*/);
+  // Extract prefix: ACT-BDE-MGR
+  const match = (formData.projectCode || '').match(/^([A-Z]+-[A-Z]+-[A-Z]+)/);
 
-    const prefix = match ? match[1] : 'ACT-XX';
+  const prefix = match ? match[1] : 'ACT-XX-XX';
 
-    setFormData((prev) => ({
-      ...prev,
-      projectCode: `${prefix}${digits}`
-    }));
-  };
+  setFormData((prev) => ({
+    ...prev,
+    projectCode: `${prefix}${digits}`
+  }));
+};
   useEffect(() => {
     generateProjectCode();
-  }, [formData.projectManager]);
+  }, [formData.projectManager || '', formData.salesPerson || '']);
   const getManagerCode = (name = '') => {
     console.log('name', name);
     const words = name.trim().split(' ').filter(Boolean);
@@ -622,7 +647,7 @@ const CreateProject = () => {
           </Row>
 
           <Row className="mb-3">
-            <Col md={4}>
+            <Col md={3}>
               <Form.Label className="required">Delivery Type</Form.Label>
               <Select
                 options={deliveryOptions}
@@ -631,7 +656,7 @@ const CreateProject = () => {
                 isClearable
               />
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Label className="required">Delivery Mode</Form.Label>
               <Select
                 options={deliveryModeOptions}
@@ -640,7 +665,27 @@ const CreateProject = () => {
                 isClearable
               />
             </Col>
-            <Col md={4}>
+                    
+
+            <Col md={3}>
+              <Form.Label className="required">BDE (Bussiness Development Executive)</Form.Label>
+              <Select
+                options={SalesOptions}
+                value={formData.salesPerson}
+                onChange={(v) => setFormData({ ...formData, salesPerson: v })}
+                isClearable
+              />
+            </Col>
+             <Col md={3}>
+              <Form.Label className="required">Client Success Manager</Form.Label>
+              <Select
+                options={csManagerOptions}
+                value={formData.csprojectManager}
+                onChange={(v) => setFormData({ ...formData, csprojectManager: v })}
+                isClearable
+              />
+            </Col>
+            {/* <Col md={4}>
               <Form.Label className="required"> Project Priority</Form.Label>
               <Select
                 options={priorityOptions}
@@ -648,7 +693,7 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, projectPriority: v.value })}
                 isClearable
               />
-            </Col>
+            </Col> */}
           </Row>
 
           <Row className="mb-3">
@@ -690,16 +735,7 @@ const CreateProject = () => {
                 isClearable
               />
             </Col>
-
-            <Col md={3}>
-              <Form.Label className="required">BDE (Bussiness Development Executive)</Form.Label>
-              <Select
-                options={SalesOptions}
-                value={formData.salesPerson}
-                onChange={(v) => setFormData({ ...formData, salesPerson: v })}
-                isClearable
-              />
-            </Col>
+   
           </Row>
 
           <Row className="mb-3">

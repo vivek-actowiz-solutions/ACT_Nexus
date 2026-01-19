@@ -20,7 +20,7 @@ router.get(
   RolePermissionMiddleware("WorkReport"),
   GetWorkReports
 );
-router.get("/project-workreport", getprojectworkreport);
+router.get("/project-workreport",protect, getprojectworkreport);
 router.get("/work-report-details", getworkreportDetails);
 router.get("/work-list-workreport", protect, getworklistbydate);
 router.get("/Feeds-list-workreport/:id", protect, getFeedsByProjectworkreport);

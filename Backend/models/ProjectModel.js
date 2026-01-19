@@ -53,10 +53,10 @@ const projectSchema = new mongoose.Schema(
       required: true,
     },
 
-    projectPriority: {
-      type: String,
-      default: "Medium",
-    },
+    // projectPriority: {
+    //   type: String,
+    //   default: "Medium",
+    // },
 
     projectFrequency: {
       frequencyType: {
@@ -81,6 +81,11 @@ const projectSchema = new mongoose.Schema(
       },
     },
     projectManager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    csprojectManager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,

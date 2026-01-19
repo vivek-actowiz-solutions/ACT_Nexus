@@ -32,7 +32,7 @@ const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sat
 const platformTypeOptions = [
   { label: 'Web', value: 'Web' },
   { label: 'App', value: 'App' },
-  { label: 'Mobile Web (MWeb)', value: 'Mobile Web (MWeb)' },
+  { label: 'Mobile Web (MWeb)', value: 'MWeb' },
   { label: 'Web & App', value: 'Web & App' }
 ];
 
@@ -42,6 +42,12 @@ const scopeTypeOptions = [
   { label: 'By Review', value: 'By Review' },
   { label: 'By Category', value: 'By Category' }
 ];
+const feedPriorityOptions = [
+  { label: 'High', value: 'High' },
+  { label: 'Medium', value: 'Medium' },
+  { label: 'Low', value: 'Low' }
+];
+
 const feedStatusOptions = [
   { label: 'Scheduled', value: 'Scheduled' },
   { label: 'New', value: 'New' },
@@ -53,26 +59,20 @@ const feedStatusOptions = [
   { label: 'Waiting from Client', value: 'Waiting from Client' },
   { label: 'Blocking Issue', value: 'Blocking Issue' },
 
-
   { label: 'Crawl Running', value: 'Crawl Running' },
   { label: 'Crawl Finished', value: 'Crawl Finished' },
-
 
   { label: 'In QA', value: 'In QA' },
   { label: 'QA Passed', value: 'QA Passed' },
 
-
   { label: 'Sample Delivered', value: 'Sample Delivered' },
   { label: 'Sample Approved', value: 'Sample Approved' },
-
 
   { label: 'BAU', value: 'BAU' },
   { label: 'Once off Delivered', value: 'Once off Delivered' },
 
- 
   { label: 'Able to Recover', value: 'Able to Recover' },
   { label: 'Feed missed', value: 'Feed missed' },
-
 
   { label: 'Close', value: 'Close' }
 ];
@@ -125,6 +125,7 @@ const ApiconfigrationList = () => {
     // industryType: '',
     platformType: '',
     scopeType: '',
+    feedPriority: 'Medium',
     // deliveryType: '',
     frequencyType: '',
     countries: [],
@@ -151,6 +152,7 @@ const ApiconfigrationList = () => {
     platformName: '',
     platformType: '',
     scopeType: '',
+    feedPriority: '',
     frameworkType: '',
     frequencyType: '',
     countries: [],
@@ -226,6 +228,10 @@ const ApiconfigrationList = () => {
       toast.error('Platform Type is required');
       return false;
     }
+    if (!formData.feedPriority) {
+      toast.error('Feed Priority is required');
+      return false;
+    }
 
     if (!formData.countries || formData.countries.length === 0) {
       toast.error('Please select at least one country');
@@ -289,6 +295,7 @@ const ApiconfigrationList = () => {
         platformName: '',
         // industryType: '',
         platformType: '',
+        feedPriority: '',
         // deliveryType: '',
         frequency: '',
         countries: [],
@@ -360,6 +367,7 @@ const ApiconfigrationList = () => {
       platformName: feed.platformName || '',
       platformType: feed.platformType || '',
       scopeType: feed.scopeType || '',
+      feedPriority: feed.feedPriority || '',
       frameworkType: feed.frameworkType || '',
       frequencyType: feed.feedfrequency?.frequencyType || '',
       countries: feed.countries || [],
@@ -431,6 +439,10 @@ const ApiconfigrationList = () => {
       toast.error('Scope Type is required');
       return false;
     }
+    if ('feedPriority' in changes && !changes.feedPriority) {
+      toast.error('Scope Type is required');
+      return false;
+    }
 
     // 🔹 Countries
     if ('countries' in changes && (!changes.countries || !changes.countries.length)) {
@@ -492,6 +504,7 @@ const ApiconfigrationList = () => {
       platformName: editFormData.platformName,
       platformType: editFormData.platformType,
       scopeType: editFormData.scopeType,
+      feedPriority: editFormData.feedPriority,
       frameworkType: editFormData.frameworkType,
       description: editFormData.description,
       countries: editFormData.countries,
@@ -507,6 +520,7 @@ const ApiconfigrationList = () => {
       platformName: editFeed.platformName,
       platformType: editFeed.platformType,
       scopeType: editFeed.scopeType,
+      feedPriority: editFeed.feedPriority,
       frameworkType: editFeed.frameworkType,
       description: editFeed.description,
       countries: editFeed.countries,
@@ -938,26 +952,31 @@ const ApiconfigrationList = () => {
     },
     {
       name: 'Active',
-      cell: (row) => (
-        <>
-          {permission[0]?.action?.includes('FeedUpdate') ? (
+      cell: (row) => {
+        const isActive = row.active;
+        const hasPermission = permission[0]?.action?.includes('FeedUpdate');
+
+        return (
+          <div className="d-flex justify-content-center">
             <Button
               size="sm"
-              variant={row.active ? 'success' : 'danger'}
-              onClick={() => {
-                setSelectedFeed(row);
-                setShowStatusModal(true);
-              }}
+              variant={isActive ? 'success' : 'danger'}
+              onClick={
+                hasPermission
+                  ? () => {
+                      setSelectedFeed(row);
+                      setShowStatusModal(true);
+                    }
+                  : undefined
+              }
+              className="text-truncate"
+              style={{ minWidth: '80px' }} // ensures button doesn't shrink too much on small screens
             >
-              {row.active ? 'Active' : 'Inactive'}
+              {isActive ? 'Active' : 'Inactive'}
             </Button>
-          ) : (
-            <Button size="sm" variant={row.active ? 'success' : 'danger'}>
-              {row.active ? 'Active' : 'Inactive'}
-            </Button>
-          )}
-        </>
-      )
+          </div>
+        );
+      }
     },
     {
       name: 'Action',
@@ -1080,156 +1099,163 @@ const ApiconfigrationList = () => {
                 <Select options={deliveryOptions} onChange={(v) => setFormData({ ...formData, deliveryType: v.value })} />
               </Form.Group>
             </Col> */}
-
-            <Col md={4} className="mt-3">
-              <Form.Label className="required">Frequency</Form.Label>
-              <Select
-                options={frequencyOptions}
-                value={frequencyOptions.find((o) => o.value === formData.frequencyType)}
-                onChange={handleFrequencyChange}
-                isClearable
-              />
-            </Col>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              {formData.frequencyType === 'Weekly' && (
-                <Col md={4} className="mt-3">
-                  <Form.Label className="required">Delivery Day</Form.Label>
-                  <Select
-                    options={dayOptions}
-                    value={dayOptions.find((d) => d.value === schedule.day) || null}
-                    onChange={(v) => setSchedule({ ...schedule, day: v?.value || '' })}
-                    isClearable
-                  />
-                </Col>
-              )}
-              {formData.frequencyType === 'Bi-Weekly' && (
-                <Col md={4} className="mt-3">
-                  <Form.Label className="required">Delivery Day(s)</Form.Label>
-                  <Select
-                    options={dayOptions}
-                    value={dayOptions.filter((d) => schedule.day?.split(',').includes(d.value))}
-                    onChange={(selectedOptions) => {
-                      if (selectedOptions && selectedOptions.length > 2) {
-                        toast.error('You can select only 2 days'); // Or any alert method
-                        return;
-                      }
-                      setSchedule({
-                        ...schedule,
-                        day: selectedOptions ? selectedOptions.map((opt) => opt.value).join(',') : ''
-                      });
-                    }}
-                    isClearable
-                    isMulti
-                    placeholder="Select up to 2 days"
-                  />
-                </Col>
-              )}
-
-              {/* BI-WEEKLY / BI-MONTHLY → FIRST DATE */}
-              {['Bi-Monthly'].includes(formData.frequencyType) && (
-                <Col md={2} className="mt-3">
-                  <Form.Label className="required">First Date</Form.Label>
-                  <DatePicker
-                    views={['day']} // Only day selection
-                    value={schedule.firstDate ? dayjs().date(parseInt(schedule.firstDate)) : null}
-                    onChange={(v) =>
-                      setSchedule({
-                        ...schedule,
-                        firstDate: v ? dayjs(v).format('DD') : ''
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                    inputFormat="DD"
-                  />
-                </Col>
-              )}
-
-              {['Bi-Monthly'].includes(formData.frequencyType) && (
-                <Col md={2} className="mt-3">
-                  <Form.Label className="required">Second Date</Form.Label>
-                  <DatePicker
-                    views={['day']} // Only day selection
-                    value={schedule.secondDate ? dayjs().date(parseInt(schedule.secondDate)) : null}
-                    onChange={(v) =>
-                      setSchedule({
-                        ...schedule,
-                        secondDate: v ? dayjs(v).format('DD') : ''
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                    inputFormat="DD"
-                  />
-                </Col>
-              )}
-              {/* MONTHLY */}
-              {['Custom'].includes(formData.frequencyType) && (
-                <Col md={4} className="mt-3">
-                  <Form.Label className="required">Delivery Date</Form.Label>
-                  <DatePicker
-                    value={schedule.date ? dayjs(schedule.date, 'YYYY-MM-DD') : null}
-                    format="YYYY-MM-DD"
-                    minDate={dayjs()}
-                    onChange={(v) =>
-                      setSchedule({
-                        ...schedule,
-                        date: v ? dayjs(v).format('YYYY-MM-DD') : ''
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                  />
-                </Col>
-              )}
-              {['Monthly'].includes(formData.frequencyType) && (
-                <Col md={4} className="mt-3">
-                  <Form.Label className="required">Delivery Date</Form.Label>
-                  <DatePicker
-                    views={['day']} // Only allow selecting the day
-                    value={schedule.date ? dayjs().date(parseInt(schedule.date)) : null} // show selected day
-                    onChange={(v) =>
-                      setSchedule({
-                        ...schedule,
-                        date: v ? dayjs(v).format('DD') : '' // store day as string
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                    inputFormat="DD"
-                  />
-                </Col>
-              )}
-
-              {/* TIME → ALWAYS */}
-              {formData.frequencyType && (
-                <Col md={4} className="mt-3">
-                  <Form.Label className="required">Delivery Time</Form.Label>
-                  <TimePicker
-                    ampm={false}
-                    value={schedule.time}
-                    onChange={(v) => setSchedule({ ...schedule, time: v })}
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                  />
-                </Col>
-              )}
-            </LocalizationProvider>
-
-            <Col md={12} className="mt-3">
-              <Form.Group>
-                <Form.Label className="required">Country </Form.Label>
+            <Row>
+              <Col md={4} className="mt-3">
+                <Form.Label className="required">Frequency</Form.Label>
                 <Select
-                  options={countryList}
-                  isMulti
-                  onChange={(v) =>
-                    setFormData({
-                      ...formData,
-                      countries: v.map((c) => ({
-                        name: c.label,
-                        code: c.value
-                      }))
-                    })
-                  }
+                  options={frequencyOptions}
+                  value={frequencyOptions.find((o) => o.value === formData.frequencyType)}
+                  onChange={handleFrequencyChange}
+                  isClearable
                 />
-              </Form.Group>
-            </Col>
+              </Col>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                {formData.frequencyType === 'Weekly' && (
+                  <Col md={4} className="mt-3">
+                    <Form.Label className="required">Delivery Day</Form.Label>
+                    <Select
+                      options={dayOptions}
+                      value={dayOptions.find((d) => d.value === schedule.day) || null}
+                      onChange={(v) => setSchedule({ ...schedule, day: v?.value || '' })}
+                      isClearable
+                    />
+                  </Col>
+                )}
+                {formData.frequencyType === 'Bi-Weekly' && (
+                  <Col md={4} className="mt-3">
+                    <Form.Label className="required">Delivery Day(s)</Form.Label>
+                    <Select
+                      options={dayOptions}
+                      value={dayOptions.filter((d) => schedule.day?.split(',').includes(d.value))}
+                      onChange={(selectedOptions) => {
+                        if (selectedOptions && selectedOptions.length > 2) {
+                          toast.error('You can select only 2 days'); // Or any alert method
+                          return;
+                        }
+                        setSchedule({
+                          ...schedule,
+                          day: selectedOptions ? selectedOptions.map((opt) => opt.value).join(',') : ''
+                        });
+                      }}
+                      isClearable
+                      isMulti
+                      placeholder="Select up to 2 days"
+                    />
+                  </Col>
+                )}
 
+                {/* BI-WEEKLY / BI-MONTHLY → FIRST DATE */}
+                {['Bi-Monthly'].includes(formData.frequencyType) && (
+                  <Col md={2} className="mt-3">
+                    <Form.Label className="required">First Date</Form.Label>
+                    <DatePicker
+                      views={['day']} // Only day selection
+                      value={schedule.firstDate ? dayjs().date(parseInt(schedule.firstDate)) : null}
+                      onChange={(v) =>
+                        setSchedule({
+                          ...schedule,
+                          firstDate: v ? dayjs(v).format('DD') : ''
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      inputFormat="DD"
+                    />
+                  </Col>
+                )}
+
+                {['Bi-Monthly'].includes(formData.frequencyType) && (
+                  <Col md={2} className="mt-3">
+                    <Form.Label className="required">Second Date</Form.Label>
+                    <DatePicker
+                      views={['day']} // Only day selection
+                      value={schedule.secondDate ? dayjs().date(parseInt(schedule.secondDate)) : null}
+                      onChange={(v) =>
+                        setSchedule({
+                          ...schedule,
+                          secondDate: v ? dayjs(v).format('DD') : ''
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      inputFormat="DD"
+                    />
+                  </Col>
+                )}
+                {/* MONTHLY */}
+                {['Custom'].includes(formData.frequencyType) && (
+                  <Col md={4} className="mt-3">
+                    <Form.Label className="required">Delivery Date</Form.Label>
+                    <DatePicker
+                      value={schedule.date ? dayjs(schedule.date, 'YYYY-MM-DD') : null}
+                      format="YYYY-MM-DD"
+                      minDate={dayjs()}
+                      onChange={(v) =>
+                        setSchedule({
+                          ...schedule,
+                          date: v ? dayjs(v).format('YYYY-MM-DD') : ''
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                    />
+                  </Col>
+                )}
+                {['Monthly'].includes(formData.frequencyType) && (
+                  <Col md={4} className="mt-3">
+                    <Form.Label className="required">Delivery Date</Form.Label>
+                    <DatePicker
+                      views={['day']} // Only allow selecting the day
+                      value={schedule.date ? dayjs().date(parseInt(schedule.date)) : null} // show selected day
+                      onChange={(v) =>
+                        setSchedule({
+                          ...schedule,
+                          date: v ? dayjs(v).format('DD') : '' // store day as string
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      inputFormat="DD"
+                    />
+                  </Col>
+                )}
+
+                {/* TIME → ALWAYS */}
+                {formData.frequencyType && (
+                  <Col md={4} className="mt-3">
+                    <Form.Label className="required">Delivery Time</Form.Label>
+                    <TimePicker
+                      ampm={false}
+                      value={schedule.time}
+                      onChange={(v) => setSchedule({ ...schedule, time: v })}
+                      slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                    />
+                  </Col>
+                )}
+              </LocalizationProvider>
+            </Row>
+            <Row>
+              <Col md={8} className="mt-3">
+                <Form.Group>
+                  <Form.Label className="required">Country </Form.Label>
+                  <Select
+                    options={countryList}
+                    isMulti
+                    onChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        countries: v.map((c) => ({
+                          name: c.label,
+                          code: c.value
+                        }))
+                      })
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4} className="mt-3">
+                <Form.Group>
+                  <Form.Label className="required">Feed Priority </Form.Label>
+                  <Select options={feedPriorityOptions} onChange={(v) => setFormData({ ...formData, feedPriority: v.value })} />
+                </Form.Group>
+              </Col>
+            </Row>
             <Col md={12} className="mt-3">
               <Form.Group>
                 <Form.Label className="required">Description</Form.Label>
@@ -1449,7 +1475,7 @@ const ApiconfigrationList = () => {
 
             {/* COUNTRY */}
 
-            <Col md={8} className="mt-3">
+            <Col md={6} className="mt-3">
               <Form.Label className="required">Country</Form.Label>
               <Select
                 options={countryList}
@@ -1466,6 +1492,15 @@ const ApiconfigrationList = () => {
                 }
               />
             </Col>
+            <Col md={2} className="mt-3">
+              <Form.Label className="required">Feed Priority</Form.Label>
+              <Select
+                options={feedPriorityOptions}
+                value={feedPriorityOptions.find((o) => o.value === editFormData.feedPriority)}
+                onChange={(v) => setEditFormData({ ...editFormData, feedPriority: v.value })}
+              />
+            </Col>
+
             <Col md={4} className="mt-3">
               <Form.Label>Framework Type</Form.Label>
 
@@ -1481,6 +1516,7 @@ const ApiconfigrationList = () => {
                 placeholder="Select Framework Type"
               />
             </Col>
+
             {/* DESCRIPTION */}
             <Col md={12} className="mt-3">
               <Form.Label className="required">Description</Form.Label>

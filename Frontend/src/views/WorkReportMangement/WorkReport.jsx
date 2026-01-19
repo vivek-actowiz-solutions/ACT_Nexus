@@ -45,6 +45,7 @@ const WorkReportList = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [projectData, setProjectData] = useState([]);
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
+  const [userId , setUserId] = useState(null);
   /* ------------------- Dates ------------------- */
   const last5Days = useMemo(() => Array.from({ length: 5 }, (_, i) => dayjs().subtract(i, 'day').format('YYYY-MM-DD')), []);
 
@@ -157,13 +158,19 @@ const WorkReportList = () => {
       });
 
       setProjectData(res.data.data.reports || []);
+      setUserId(res.data.userId);
     } catch {
       toast.error('Failed to fetch project details');
     } finally {
       setLoading(false);
     }
   };
-
+const isEditableDate = dayjs(selectedDate, 'YYYY-MM-DD').isBetween(
+  dayjs().subtract(5, 'day'),
+  dayjs(),
+  'day',
+  '[]' // inclusive of start & end
+);
   /* ------------------- UI ------------------- */
   return (
     <>
@@ -329,7 +336,7 @@ const WorkReportList = () => {
               </tbody>
             </table>
           )}
-          <div className="d-flex justify-content-end">
+          {userId === selectedDeveloper?.id  && isEditableDate && ( <div className="d-flex justify-content-end">
             <Button
               variant="dark"
               size="sm"
@@ -344,7 +351,8 @@ const WorkReportList = () => {
             >
               Edit
             </Button>
-          </div>
+          </div>)}
+          
         </Modal.Body>
       </Modal>
     </>

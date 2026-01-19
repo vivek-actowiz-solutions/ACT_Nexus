@@ -240,6 +240,7 @@ const updateWorkReport = async (req, res) => {
 const GetWorkReports = async (req, res) => {
   const permission = res.locals.permissions;
   const Rolelevel = req.user.Rolelevel;
+  const department = req.user.department;
   const userId = new mongoose.Types.ObjectId(req.user.id);
 
   try {
@@ -285,7 +286,7 @@ const GetWorkReports = async (req, res) => {
     }
     const roles = await mongoose.connection.db
       .collection("roles")
-      .find({ Rolelevel: { $in: [5, 6] } })
+      .find({ Rolelevel: { $in: [4 ,5, 6 ] } })
       .project({ _id: 1, Rolelevel: 1 })
       .toArray();
 
@@ -303,16 +304,12 @@ const GetWorkReports = async (req, res) => {
     }
 
     // 🔹 Team Lead (5) → Own developers
-if (Rolelevel === 5) {
-  developerFilter.$or = [
-    { reportingTo: userId },
-    { _id: userId }
-  ];
-}
-
+    if (Rolelevel === 5) {
+      developerFilter.$or = [{ reportingTo: userId }, { _id: userId }];
+    }
 
     // 🔹 Manager (3) → TLs → Developers
-    if (Rolelevel === 3 ) {
+    if (Rolelevel === 3 && department === "Development") {
       const tls = await mongoose.connection.db
         .collection("users")
         .find({ reportingTo: userId })
@@ -320,6 +317,24 @@ if (Rolelevel === 5) {
         .toArray();
 
       developerFilter.reportingTo = { $in: tls.map((tl) => tl._id) };
+    }
+    if (Rolelevel === 3 && department === "Client Success") {
+      // const pc = await mongoose.connection.db
+      //   .collection("users")
+      //   .find({ reportingTo: userId })
+      //   .project({ _id: 1 })
+      //   .toArray();
+
+      developerFilter.reportingTo = { $in: [userId] }; // { $in: pc.map((tl) => tl._id) };
+    }
+    if (Rolelevel === 4) {
+      console.log("runnning this ");
+      const me = await mongoose.connection.db
+        .collection("users")
+        .findOne({ _id: userId }, { projection: { reportingTo: 1 } });
+      console.log("me", me);
+
+      developerFilter.reportingTo = me.reportingTo; // { $in: pc.map((tl) => tl._id) };
     }
 
     const developers = await mongoose.connection.db
@@ -335,7 +350,7 @@ if (Rolelevel === 5) {
     const total = await mongoose.connection.db
       .collection("users")
       .countDocuments(developerFilter);
-
+    console.log(total);
     /* ---------- Fetch Work Reports ---------- */
     const reports = await WorkReport.find({
       developerId: { $in: developerIds },
@@ -379,6 +394,8 @@ if (Rolelevel === 5) {
 
 const getprojectworkreport = async (req, res) => {
   console.log(req.query);
+  const userId = req.user.id;
+  console.log("userId", userId);
   const { developerId, date } = req.query;
 
   try {
@@ -406,6 +423,7 @@ const getprojectworkreport = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: workReport,
+      userId: userId,
     });
   } catch (error) {
     console.error("Work report error:", error);
