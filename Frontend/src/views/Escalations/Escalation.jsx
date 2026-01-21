@@ -12,6 +12,8 @@ import TextField from '@mui/material/TextField';
 import { data } from 'jquery';
 import { useRef } from 'react';
 import { sl } from 'date-fns/locale';
+import DOMPurify from 'dompurify';
+import ReactQuill from 'react-quill';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,7 +29,7 @@ const EscalationList = () => {
     description: '',
     department: '',
     priority: '',
-    Severity: '',
+    // Severity: '',
     assignTo: '',
     assignToName: '',
     watchers: [],
@@ -55,10 +57,11 @@ const EscalationList = () => {
     slaBreachReason: ''
   });
   const [users, setUsers] = useState([]);
+  const [userId, setUserId] = useState('');
   const [watchers, setwatchers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [feeds, setFeeds] = useState([]);
-
+  const [permission, setPermission] = useState([]);
   const [escalations, setEscalations] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [errors, setErrors] = useState({});
@@ -75,7 +78,8 @@ const EscalationList = () => {
   const departmentOptions = [
     { value: 'Sales', label: 'Sales' },
     { value: 'Development', label: 'Development' },
-    { value: 'Client Success', label: 'Client Success' }
+    { value: 'Client Success', label: 'Client Success' },
+    { value: 'R&D', label: 'R&D' }
   ];
 
   const priorityOptions = [
@@ -84,12 +88,12 @@ const EscalationList = () => {
     { value: 'P2 - Medium', label: 'P2 - Medium' },
     { value: 'P3 - Low', label: 'P3 - Low' }
   ];
-  const SeverityOptions = [
-    { value: 'Critical', label: 'Critical' },
-    { value: 'High', label: 'High' },
-    { value: 'Medium', label: 'Medium' },
-    { value: 'Low', label: 'Low' }
-  ];
+  // const SeverityOptions = [
+  //   { value: 'Critical', label: 'Critical' },
+  //   { value: 'High', label: 'High' },
+  //   { value: 'Medium', label: 'Medium' },
+  //   { value: 'Low', label: 'Low' }
+  // ];
 
   const statusOptions = [
     { value: 'Open', label: 'Open' },
@@ -154,6 +158,8 @@ const EscalationList = () => {
   const fetchProjects = async () => {
     const res = await axios.get(`${api}/Escalation-projects`, { withCredentials: true });
     setProjects(res.data.data || []);
+    setPermission(res.data.permission);
+    setUserId(res.data.userId);
   };
 
   const fetchFeeds = async (projectId) => {
@@ -339,7 +345,7 @@ const EscalationList = () => {
       description: '',
       department: '',
       priority: '',
-      Severity: '',
+      // Severity: '',
       assignTo: '',
       watchers: [],
       project: '',
@@ -439,6 +445,20 @@ const EscalationList = () => {
     }
 
     return 'Just now';
+  };
+
+  const truncateQuillHTML = (html = '', limit = 120) => {
+    const cleanHTML = DOMPurify.sanitize(html);
+
+    // Convert HTML to plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = cleanHTML;
+
+    const text = tempDiv.textContent || tempDiv.innerText || '';
+
+    if (text.length <= limit) return text;
+
+    return text.substring(0, limit).trim() + '...';
   };
   return (
     <>
@@ -560,9 +580,7 @@ const EscalationList = () => {
                             </div>
 
                             {/* Description */}
-                            <p className="text-muted small mb-2 description-ellipsis" title={e.description}>
-                              {e.description || 'No description provided'}
-                            </p>
+                            <p className="text-muted small mb-2">{truncateQuillHTML(e.description, 120) || 'No description provided'}</p>
 
                             {/* Assigned + Time */}
                             <div className="d-flex flex-wrap align-items-center small text-secondary gap-2">
@@ -602,9 +620,22 @@ const EscalationList = () => {
                     <MainCard title={<div className="card-title-safe">{selectedEscalation?.title}</div>}>
                       <div className="mb-4">
                         <h6 className="text-secondary small fw-bold mb-2">Description</h6>
-                        <p className="text-dark" style={{ whiteSpace: 'pre-line' }}>
-                          {selectedEscalation.description || 'No description provided.'}
-                        </p>
+
+                        <div
+                          className=" p-3"
+                          style={{
+                            minHeight: '150px',
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                          }}
+                        >
+                          <div
+                            className="ql-editor p-0"
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(selectedEscalation.description)
+                            }}
+                          />
+                        </div>
                       </div>
 
                       <hr className="my-4 text-muted" style={{ opacity: 0.1 }} />
@@ -711,12 +742,12 @@ const EscalationList = () => {
                               </div>
                               <div className="fw-bold text-break">{selectedEscalation?.SLADate ?? 'N/A'}</div>
                             </div>
-                            <div className="mb-2 d-flex flex-column flex-sm-row">
+                            {/* <div className="mb-2 d-flex flex-column flex-sm-row">
                               <div className="text-secondary small fw-medium me-sm-3" style={{ minWidth: '120px' }}>
                                 Severity
                               </div>
                               <div className="fw-bold text-break">{selectedEscalation?.Severity ?? 'N/A'}</div>
-                            </div>
+                            </div> */}
                             <div className="mb-2 d-flex flex-column flex-sm-row">
                               <div className="text-secondary small fw-medium me-sm-3" style={{ minWidth: '120px' }}>
                                 Created By
@@ -758,17 +789,20 @@ const EscalationList = () => {
                           View Details
                         </Button>
                       </div>
-                      {selectedEscalation.status !== 'Closed' && (
-                        <div className="mt-auto pt-3 ">
-                          <Button
-                            variant="danger"
-                            className="w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2"
-                            onClick={() => handleCloseEscalationModel(selectedEscalation)}
-                          >
-                            Close Escalation
-                          </Button>
-                        </div>
-                      )}
+                      {selectedEscalation.status !== 'Closed' &&
+                        (permission[0].action.includes('UpdateStatus') ||
+                          selectedEscalation.createdBy._id === userId ||
+                          selectedEscalation.assignTo._id === userId) && (
+                          <div className="mt-auto pt-3 ">
+                            <Button
+                              variant="danger"
+                              className="w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2"
+                              onClick={() => handleCloseEscalationModel(selectedEscalation)}
+                            >
+                              Close Escalation
+                            </Button>
+                          </div>
+                        )}
                     </MainCard>
                   ) : (
                     <div className="text-muted text-center mt-5">Select an escalation to view details</div>
@@ -809,7 +843,7 @@ const EscalationList = () => {
                 <Form.Group className="mb-3">
                   <Form.Label className="required">Project</Form.Label>
                   <Select
-                    options={projects.map((p) => ({ value: p._id, label: p.projectName }))}
+                    options={projects.map((p) => ({ value: p._id, label: `[${p.projectCode}] ${p.projectName}` }))}
                     placeholder="Select Project"
                     isClearable
                     value={
@@ -835,7 +869,7 @@ const EscalationList = () => {
               <Col md={4}>
                 {' '}
                 <Form.Group className="mb-3">
-                  <Form.Label>Feed</Form.Label>
+                  <Form.Label>Feed (Optional) </Form.Label>
                   <Select
                     options={feeds.map((f) => ({ value: f._id, label: f.feedName }))}
                     placeholder={escalation.project ? 'Select Feed' : 'Select Project first'}
@@ -847,19 +881,6 @@ const EscalationList = () => {
                 {errors.feed && <p className="text-danger">{errors.feed}</p>}
               </Col>
             </Row>
-            <Form.Group className="mb-3">
-              <Form.Label className="required">Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="description"
-                value={escalation.description}
-                onChange={handleChange}
-                maxLength={500}
-                placeholder="Enter description (max 250 characters)"
-              />
-            </Form.Group>
-            {errors.description && <p className="text-danger">{errors.description}</p>}
 
             <Row>
               <Col md={6}>
@@ -877,13 +898,13 @@ const EscalationList = () => {
                 </Form.Group>
                 {errors.priority && <p className="text-danger">{errors.priority}</p>}
               </Col>
-              <Col md={3}>
+              {/* <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="required">Severity</Form.Label>
                   <Select options={SeverityOptions} onChange={(e) => handleSelect('Severity', e?.value)} />
                 </Form.Group>
                 {errors.Severity && <p className="text-danger">{errors.Severity}</p>}
-              </Col>
+              </Col> */}
             </Row>
 
             <Row>
@@ -955,6 +976,23 @@ const EscalationList = () => {
                 {errors.watchers && <p className="text-danger">{errors.watchers}</p>}
               </Col>
             </Row>
+            <Form.Group className="mb-3">
+              <Form.Label className="required">Description</Form.Label>
+
+              <ReactQuill
+                theme="snow"
+                value={escalation.description}
+                onChange={(value) =>
+                  setEscalation((prev) => ({
+                    ...prev,
+                    description: value
+                  }))
+                }
+                placeholder="Enter description"
+              />
+
+              {errors.description && <p className="text-danger mt-1">{errors.description}</p>}
+            </Form.Group>
           </Modal.Body>
 
           <Modal.Footer>
@@ -1008,7 +1046,16 @@ const EscalationList = () => {
                   </Col>
                   <Col md={12} className="mt-3">
                     <Form.Label className="required">RCA Description</Form.Label>
-                    <Form.Control
+                    <ReactQuill
+                      theme="snow"
+                      value={closeData.rcaDescription}
+                      onChange={(value) => {
+                        setCloseData({ ...closeData, rcaDescription: value });
+                        setErrors((prev) => ({ ...prev, rcaDescription: '' }));
+                      }}
+                    />
+                    {errors.rcaDescription && <small className="text-danger">{errors.rcaDescription}</small>}
+                    {/* <Form.Control
                       as="textarea"
                       rows={3}
                       maxLength={500}
@@ -1018,7 +1065,7 @@ const EscalationList = () => {
                         setErrors((prev) => ({ ...prev, rcaDescription: '' }));
                       }}
                     />
-                    {errors.rcaDescription && <small className="text-danger">{errors.rcaDescription}</small>}
+                    {errors.rcaDescription && <small className="text-danger">{errors.rcaDescription}</small>} */}
                   </Col>
                 </Row>
                 {/* </div> */}
@@ -1032,21 +1079,6 @@ const EscalationList = () => {
               {/* ===== CORRECTIVE ACTION TAB ===== */}
               <Tab eventKey="corrective" title="2. Corrective Action (CA)">
                 <Row>
-                  <Col md={12}>
-                    <Form.Label className="required">Corrective Action Description</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={2}
-                      maxLength={500}
-                      placeholder="Enter description (max 500 characters)"
-                      onChange={(e) => {
-                        setCloseData({ ...closeData, correctiveActionDescription: e.target.value });
-                        setErrors((prev) => ({ ...prev, correctiveActionDescription: '' }));
-                      }}
-                    />
-                    {errors.correctiveActionDescription && <small className="text-danger">{errors.correctiveActionDescription}</small>}
-                  </Col>
-
                   <Col md={6} className="mt-3">
                     <Form.Label className="required">Action Type</Form.Label>
                     <Select
@@ -1103,6 +1135,29 @@ const EscalationList = () => {
                     />
                     {errors.fixVerificationMethod && <small className="text-danger">{errors.fixVerificationMethod}</small>}
                   </Col>
+                  <Col md={12}>
+                    <Form.Label className="required">Corrective Action Description</Form.Label>
+                    <ReactQuill
+                      theme="snow"
+                      value={closeData.correctiveActionDescription}
+                      onChange={(value) => {
+                        setCloseData({ ...closeData, correctiveActionDescription: value });
+                        setErrors((prev) => ({ ...prev, correctiveActionDescription: '' }));
+                      }}
+                    />
+                    {errors.correctiveActionDescription && <small className="text-danger">{errors.correctiveActionDescription}</small>}
+                    {/* <Form.Control
+                      as="textarea"
+                      rows={2}
+                      maxLength={500}
+                      placeholder="Enter description (max 500 characters)"
+                      onChange={(e) => {
+                        setCloseData({ ...closeData, correctiveActionDescription: e.target.value });
+                        setErrors((prev) => ({ ...prev, correctiveActionDescription: '' }));
+                      }}
+                    />
+                    {errors.correctiveActionDescription && <small className="text-danger">{errors.correctiveActionDescription}</small>} */}
+                  </Col>
                 </Row>
                 <div className="d-flex justify-content-between mt-3">
                   <Button variant="secondary" onClick={() => setActiveTab('rca')}>
@@ -1117,21 +1172,6 @@ const EscalationList = () => {
               {/* ===== PREVENTIVE ACTION TAB ===== */}
               <Tab eventKey="preventive" title="3. Preventive Action (PA)">
                 <Row>
-                  <Col md={12}>
-                    <Form.Label className="required">Preventive Action Description</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={2}
-                      maxLength={500}
-                      placeholder="Enter description (max 500 characters)"
-                      onChange={(e) => {
-                        setCloseData({ ...closeData, preventiveActionDescription: e.target.value });
-                        setErrors((prev) => ({ ...prev, preventiveActionDescription: '' }));
-                      }}
-                    />
-                    {errors.preventiveActionDescription && <small className="text-danger">{errors.preventiveActionDescription}</small>}
-                  </Col>
-
                   <Col md={6} className="mt-3">
                     <Form.Label className="required">Preventive Action Type</Form.Label>
                     <Select
@@ -1187,6 +1227,29 @@ const EscalationList = () => {
                     />
                     {errors.preventiveActionStatus && <small className="text-danger">{errors.preventiveActionStatus}</small>}
                   </Col>
+                  <Col md={12}>
+                    <Form.Label className="required">Preventive Action Description</Form.Label>
+                    <ReactQuill
+                      theme="snow"
+                      value={closeData.preventiveActionDescription}
+                      onChange={(value) => {
+                        setCloseData({ ...closeData, preventiveActionDescription: value });
+                        setErrors((prev) => ({ ...prev, preventiveActionDescription: '' }));
+                      }}
+                    />
+                    {errors.preventiveActionDescription && <small className="text-danger">{errors.preventiveActionDescription}</small>}
+                    {/* <Form.Control
+                      as="textarea"
+                      rows={2}
+                      maxLength={500}
+                      placeholder="Enter description (max 500 characters)"
+                      onChange={(e) => {
+                        setCloseData({ ...closeData, preventiveActionDescription: e.target.value });
+                        setErrors((prev) => ({ ...prev, preventiveActionDescription: '' }));
+                      }}
+                    />
+                    {errors.preventiveActionDescription && <small className="text-danger">{errors.preventiveActionDescription}</small>} */}
+                  </Col>
                 </Row>
                 <div className="d-flex justify-content-start mt-3">
                   <Button variant="secondary" onClick={() => setActiveTab('corrective')}>
@@ -1209,7 +1272,16 @@ const EscalationList = () => {
 
                   <Col md={12}>
                     <Form.Label className="required">SLA Breach Reason</Form.Label>
-                    <Form.Control
+                    <ReactQuill
+                      theme="snow"
+                      value={closeData.slaBreachReason}
+                      onChange={(value) => {
+                        setCloseData({ ...closeData, slaBreachReason: value });
+                        setErrors((prev) => ({ ...prev, slaBreachReason: '' }));
+                      }}
+                    />
+                    {errors.slaBreachReason && <small className="text-danger">{errors.slaBreachReason}</small>}
+                    {/* <Form.Control
                       as="textarea"
                       rows={2}
                       maxLength={500}
@@ -1219,7 +1291,7 @@ const EscalationList = () => {
                         setErrors((prev) => ({ ...prev, slaBreachReason: '' }));
                       }}
                     />
-                    {errors.slaBreachReason && <small className="text-danger">{errors.slaBreachReason}</small>}
+                    {errors.slaBreachReason && <small className="text-danger">{errors.slaBreachReason}</small>} */}
                   </Col>
                 </Row>
               </>
@@ -1270,7 +1342,7 @@ const EscalationList = () => {
                       Project
                     </Col>
                     <Col sm={8} className="fw-bold">
-                      {selectedEscalation.project?.projectName || 'N/A'}
+                      {selectedEscalation.project?.projectName || '-'}
                     </Col>
                   </Row>
                   <Row className="mb-2">
@@ -1278,34 +1350,51 @@ const EscalationList = () => {
                       Feed
                     </Col>
                     <Col sm={8} className="fw-bold">
-                      {selectedEscalation.feed?.feedName || 'N/A'}
+                      {selectedEscalation.feed?.feedName || '-'}
                     </Col>
                   </Row>
                   <Row className="mb-2">
                     <Col sm={4} className="text-secondary fw-medium">
                       Department
                     </Col>
-                    <Col sm={8}>{selectedEscalation.department?.label || selectedEscalation.department || 'N/A'}</Col>
+                    <Col sm={8}>{selectedEscalation.department?.label || selectedEscalation.department || '-'}</Col>
                   </Row>
                   <Row className="mb-2">
                     <Col sm={4} className="text-secondary fw-medium">
                       Assigned To
                     </Col>
                     <Col sm={8} className="text-primary fw-bold">
-                      {selectedEscalation.assignTo?.name || 'N/A'}
+                      {selectedEscalation.assignTo?.name || '-'}
                     </Col>
                   </Row>
-                  <Row className="mb-2">
+                  {/* <Row className="mb-2">
                     <Col sm={4} className="text-secondary fw-medium">
                       Severity
                     </Col>
-                    <Col sm={8}>{selectedEscalation.Severity || 'N/A'}</Col>
-                  </Row>
+                    <Col sm={8}>{selectedEscalation.Severity || '-'}</Col>
+                  </Row> */}
+                  <Row>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      {/* <MdDescription size={18} /> */}
+                      <h6 className="text-secondary mb-0 fw-semibold">Description</h6>
+                    </div>
 
-                  <div className="mt-4">
-                    <h6 className="fw-bold border-bottom pb-2 mb-3">Description</h6>
-                    <p className="bg-light p-3 rounded">{selectedEscalation.description}</p>
-                  </div>
+                    <div
+                      className=" p-3"
+                      style={{
+                        minHeight: '150px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      <div
+                        className="ql-editor p-0"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(selectedEscalation.description)
+                        }}
+                      />
+                    </div>
+                  </Row>
                 </Col>
 
                 {/* Right Column: SLA & Timelines */}
@@ -1342,7 +1431,7 @@ const EscalationList = () => {
                         SLA Target Date
                       </Col>
                       <Col sm={6} className="fw-bold">
-                        {selectedEscalation.SLADate || 'N/A'}
+                        {selectedEscalation.SLADate || '-'}
                       </Col>
                     </Row>
                     <Row className="mb-2">
@@ -1365,7 +1454,26 @@ const EscalationList = () => {
                     {selectedEscalation.slaBreachReason && (
                       <div className="mt-3 p-2 border border-danger rounded bg-white">
                         <strong className="text-danger d-block mb-1">SLA Breach Reason:</strong>
-                        {selectedEscalation.slaBreachReason}
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          {/* <MdDescription size={18} /> */}
+                          <h6 className="text-secondary mb-0 fw-semibold">Description</h6>
+                        </div>
+
+                        <div
+                          className=" p-3"
+                          style={{
+                            minHeight: '150px',
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                          }}
+                        >
+                          <div
+                            className="ql-editor p-0"
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(selectedEscalation.slaBreachReason)
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1395,8 +1503,26 @@ const EscalationList = () => {
                         </Col>
                         <Col md={12}>
                           <div className="p-2 border rounded bg-light">
-                            <small className="text-muted d-block">Description</small>
-                            <p className="mb-0">{selectedEscalation.closureDetails.rcaDescription || 'N/A'}</p>
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              {/* <MdDescription size={18} /> */}
+                              <h6 className="text-secondary mb-0 fw-semibold">Description</h6>
+                            </div>
+
+                            <div
+                              className=" p-3"
+                              style={{
+                                minHeight: '150px',
+                                maxHeight: '200px',
+                                overflowY: 'auto'
+                              }}
+                            >
+                              <div
+                                className="ql-editor p-0"
+                                dangerouslySetInnerHTML={{
+                                  __html: DOMPurify.sanitize(selectedEscalation.closureDetails.rcaDescription)
+                                }}
+                              />
+                            </div>
                           </div>
                         </Col>
                       </Row>
@@ -1407,8 +1533,26 @@ const EscalationList = () => {
                       <Row className="g-3">
                         <Col md={12}>
                           <div className="p-2 border rounded bg-light">
-                            <small className="text-muted d-block">Description</small>
-                            <p className="mb-0">{selectedEscalation.closureDetails.correctiveActionDescription || 'N/A'}</p>
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              {/* <MdDescription size={18} /> */}
+                              <h6 className="text-secondary mb-0 fw-semibold">Description</h6>
+                            </div>
+
+                            <div
+                              className=" p-3"
+                              style={{
+                                minHeight: '150px',
+                                maxHeight: '200px',
+                                overflowY: 'auto'
+                              }}
+                            >
+                              <div
+                                className="ql-editor p-0"
+                                dangerouslySetInnerHTML={{
+                                  __html: DOMPurify.sanitize(selectedEscalation.closureDetails.correctiveActionDescription)
+                                }}
+                              />
+                            </div>
                           </div>
                         </Col>
                         <Col md={3}>
@@ -1447,8 +1591,26 @@ const EscalationList = () => {
                       <Row className="g-3">
                         <Col md={12}>
                           <div className="p-2 border rounded bg-light">
-                            <small className="text-muted d-block">Description</small>
-                            <p className="mb-0">{selectedEscalation.closureDetails.preventiveActionDescription || 'N/A'}</p>
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              {/* <MdDescription size={18} /> */}
+                              <h6 className="text-secondary mb-0 fw-semibold">Description</h6>
+                            </div>
+
+                            <div
+                              className=" p-3"
+                              style={{
+                                minHeight: '150px',
+                                maxHeight: '200px',
+                                overflowY: 'auto'
+                              }}
+                            >
+                              <div
+                                className="ql-editor p-0"
+                                dangerouslySetInnerHTML={{
+                                  __html: DOMPurify.sanitize(selectedEscalation.closureDetails.preventiveActionDescription)
+                                }}
+                              />
+                            </div>
                           </div>
                         </Col>
                         <Col md={4}>

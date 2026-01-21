@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Row, Col, Form, Spinner, Button, Modal } from 'react-bootstrap';
+import { Row, Col, Form, Spinner, Button, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import MainCard from '../../components/Card/MainCard';
 import axios from 'axios';
 import DataTable from 'react-data-table-component';
@@ -45,7 +45,7 @@ const WorkReportList = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [projectData, setProjectData] = useState([]);
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
-  const [userId , setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   /* ------------------- Dates ------------------- */
   const last5Days = useMemo(() => Array.from({ length: 5 }, (_, i) => dayjs().subtract(i, 'day').format('YYYY-MM-DD')), []);
 
@@ -165,12 +165,12 @@ const WorkReportList = () => {
       setLoading(false);
     }
   };
-const isEditableDate = dayjs(selectedDate, 'YYYY-MM-DD').isBetween(
-  dayjs().subtract(5, 'day'),
-  dayjs(),
-  'day',
-  '[]' // inclusive of start & end
-);
+  const isEditableDate = dayjs(selectedDate, 'YYYY-MM-DD').isBetween(
+    dayjs().subtract(5, 'day'),
+    dayjs(),
+    'day',
+    '[]' // inclusive of start & end
+  );
   /* ------------------- UI ------------------- */
   return (
     <>
@@ -313,46 +313,75 @@ const isEditableDate = dayjs(selectedDate, 'YYYY-MM-DD').isBetween(
           ) : projectData.length === 0 ? (
             <p className="text-center text-muted">No records found</p>
           ) : (
-            <table className="table table-hover">
-              <thead>
+            <table className="table table-hover table-striped m-1 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <thead className="table-light">
                 <tr>
-                  <th>Project</th>
-                  <th>Feed</th>
-                  <th>Hours</th>
-                  <th>Task Type</th>
+                  <th style={{ width: '220px' }}>Project</th>
+                  <th style={{ width: '200px' }}>Feed</th>
+                  <th style={{ width: '90px' }}>Hours</th>
+                  <th style={{ width: '130px' }}>Task Type</th>
                   <th>Description</th>
                 </tr>
               </thead>
+
               <tbody>
                 {projectData.map((p, i) => (
                   <tr key={i}>
-                    <td>{p?.projectId ? `[${p.projectId.projectCode}] ${p.projectId.projectName}` : '-'}</td>
-                    <td>{p?.feedId?.feedName || '-'}</td>
+                    <td className="text-truncate">{p?.projectId ? `[${p.projectId.projectCode}] ${p.projectId.projectName}` : '-'}</td>
+
+                    <td>
+                      {p?.feedId?.feedName ? (
+                        <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-feed-${p._id}`}>{p.feedId.feedName}</Tooltip>}>
+                          <span className="d-inline-block text-truncate" style={{ maxWidth: '200px', cursor: 'pointer' }}>
+                            {p.feedId.feedName}
+                          </span>
+                        </OverlayTrigger>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+
                     <td>{p?.timeSpent || '0:00'}</td>
+
                     <td>{p?.taskType || '-'}</td>
-                    <td>{p?.description || '-'}</td>
+
+                    <td>
+                      <div
+                        className="border rounded bg-light ql-editor p-2"
+                        style={{
+                          maxHeight: '100px',
+                          overflowY: 'auto',
+                          overflowX: 'hidden',
+                          fontSize: '13px',
+                          lineHeight: '1.5'
+                        }}
+                      >
+                        {p.description}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-          {userId === selectedDeveloper?.id  && isEditableDate && ( <div className="d-flex justify-content-end">
-            <Button
-              variant="dark"
-              size="sm"
-              onClick={() =>
-                navigate('/Edit-Work-Report', {
-                  state: {
-                    developerId: selectedDeveloper.id,
-                    date: selectedDate
-                  }
-                })
-              }
-            >
-              Edit
-            </Button>
-          </div>)}
-          
+          {userId === selectedDeveloper?.id && isEditableDate && (
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="dark"
+                size="sm"
+                onClick={() =>
+                  navigate('/Edit-Work-Report', {
+                    state: {
+                      developerId: selectedDeveloper.id,
+                      date: selectedDate
+                    }
+                  })
+                }
+              >
+                Edit
+              </Button>
+            </div>
+          )}
         </Modal.Body>
       </Modal>
     </>

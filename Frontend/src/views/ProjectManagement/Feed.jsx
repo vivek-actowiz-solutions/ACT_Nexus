@@ -17,7 +17,7 @@ import { FaUserPlus } from 'react-icons/fa';
 import { FaClock } from 'react-icons/fa6';
 import { FaEdit } from 'react-icons/fa';
 import { FaTrash } from 'react-icons/fa';
-
+import ReactQuill from 'react-quill';
 const frequencyOptions = [
   { label: 'Daily', value: 'Daily' },
   { label: 'Weekly', value: 'Weekly' },
@@ -175,7 +175,8 @@ const ApiconfigrationList = () => {
   const [deleteFeed, setDeleteFeed] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(null);
-
+  const [loadingfeedcreate, setLoadingfeedcreate] = useState(false);
+  const [loadingfeedassigndev, setLoadingfeedassigndev] = useState(false);
   useEffect(() => {
     const countries = getData();
     const options = countries.map(({ name, code }) => ({ label: name, value: code })).sort((a, b) => a.label.localeCompare(b.label));
@@ -286,6 +287,7 @@ const ApiconfigrationList = () => {
       ...formData,
       frequencyConfig // ✅ SEND DIRECTLY
     };
+    setLoadingfeedcreate(true);
     try {
       await axios.post(`${api}/feed-create`, payload, { withCredentials: true });
 
@@ -305,6 +307,7 @@ const ApiconfigrationList = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Create feed failed');
     }
+    setLoadingfeedcreate(false);
   };
 
   const confirmStatusChange = async () => {
@@ -324,7 +327,7 @@ const ApiconfigrationList = () => {
       toast.error('Please select at least one Developer');
       return;
     }
-
+    setLoadingfeedassigndev(true);
     try {
       await axios.post(
         `${api}/feed-assign-developers`,
@@ -342,6 +345,7 @@ const ApiconfigrationList = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Assign developers failed');
     }
+    setLoadingfeedassigndev(false);
   };
   const openAssignDeveloperModal = (feed) => {
     setSelectedFeedForDevAssign(feed);
@@ -932,8 +936,12 @@ const ApiconfigrationList = () => {
         return (
           <Button
             size="sm"
-            disabled={!hasPermission}
-            onClick={() => hasPermission && openStatusUpdateModal(row)}
+            disabled={!hasPermission || !row.active}
+            onClick={() => {
+              if (row.active && hasPermission) {
+                openStatusUpdateModal(row);
+              }
+            }}
             style={{
               backgroundColor: statusStyle.bg,
               color: statusStyle.color,
@@ -988,7 +996,7 @@ const ApiconfigrationList = () => {
               <FaEye size={18} color="green" onClick={() => navigate(`/Project-feeds/${projectId}/Feed-details/${row._id}`)} />
             </span>
           </OverlayTrigger>
-          {permission?.[0]?.action?.includes('FeedUpdate') && (
+          {permission?.[0]?.action?.includes('FeedUpdate') && row.active && (
             <OverlayTrigger placement="top" overlay={<Tooltip>Edit</Tooltip>}>
               <span style={{ cursor: 'pointer' }}>
                 <FaEdit size={18} color="blue" onClick={() => openEditModal(row)} />
@@ -1069,7 +1077,12 @@ const ApiconfigrationList = () => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="required">Platform Name </Form.Label>
-                <Form.Control value={formData.platformName} onChange={(e) => setFormData({ ...formData, platformName: e.target.value })} />
+                <Form.Control
+                  value={formData.platformName}
+                  onChange={(e) => setFormData({ ...formData, platformName: e.target.value })}
+                  maxLength={60}
+                  placeholder="Enter Platform Name ( Max 60 characters )"
+                />
               </Form.Group>
             </Col>
 
@@ -1259,11 +1272,11 @@ const ApiconfigrationList = () => {
             <Col md={12} className="mt-3">
               <Form.Group>
                 <Form.Label className="required">Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
+                <ReactQuill
+                  theme="snow"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, description: value })}
+                  placeholder="Enter description..."
                 />
               </Form.Group>
             </Col>
@@ -1282,9 +1295,16 @@ const ApiconfigrationList = () => {
           <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
             Cancel
           </Button>
-          <Button variant="dark" onClick={handleCreateFeed}>
-            Create Feed
-          </Button>
+          {loadingfeedcreate ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+              Creating Feed...
+            </Button>
+          ) : (
+            <Button variant="dark" onClick={handleCreateFeed}>
+              Create Feed
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
 
@@ -1294,7 +1314,10 @@ const ApiconfigrationList = () => {
           <Modal.Title>Confirm Status</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Change status of <b>{selectedFeed?.feedName}</b>?
+          <small className="text-muted">
+            Confirm status change for
+            <span className="fw-semibold"> {selectedFeed?.feedName}</span>
+          </small>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowStatusModal(false)}>
@@ -1562,9 +1585,16 @@ const ApiconfigrationList = () => {
           <Button variant="secondary" onClick={() => setShowAssignDevModal(false)}>
             Cancel
           </Button>
-          <Button variant="dark" onClick={handleAssignDevelopers}>
-            Add Developer
-          </Button>
+          {loadingfeedassigndev ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+              Assigning Developers...
+            </Button>
+          ) : (
+            <Button variant="dark" onClick={handleAssignDevelopers}>
+              Add Developer
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
       <Modal show={showStatusUpdateModal} onHide={() => setShowStatusUpdateModal(false)} centered>

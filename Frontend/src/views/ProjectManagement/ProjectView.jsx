@@ -8,6 +8,8 @@ import { FaCheckCircle, FaEdit, FaPlusCircle } from 'react-icons/fa';
 import { FaRegUserCircle } from 'react-icons/fa';
 import { IoMdTime } from 'react-icons/io';
 import { api } from 'views/api';
+import ReactQuill from 'react-quill';
+import DOMPurify from 'dompurify';
 
 /* ===== ICONS ===== */
 import {
@@ -98,6 +100,7 @@ const ProjectView = () => {
     department,
     deliveryType,
     projectPriority,
+    description,
     deliveryMode,
     projectFrequency,
     sowDocument = [],
@@ -321,6 +324,30 @@ const ProjectView = () => {
                   </small>
                   <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
                 </Card>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  {/* <MdDescription size={18} /> */}
+                  <h6 className="mb-0 fw-semibold">Description</h6>
+                </div>
+
+                <div
+                  className=" p-3"
+                  style={{
+                    minHeight: '150px',
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}
+                >
+                  <div
+                    className="ql-editor p-0"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(description)
+                    }}
+                  />
+                </div>
               </Col>
             </Row>
           </MainCard>

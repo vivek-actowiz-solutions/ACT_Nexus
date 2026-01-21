@@ -8,7 +8,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
+import 'react-quill/dist/quill.snow.css';
 const container = document.getElementById('root');
 const root = createRoot(container);
 root.render(

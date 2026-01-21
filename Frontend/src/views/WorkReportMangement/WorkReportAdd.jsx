@@ -44,7 +44,7 @@ const AddWorkReport = () => {
   const [feeds, setFeeds] = useState([]);
   const [form, setForm] = useState(createEmptyForm());
   const [workList, setWorkList] = useState([]);
-  console.log(workList)
+  console.log(workList);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -205,10 +205,14 @@ const AddWorkReport = () => {
               </Col>
 
               <Col md={3}>
-                <Form.Label className='required'>Project </Form.Label>
+                <Form.Label className="required">Project </Form.Label>
                 <Select
                   options={projects.map((p) => ({ value: p._id, label: `[${p.projectCode}] ${p.projectName}` }))}
-                  value={projects.map((p) => ({ value: p._id, label:`[${p.projectCode}] ${p.projectName}` })).find((o) => o.value === form.projectId) || null}
+                  value={
+                    projects
+                      .map((p) => ({ value: p._id, label: `[${p.projectCode}] ${p.projectName}` }))
+                      .find((o) => o.value === form.projectId) || null
+                  }
                   onChange={(s) => {
                     setForm({ ...form, projectId: s?.value || null, feedId: null });
                     if (s) fetchFeeds(s.value);
@@ -217,7 +221,7 @@ const AddWorkReport = () => {
               </Col>
 
               <Col md={3}>
-                <Form.Label className='required'>Feed </Form.Label>
+                <Form.Label className="required">Feed </Form.Label>
                 <Select
                   isDisabled={!form.projectId}
                   options={feeds.map((f) => ({ value: f._id, label: f.feedName }))}
@@ -227,7 +231,7 @@ const AddWorkReport = () => {
               </Col>
 
               <Col md={3}>
-                <Form.Label className='required'>Task Type </Form.Label>
+                <Form.Label className="required">Task Type </Form.Label>
                 <Select
                   options={TASK_TYPES}
                   value={TASK_TYPES.find((t) => t.value === form.taskType) || null}
@@ -238,7 +242,7 @@ const AddWorkReport = () => {
 
             <Row className="g-3 mb-3">
               <Col md={4}>
-                <Form.Label className='required'>Time Spent </Form.Label>
+                <Form.Label className="required">Time Spent </Form.Label>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <TimePicker
                     ampm={false}
@@ -249,12 +253,13 @@ const AddWorkReport = () => {
                 </LocalizationProvider>
               </Col>
             </Row>
-
+            <Form.Label className="required">Description </Form.Label>
             <Form.Control
               as="textarea"
-              rows={2}
-              placeholder="Describe your work..."
+              rows={3}
+              placeholder="Describe your work... (Max 500 characters)"
               className="mb-3 required"
+              maxLength={500}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
@@ -288,14 +293,29 @@ const AddWorkReport = () => {
                     {workList.map((w, i) => (
                       <tr key={w.id}>
                         <td>{i + 1}</td>
-                        <td>[{w.projectCode}]{w.projectName}</td>
+                        <td>
+                          [{w.projectCode}]{w.projectName}
+                        </td>
                         <td>{w.feedName}</td>
                         <td>{w.workDate}</td>
                         <td>
                           {w.hours}h {w.minutes}m
                         </td>
                         <td>{w.taskType}</td>
-                        <td>{w.description}</td>
+                        <td style={{ width: '900px', maxWidth: '300px' }}>
+                          <div
+                            className="ql-editor"
+                            style={{
+                              maxHeight: '100px',
+                              overflowY: 'auto',
+                              overflowX: 'hidden',
+                              fontSize: '13px',
+                              lineHeight: '1.5'
+                            }}
+                          >
+                            {w.description}
+                          </div>
+                        </td>
                         <td>
                           <Button size="sm" variant="warning" onClick={() => handleEdit(w)}>
                             Edit

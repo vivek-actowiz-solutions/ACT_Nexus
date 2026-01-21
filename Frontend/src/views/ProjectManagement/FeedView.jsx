@@ -7,7 +7,7 @@ import axios from 'axios';
 import { api } from 'views/api';
 import { FaArrowRight } from 'react-icons/fa6';
 import { IoArrowBack } from 'react-icons/io5';
-
+import DOMPurify from 'dompurify';
 /* ===== ICONS ===== */
 import {
   FaLayerGroup,
@@ -80,7 +80,8 @@ const FeedView = () => {
     countries = [],
     description,
     createdBy,
-    createdAt,frameworkType
+    createdAt,
+    frameworkType
   } = feed;
   const latestActivities = feedActivities.slice(0, 10);
   const ActivityTimeline = ({ activities }) => {
@@ -117,7 +118,7 @@ const FeedView = () => {
             <div>
               <div className="fw-semibold">{log.actionTitle}</div>
 
-              {log.actionTitle.includes('Active Status Updated')  && (
+              {log.actionTitle.includes('Active Status Updated') && (
                 <div className="text-muted small">
                   {' '}
                   old status : <strong>{formatValue(log.oldData)}</strong> <FaArrowRight /> New status :{' '}
@@ -151,7 +152,7 @@ const FeedView = () => {
           <MainCard
             title={
               <>
-                <FaLayerGroup /> {""}
+                <FaLayerGroup /> {''}
                 {feedName}
               </>
             }
@@ -212,9 +213,21 @@ const FeedView = () => {
                       <h6 className="mb-0 fw-semibold">Description</h6>
                     </div>
 
-                    <p className="mb-0 text-muted" style={{ lineHeight: '1.6' }}>
-                      {description?.trim() ? description : 'No description provided'}
-                    </p>
+                    <div
+                      className=" p-3"
+                      style={{
+                        minHeight: '150px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      <div
+                        className="ql-editor p-0"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(description)
+                        }}
+                      />
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>

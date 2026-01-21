@@ -13,7 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { IoArrowBack } from 'react-icons/io5';
 import { CgLogIn } from 'react-icons/cg';
 import { cs } from 'date-fns/locale';
-
+import ReactQuill from 'react-quill';
 const priorityOptions = [
   { label: 'High', value: 'High' },
   { label: 'Medium', value: 'Medium' },
@@ -59,7 +59,6 @@ const deliveryModeOptions = [
   { label: 'Database-Level Delivery ', value: 'DB Delivery' },
   { label: 'Google Cloud Storage (GCS)', value: 'GCS' }
 ];
-
 
 const departments = [
   { label: 'Development', value: 'Development' },
@@ -108,7 +107,7 @@ const EditProject = () => {
   useEffect(() => {
     fetchProject();
     fetchSales();
-    fetchcsManagers("Client Success");
+    fetchcsManagers('Client Success');
   }, [id]);
 
   const fetchProject = async () => {
@@ -143,7 +142,7 @@ const EditProject = () => {
               value: u._id,
               label: u.name
             }))
-          : [],
+          : []
         // projectCoordinator: p.projectCoordinator ? { value: p.projectCoordinator._id, label: p.projectCoordinator.name } : null
       });
 
@@ -161,8 +160,8 @@ const EditProject = () => {
 
       if (p.department) {
         fetchManagers(p.department);
-        fetchAssignTlUsers(p.department , p.projectManager?._id);
-        fetchAssignPCUsers("Client Success" , p.csprojectManager?._id);
+        fetchAssignTlUsers(p.department, p.projectManager?._id);
+        fetchAssignPCUsers('Client Success', p.csprojectManager?._id);
       }
     } catch {
       toast.error('Failed to load project');
@@ -193,9 +192,12 @@ const EditProject = () => {
   const SalesOptions = salesList.map((u) => ({ value: u._id, label: u.name }));
   const csManagerOptions = csmanagerList.map((u) => ({ value: u._id, label: u.name }));
 
-  const fetchAssignTlUsers = async (department , reportingId) => {
+  const fetchAssignTlUsers = async (department, reportingId) => {
     try {
-      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&teamLead=true`, { withCredentials: true });
+      const res = await axios.get(
+        `${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&teamLead=true`,
+        { withCredentials: true }
+      );
 
       setTeamLeads(
         (res.data.data || []).map((u) => ({
@@ -203,15 +205,16 @@ const EditProject = () => {
           value: u._id
         }))
       );
-
-     
     } catch (err) {
       toast.error('Failed to load assign users');
     }
   };
-  const fetchAssignPCUsers = async (department , reportingId) => {
+  const fetchAssignPCUsers = async (department, reportingId) => {
     try {
-      const res = await axios.get(`${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&coordinator=true`, { withCredentials: true });
+      const res = await axios.get(
+        `${api}/project-assign-users?department=${encodeURIComponent(department)}&reportingId=${reportingId}&coordinator=true`,
+        { withCredentials: true }
+      );
 
       setCoordinators(
         (res.data.data || []).map((u) => ({
@@ -242,108 +245,113 @@ const EditProject = () => {
   };
 
   /* ================= SUBMIT ================= */
-const validateBeforeSubmit = () => {
-  if (!formData.IndustryType) {
-    toast.error('Industry Type is required');
-    return false;
-  }
-
-  if (!formData.projectFrequency) {
-    toast.error('Project Frequency is required');
-    return false;
-  }
-
-  if (!formData.deliveryType) {
-    toast.error('Delivery Type is required');
-    return false;
-  }
-
-  if (!formData.deliveryMode) {
-    toast.error('Delivery Mode is required');
-    return false;
-  }
-
-  if (!formData.projectTechManager?.value) {
-    toast.error('Project Technical Manager is required');
-    return false;
-  }
-  if (!formData.csprojectManager?.value) {
-    toast.error('Project Technical Manager is required');
-    return false;
-  }
-
-  // ===== SOW DOCUMENT (MANDATORY) =====
-  if (!sowFile || sowFile.length === 0) {
-    toast.error('SOW Document is required');
-    return false;
-  }
-
-  // ===== FREQUENCY BASED VALIDATION =====
-  const freq = formData.projectFrequency;
-
-  if (freq === 'Weekly') {
-    if (!schedule.day) {
-      toast.error('Delivery Day is required for Weekly frequency');
-      return false;
-    }
-  }
-
-  if (freq === 'Bi-Weekly') {
-    if (!schedule.day) {
-      toast.error('Delivery Days are required for Bi-Weekly frequency');
+  const validateBeforeSubmit = () => {
+    if (!formData.IndustryType) {
+      toast.error('Industry Type is required');
       return false;
     }
 
-    const daysCount = schedule.day.split(',').length;
-    if (daysCount > 2) {
-      toast.error('You can select only 2 days for Bi-Weekly frequency');
-      return false;
-    }
-       if (daysCount < 2) {
-      toast.error('Please select 2 days for Bi-Weekly frequency');
-      return false;
-    }
-  }
-
-  if (freq === 'Monthly') {
-    if (!schedule.date) {
-      toast.error('Delivery Date is required for Monthly frequency');
-      return false;
-    }
-  }
-
-  if (freq === 'Bi-Monthly') {
-    if (!schedule.firstDate || !schedule.secondDate) {
-      toast.error('Both delivery dates are required for Bi-Monthly frequency');
+    if (!formData.projectFrequency) {
+      toast.error('Project Frequency is required');
       return false;
     }
 
-    if (schedule.firstDate === schedule.secondDate) {
-      toast.error('Bi-Monthly dates cannot be the same');
+    if (!formData.deliveryType) {
+      toast.error('Delivery Type is required');
       return false;
     }
-  }
 
-  if (freq === 'Custom') {
-    if (!schedule.date) {
-      toast.error('Delivery Date is required for Custom frequency');
+    if (!formData.deliveryMode) {
+      toast.error('Delivery Mode is required');
       return false;
     }
-  }
 
-  // ===== TIME REQUIRED FOR ALL FREQUENCIES =====
-  if (!schedule.time) {
-    toast.error('Delivery Time is required');
-    return false;
-  }
+    if (!formData.projectTechManager?.value) {
+      toast.error('Project Technical Manager is required');
+      return false;
+    }
+    if (!formData.csprojectManager?.value) {
+      toast.error('Project Technical Manager is required');
+      return false;
+    }
 
-  if (!sowFile || sowFile.length === 0) {
-    toast.error('SoW Document is required ');
-    return false;
-  }
+    // ===== SOW DOCUMENT (MANDATORY) =====
+    if (!sowFile || sowFile.length === 0) {
+      toast.error('SOW Document is required');
+      return false;
+    }
 
-  return true;
-};
+    // ===== FREQUENCY BASED VALIDATION =====
+    const freq = formData.projectFrequency;
+
+    if (freq === 'Weekly') {
+      if (!schedule.day) {
+        toast.error('Delivery Day is required for Weekly frequency');
+        return false;
+      }
+    }
+
+    if (freq === 'Bi-Weekly') {
+      if (!schedule.day) {
+        toast.error('Delivery Days are required for Bi-Weekly frequency');
+        return false;
+      }
+
+      const daysCount = schedule.day.split(',').length;
+      if (daysCount > 2) {
+        toast.error('You can select only 2 days for Bi-Weekly frequency');
+        return false;
+      }
+      if (daysCount < 2) {
+        toast.error('Please select 2 days for Bi-Weekly frequency');
+        return false;
+      }
+    }
+
+    if (freq === 'Monthly') {
+      if (!schedule.date) {
+        toast.error('Delivery Date is required for Monthly frequency');
+        return false;
+      }
+    }
+
+    if (freq === 'Bi-Monthly') {
+      if (!schedule.firstDate || !schedule.secondDate) {
+        toast.error('Both delivery dates are required for Bi-Monthly frequency');
+        return false;
+      }
+
+      if (schedule.firstDate === schedule.secondDate) {
+        toast.error('Bi-Monthly dates cannot be the same');
+        return false;
+      }
+    }
+
+    if (freq === 'Custom') {
+      if (!schedule.date) {
+        toast.error('Delivery Date is required for Custom frequency');
+        return false;
+      }
+    }
+
+    // ===== TIME REQUIRED FOR ALL FREQUENCIES =====
+    if (!schedule.time) {
+      toast.error('Delivery Time is required');
+      return false;
+    }
+
+    if (!sowFile || sowFile.length === 0) {
+      toast.error('SoW Document is required ');
+      return false;
+    }
+
+    if (formData.description === '') {
+      toast.error('Description is required');
+      return false;
+    }
+
+    return true;
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -359,7 +367,7 @@ const validateBeforeSubmit = () => {
       toast.info('No changes detected');
       return;
     }
-  if (!validateBeforeSubmit()) return;
+    if (!validateBeforeSubmit()) return;
     try {
       setLoading(true);
       const form = new FormData();
@@ -695,12 +703,12 @@ const validateBeforeSubmit = () => {
                 isClearable
               />
             </Col>
-  <Col md={3}>
-              <Form.Label className='required'>BDE (Business Development Executive)</Form.Label>
+            <Col md={3}>
+              <Form.Label className="required">BDE (Business Development Executive)</Form.Label>
               <Select options={SalesOptions} value={formData.bde} onChange={(v) => handleChange('bde', v)} />
             </Col>
             <Col md={3}>
-              <Form.Label className='required'>Client Success manager </Form.Label>
+              <Form.Label className="required">Client Success manager </Form.Label>
               <Select options={csManagerOptions} value={formData.csprojectManager} onChange={(v) => handleChange('csprojectManager', v)} />
             </Col>
             {/* <Col md={4}>
@@ -739,9 +747,8 @@ const validateBeforeSubmit = () => {
                 isClearable
               />
             </Col>
-          
           </Row>
-          {formData.teamLead?.length > 0  && formData.projectCoordinator?.length > 0 && (
+          {formData.teamLead?.length > 0 && formData.projectCoordinator?.length > 0 && (
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Label>Team Lead</Form.Label>
@@ -751,11 +758,10 @@ const validateBeforeSubmit = () => {
               <Col md={6}>
                 <Form.Label>Project Coordinator</Form.Label>
                 <Select
-                 isMulti
+                  isMulti
                   options={coordinators}
                   value={formData.projectCoordinator}
                   onChange={(v) => handleChange('projectCoordinator', v)}
-                 
                   isClearable
                 />
               </Col>
@@ -777,12 +783,12 @@ const validateBeforeSubmit = () => {
 
           <Row className="mb-3">
             <Col>
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={4}
+              <Form.Label className="required">Description</Form.Label>
+              <ReactQuill
+                theme="snow"
                 value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
+                onChange={(value) => handleChange('description', value)}
+                placeholder="Enter description..."
               />
             </Col>
           </Row>
@@ -836,7 +842,6 @@ const validateBeforeSubmit = () => {
               handleSubmit(e);
             }}
           >
-
             Confirm Update
           </Button>
         </Modal.Footer>

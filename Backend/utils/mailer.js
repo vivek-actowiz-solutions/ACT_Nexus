@@ -1,19 +1,21 @@
 const nodemailer = require("nodemailer");
-
+const email = process.env.EMAIL_SEND;
+const password = process.env.EMAIL_PASSWORD;
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "alert1.actowiz@gmail.com",
-    pass: "wbqc ehvf yggx bced", // App password, NOT your Gmail password
+    user: email,
+    pass: password,
   },
 });
 
 // Send email function
-const sendMail = async (to, subject, html) => {
+const sendMail = async ({ to = [], cc = [], subject, html }) => {
   const mailOptions = {
-    from: "alert1.actowiz@gmail.com",
-    to,
+    from: email,
+    to: to.join(","), // string | array
+    cc: cc.join(","), // optional
     subject,
     html,
   };

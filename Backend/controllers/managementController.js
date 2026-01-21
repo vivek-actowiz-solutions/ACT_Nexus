@@ -105,6 +105,7 @@ const updatePermissions = async (req, res) => {
 
 const getusers = async (req, res) => {
   const permission = res.locals.permissions;
+  const canViewOriginalPassword = req.user.Rolelevel === 1;
   console.log("permission in my api", permission);
 
   try {
@@ -139,7 +140,7 @@ const getusers = async (req, res) => {
       .collection("users")
       .aggregate([
         { $match: finalFilter }, // search filter
-            { $sort: { createdAt: -1 } },
+        { $sort: { createdAt: -1 } },
         {
           $lookup: {
             from: "roles", // roles collection
@@ -174,12 +175,20 @@ const getusers = async (req, res) => {
             roleId: 1,
             status: 1,
             roleName: "$roleInfo.roleName",
-            originalPassword: 1,
+
+            // ✅ Based on LOGIN ROLE LEVEL
+            originalPassword: {
+              $cond: {
+                if: { $eq: [{ $literal: canViewOriginalPassword }, true] },
+                then: "$originalPassword",
+                else: "$$REMOVE",
+              },
+            },
           },
         },
         { $skip: skip },
         { $limit: pageLimit },
-        { $sort: { createdAt: -1 } }, 
+        { $sort: { createdAt: -1 } },
       ])
       .toArray();
 

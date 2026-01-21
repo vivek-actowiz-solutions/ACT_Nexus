@@ -7,24 +7,61 @@ const {
   getworkreportDetails,
   getuserslist,
   getFeedsByProjectworkreport,
-  getProjectlistworkreport,getworklistbydate ,updateWorkReport
+  getProjectlistworkreport,
+  getworklistbydate,
+  updateWorkReport,
 } = require("../controllers/WorkReportController");
 const protect = require("../middleware/AuthMiddleware");
 const RolePermissionMiddleware = require("../middleware/RolePermissionMiddleware");
 
-router.post("/Add-WorkReport", protect, AddWorkReport);
-router.post("/update-WorkReport", protect, updateWorkReport);
+router.post(
+  "/Add-WorkReport",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  AddWorkReport
+);
+router.post(
+  "/update-WorkReport",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  updateWorkReport
+);
 router.get(
   "/work-reports",
   protect,
   RolePermissionMiddleware("WorkReport"),
   GetWorkReports
 );
-router.get("/project-workreport",protect, getprojectworkreport);
-router.get("/work-report-details", getworkreportDetails);
-router.get("/work-list-workreport", protect, getworklistbydate);
-router.get("/Feeds-list-workreport/:id", protect, getFeedsByProjectworkreport);
-router.get("/project-list-workreport", protect, getProjectlistworkreport);
+router.get(
+  "/project-workreport",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  getprojectworkreport
+);
+router.get(
+  "/work-report-details",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  getworkreportDetails
+);
+router.get(
+  "/work-list-workreport",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  getworklistbydate
+);
+router.get(
+  "/Feeds-list-workreport/:id",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  getFeedsByProjectworkreport
+);
+router.get(
+  "/project-list-workreport",
+  protect,
+  RolePermissionMiddleware("WorkReport"),
+  getProjectlistworkreport
+);
 router.get(
   "/get-users-list",
   protect,

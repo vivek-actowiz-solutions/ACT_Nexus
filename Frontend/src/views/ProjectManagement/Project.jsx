@@ -33,6 +33,9 @@ const Project = () => {
   const [showAssignpcModal, setShowAssipcgnModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
+  const [loadingTeamLead, setLoadingTeamLead] = useState(false);
+  const [loadingProjectCoordinator, setLoadingProjectCoordinator] = useState(false);
+
   // multi team leads
   const [selectedTLs, setSelectedTLs] = useState([]);
 
@@ -317,6 +320,7 @@ const Project = () => {
     fetchAssignTlUsers(row);
   };
   const fetchAssignTlUsers = async (row) => {
+    setLoadingTeamLead(true);
     try {
       const res = await axios.get(
         `${api}/project-assign-users?department=${encodeURIComponent(row.department)}&reportingId=${row.projectManager?._id}&teamLead=true`,
@@ -333,9 +337,12 @@ const Project = () => {
       );
     } catch (err) {
       toast.error('Failed to load assign users');
+    } finally {
+      setLoadingTeamLead(false);
     }
   };
   const fetchAssignpcUsers = async (row) => {
+    setLoadingProjectCoordinator(true);
     try {
       const res = await axios.get(
         `${api}/project-assign-users?department=${encodeURIComponent('Client Success')}&reportingId=${row.csprojectManager?._id}&coordinator=true`,
@@ -352,6 +359,8 @@ const Project = () => {
       );
     } catch (err) {
       toast.error('Failed to load assign users');
+    } finally {
+      setLoadingProjectCoordinator(false);
     }
   };
   const handleAssignTeam = async () => {
@@ -365,6 +374,7 @@ const Project = () => {
       return;
     }
 
+    setLoadingTeamLead(true);
     try {
       const res = await axios.post(
         `${api}/project-assign-team?teamlead=true`,
@@ -381,6 +391,8 @@ const Project = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Assign failed');
+    } finally {
+      setLoadingTeamLead(false);
     }
   };
   const handleAssignpc = async () => {
@@ -389,6 +401,7 @@ const Project = () => {
       return;
     }
 
+    setLoadingProjectCoordinator(true);
     try {
       const res = await axios.post(
         `${api}/project-assign-team?coordinator=true`,
@@ -405,6 +418,8 @@ const Project = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Assign failed');
+    } finally {
+      setLoadingProjectCoordinator(false);
     }
   };
   const columns = [
@@ -413,7 +428,36 @@ const Project = () => {
       width: '60px',
       selector: (row, index) => index + 1 + (currentPage - 1) * perPage
     },
-    { name: 'Project Code', selector: (row) => row.projectCode },
+    {
+      name: 'Project Code',
+      width: '160px',
+      cell: (row) => {
+        const content = (
+          <div
+            style={{
+              backgroundColor: row.hasEscalation ? '#f09799ff' : 'transparent',
+              color: row.hasEscalation ? '#000' : 'inherit',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              width: '100%',
+              textAlign: 'center',
+              fontWeight: row.hasEscalation ? '600' : 'normal',
+              cursor: row.hasEscalation ? 'pointer' : 'default'
+            }}
+          >
+            {row.projectCode}
+          </div>
+        );
+
+        return row.hasEscalation ? (
+          <OverlayTrigger placement="top" overlay={<Tooltip>Escalation Open for this Project</Tooltip>}>
+            {content}
+          </OverlayTrigger>
+        ) : (
+          content
+        );
+      }
+    },
     { name: 'Name', selector: (row) => row.projectName },
     { name: 'Total Feed', width: '100px', selector: (row) => row.feedIds.length },
     {
@@ -574,10 +618,21 @@ const Project = () => {
           </div>
         </>
       ),
-      width: '150px'
+      width: '200px'
     }
   ];
   document.title = 'Projects Overview';
+
+  const conditionalRowStyles = [
+    {
+      when: (row) => row.hasEscalation === true,
+      style: {
+        backgroundColor: '#f09799ff',
+        color: '#000',
+        fontWeight: '600'
+      }
+    }
+  ];
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
@@ -629,6 +684,7 @@ const Project = () => {
                 paginationDefaultPage={currentPage}
                 onChangePage={handlePageChange}
                 onChangeRowsPerPage={handlePerRowsChange}
+                conditionalRowStyles={conditionalRowStyles}
                 responsive
                 striped
                 highlightOnHover
@@ -683,9 +739,15 @@ const Project = () => {
           <Button variant="secondary" onClick={() => setShowAssignTeamModal(false)}>
             Cancel
           </Button>
-          <Button variant="dark" onClick={handleAssignTeam}>
-            Add Team
-          </Button>
+          {loadingTeamLead ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+            </Button>
+          ) : (
+            <Button variant="dark" onClick={handleAssignTeam}>
+              Add Team
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
       <Modal show={showAssignpcModal} onHide={() => setShowAssipcgnModal(false)} centered>
@@ -716,9 +778,15 @@ const Project = () => {
           <Button variant="secondary" onClick={() => setShowAssipcgnModal(false)}>
             Cancel
           </Button>
-          <Button variant="dark" onClick={handleAssignpc}>
-            Add Team
-          </Button>
+          {loadingProjectCoordinator ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+            </Button>
+          ) : (
+            <Button variant="dark" onClick={handleAssignpc}>
+              Add Team
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </>

@@ -14,7 +14,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 // import { TextField, MenuItem } from '@mui/material';
 // import { set } from 'date-fns';
 
-// import ReactQuill from 'react-quill';
+import ReactQuill from 'react-quill';
 
 const priorityOptions = [
   { label: 'High', value: 'High' },
@@ -94,6 +94,7 @@ const CreateProject = () => {
     csprojectManager: null,
     salesPerson: null
   });
+  const [errors, setErrors] = useState({});
   console.log('formdata', formData);
   const [schedule, setSchedule] = useState({
     day: '',
@@ -106,6 +107,7 @@ const CreateProject = () => {
   console.log('schedule', schedule);
   const handleFrequencyChange = (v) => {
     setFormData({ ...formData, projectFrequency: v?.value || '' });
+    setErrors((prev) => ({ ...prev, projectFrequency: '' }));
     setSchedule({
       day: '',
       date: null,
@@ -146,7 +148,7 @@ const CreateProject = () => {
       const res = await axios.get(`${api}/users-list?department=${encodeURIComponent(department)}&manager=true`, {
         withCredentials: true
       });
-      console.log("csManager" , res.data.data || []);
+      console.log('csManager', res.data.data || []);
       setcsManager(res.data.data || []);
     } catch {
       toast.error('Failed to fetch users');
@@ -166,99 +168,43 @@ const CreateProject = () => {
     label: u.name
   }));
   const validateForm = () => {
-    if (!formData.projectName?.trim()) {
-      toast.error('Project Name is required');
-      return false;
-    }
-    if (!formData.projectCode?.trim()) {
-      toast.error('Project code is required');
-      return false;
-    }
+    let newErrors = {};
 
-    if (!formData.description?.trim()) {
-      toast.error('Description is required');
-      return false;
-    }
+    if (!formData.projectName?.trim()) newErrors.projectName = 'Project Name is required';
+    if (!formData.projectCode?.trim()) newErrors.projectCode = 'Project code is required';
+    if (!formData.description?.trim()) newErrors.description = 'Description is required';
+    if (!formData.deliveryType) newErrors.deliveryType = 'Delivery Type is required';
+    if (!formData.deliveryMode) newErrors.deliveryMode = 'Delivery Mode is required';
+    if (!formData.IndustryType) newErrors.IndustryType = 'Industry Type is required';
+    if (!formData.department) newErrors.department = 'Department is required';
+    // if (!formData.projectPriority) newErrors.projectPriority = 'Project Priority is required';
+    if (!formData.projectFrequency) newErrors.projectFrequency = 'Project Frequency is required';
+    if (!formData.projectManager) newErrors.projectManager = 'Project Manager is required';
+    if (!formData.csprojectManager) newErrors.csprojectManager = 'CS Manager is required';
+    if (!formData.projectTechManager) newErrors.projectTechManager = 'Project Tech Manager is required';
+    if (!formData.salesPerson) newErrors.salesPerson = 'Sales Person is required';
 
-    if (!formData.deliveryType) {
-      toast.error('Delivery Type is required');
-      return false;
-    }
-    if (!formData.deliveryMode) {
-      toast.error('Delivery Type is required');
-      return false;
-    }
+    if (!sowFile || sowFile.length === 0) newErrors.sowFile = 'SOW document is required';
 
-    if (!formData.IndustryType) {
-      toast.error('Industry Type is required');
-      return false;
-    }
-
-    if (!formData.department) {
-      toast.error('Department is required');
-      return false;
-    }
-
-    // if (!formData.projectPriority) {
-    //   toast.error('Project Priority is required');
-    //   return false;
-    // }
-
-    if (!formData.projectFrequency) {
-      toast.error('Project Frequency is required');
-      return false;
-    }
-
-    if (!formData.projectManager) {
-      toast.error('Project Manager is required');
-      return false;
-    }
-    if (!formData.csprojectManager) {
-      toast.error('CS Manager is required');
-      return false;
-    }
-    if (!formData.projectTechManager) {
-      toast.error('Project Tech Manager is required');
-      return false;
-    }
-
-    if (!formData.salesPerson) {
-      toast.error('Sales Person is required');
-      return false;
-    }
-
-    if (!sowFile || sowFile.length === 0) {
-      toast.error('SOW document is required');
-      return false;
-    }
-
-    // if (!inputFile || inputFile.length === 0) {
-    //   toast.error('Input document is required');
-    //   return false;
-    // }
     if (formData.projectFrequency) {
-      if (!schedule.time) {
-        toast.error('Delivery time is required');
-        return false;
-      }
+      if (!schedule.time) newErrors.time = 'Delivery time is required';
 
       if (['Weekly', 'Bi-Weekly'].includes(formData.projectFrequency) && !schedule.day) {
-        toast.error('Delivery day is required');
-        return false;
+        newErrors.day = 'Delivery day is required';
       }
 
-      if (['Custom'].includes(formData.projectFrequency) && !schedule.date) {
-        toast.error('Delivery date is required');
-        return false;
+      if (['Custom', 'Monthly'].includes(formData.projectFrequency) && !schedule.date) {
+        newErrors.date = 'Delivery date is required';
+      }
+      if (['Bi-Monthly'].includes(formData.projectFrequency)) {
+        if (!schedule.firstDate) newErrors.firstDate = 'First Date is required';
+        if (!schedule.secondDate) newErrors.secondDate = 'Second Date is required';
       }
     }
+    if (!formData.description?.trim()) newErrors.description = 'Description is required';
 
-    // if (!annotationFile || annotationFile.length === 0) {
-    //   toast.error('Annotation document is required');
-    //   return false;
-    // }
-
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   /* ================= SUBMIT ================= */
 
@@ -318,6 +264,8 @@ const CreateProject = () => {
       annotationFile.forEach((file) => {
         form.append('annotationDocument', file);
       });
+
+      console.log(form);
       const res = await axios.post(`${api}/Project-Integration`, form, {
         withCredentials: true
         // headers: { 'Content-Type': 'multipart/form-data' }
@@ -352,7 +300,7 @@ const CreateProject = () => {
       setLoading(false);
     }
   };
-  const FileDropZone = ({ label, file, setFile }) => {
+  const FileDropZone = ({ label, file, setFile, error }) => {
     const inputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -366,13 +314,13 @@ const CreateProject = () => {
       setDragOver(false);
       if (e.dataTransfer.files?.length) {
         setFile((prev) => [...prev, ...Array.from(e.dataTransfer.files)]);
+        if (label === 'SOW Document') setErrors((prev) => ({ ...prev, sowFile: '' }));
       }
     };
 
     return (
       <>
         <Form.Label className={label === 'SOW Document' ? 'required' : ''}>{label}</Form.Label>
-
         <div
           className="text-center p-4 rounded"
           style={{
@@ -396,54 +344,63 @@ const CreateProject = () => {
             type="file"
             multiple
             className="d-none"
-            onChange={(e) => setFile((prev) => [...prev, ...Array.from(e.target.files)])}
+            onChange={(e) => {
+              setFile((prev) => [...prev, ...Array.from(e.target.files)]);
+              if (label === 'SOW Document') setErrors((prev) => ({ ...prev, sowFile: '' }));
+            }}
           />
         </div>
-
         {/* ✅ Preview */}
         {file.map((f, i) => (
-          <div key={i} className="mt-2 p-2 border rounded d-flex justify-content-between">
-            <div>
-              <div className="fw-semibold">{f.name}</div>
+          <div key={i} className="mt-2 p-2 border rounded d-flex justify-content-between align-items-center">
+            <div className="me-2" style={{ maxWidth: '220px' }}>
+              <div
+                className="fw-semibold text-truncate"
+                title={f.name} // full name on hover
+              >
+                {f.name}
+              </div>
               <small>{(f.size / 1024).toFixed(2)} KB</small>
             </div>
-            <Button size="sm" onClick={() => setFile(file.filter((_, idx) => idx !== i))}>
+
+            <Button size="sm" variant="danger" onClick={() => setFile(file.filter((_, idx) => idx !== i))}>
               Remove
             </Button>
           </div>
         ))}
+        {error && <div className="text-danger mt-1 small">{error}</div>}
       </>
     );
   };
   const generateProjectCode = () => {
     const managerCode = formData.projectManager ? getManagerCode(formData.projectManager.label) : 'XX';
+    const csprojectManagerCode = formData.csprojectManager ? getManagerCode(formData.csprojectManager.label) : 'XX';
     const bdecode = formData.salesPerson ? getManagerCode(formData.salesPerson.label) : 'XX';
     const random4Digit = Math.floor(1000 + Math.random() * 9000);
 
-    const code = `ACT-${bdecode}${managerCode}-${random4Digit}`;
-//ACT-ARSS-1334
+    const code = `ACT-${bdecode}${csprojectManagerCode}${managerCode}-${random4Digit}`;
+    //ACT-ARSS-1334
     setFormData((prev) => ({
       ...prev,
       projectCode: code
     }));
   };
-const handleCodeEdit = (e) => {
-  // Get only digits (max 4)
-  const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+  const handleCodeEdit = (e) => {
+    // allow only 4 digits
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
 
-  // Extract prefix: ACT-BDE-MGR
-  const match = (formData.projectCode || '').match(/^([A-Z]+-[A-Z]+-[A-Z]+)/);
+    // keep everything before last hyphen
+    const prefix = formData.projectCode ? formData.projectCode.replace(/-\d{0,4}$/, '') : 'ACT-XX-XX-XX';
 
-  const prefix = match ? match[1] : 'ACT-XX-XX';
-
-  setFormData((prev) => ({
-    ...prev,
-    projectCode: `${prefix}${digits}`
-  }));
-};
+    setFormData((prev) => ({
+      ...prev,
+      projectCode: `${prefix}-${digits}`
+    }));
+    setErrors((prev) => ({ ...prev, projectCode: '' }));
+  };
   useEffect(() => {
     generateProjectCode();
-  }, [formData.projectManager || '', formData.salesPerson || '']);
+  }, [formData.projectManager || '', formData.salesPerson || '', formData.csprojectManager || '']);
   const getManagerCode = (name = '') => {
     console.log('name', name);
     const words = name.trim().split(' ').filter(Boolean);
@@ -466,6 +423,7 @@ const handleCodeEdit = (e) => {
               <Form.Control
                 value={formData.projectName}
                 maxLength={30}
+                isInvalid={!!errors.projectName}
                 onChange={(e) => {
                   const value = e.target.value;
 
@@ -484,15 +442,24 @@ const handleCodeEdit = (e) => {
                   }
 
                   setFormData({ ...formData, projectName: value });
+                  if (value) setErrors((prev) => ({ ...prev, projectName: '' }));
                 }}
                 placeholder="Enter project name"
               />
+              <Form.Control.Feedback type="invalid">{errors.projectName}</Form.Control.Feedback>
             </Col>
             <Col md={3}>
               <Form.Label className="required">Project Code</Form.Label>
 
               <div className="d-flex gap-2">
-                <Form.Control type="text" value={formData.projectCode} onChange={handleCodeEdit} placeholder="Click Generate" />
+                <Form.Control
+                  type="text"
+                  value={formData.projectCode}
+                  onChange={handleCodeEdit}
+                  placeholder="Click Generate"
+                  isInvalid={!!errors.projectCode}
+                />
+                <Form.Control.Feedback type="invalid">{errors.projectCode}</Form.Control.Feedback>
 
                 <Button variant="primary" onClick={generateProjectCode}>
                   Generate
@@ -505,8 +472,12 @@ const handleCodeEdit = (e) => {
                 options={industryOptions}
                 value={industryOptions.find((o) => o.value === formData.IndustryType)}
                 isClearable
-                onChange={(v) => setFormData({ ...formData, IndustryType: v?.value || '' })}
+                onChange={(v) => {
+                  setFormData({ ...formData, IndustryType: v?.value || '' });
+                  setErrors((prev) => ({ ...prev, IndustryType: '' }));
+                }}
               />
+              {errors.IndustryType && <div className="text-danger mt-1 small">{errors.IndustryType}</div>}
             </Col>
           </Row>
 
@@ -519,6 +490,7 @@ const handleCodeEdit = (e) => {
                 onChange={handleFrequencyChange}
                 isClearable
               />
+              {errors.projectFrequency && <div className="text-danger mt-1 small">{errors.projectFrequency}</div>}
             </Col>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {formData.projectFrequency === 'Weekly' && (
@@ -527,9 +499,13 @@ const handleCodeEdit = (e) => {
                   <Select
                     options={dayOptions}
                     value={dayOptions.find((d) => d.value === schedule.day) || null}
-                    onChange={(v) => setSchedule({ ...schedule, day: v?.value || '' })}
+                    onChange={(v) => {
+                      setSchedule({ ...schedule, day: v?.value || '' });
+                      setErrors((prev) => ({ ...prev, day: '' }));
+                    }}
                     isClearable
                   />
+                  {errors.day && <div className="text-danger mt-1 small">{errors.day}</div>}
                 </Col>
               )}
               {formData.projectFrequency === 'Bi-Weekly' && (
@@ -547,11 +523,13 @@ const handleCodeEdit = (e) => {
                         ...schedule,
                         day: selectedOptions ? selectedOptions.map((opt) => opt.value).join(',') : ''
                       });
+                      setErrors((prev) => ({ ...prev, day: '' }));
                     }}
                     isClearable
                     isMulti
                     placeholder="Select up to 2 days"
                   />
+                  {errors.day && <div className="text-danger mt-1 small">{errors.day}</div>}
                 </Col>
               )}
 
@@ -562,15 +540,17 @@ const handleCodeEdit = (e) => {
                   <DatePicker
                     views={['day']} // Only day selection
                     value={schedule.firstDate ? dayjs().date(parseInt(schedule.firstDate)) : null}
-                    onChange={(v) =>
+                    onChange={(v) => {
                       setSchedule({
                         ...schedule,
                         firstDate: v ? dayjs(v).format('DD') : '',
-                        secondDate: '' 
-                      })
-
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                        secondDate: ''
+                      });
+                      setErrors((prev) => ({ ...prev, firstDate: '' }));
+                    }}
+                    slotProps={{
+                      textField: { fullWidth: true, size: 'small', error: !!errors.firstDate, helperText: errors.firstDate }
+                    }}
                     inputFormat="DD"
                   />
                 </Col>
@@ -584,13 +564,16 @@ const handleCodeEdit = (e) => {
                     value={schedule.secondDate ? dayjs().date(parseInt(schedule.secondDate)) : null}
                     maxDate={schedule.firstDate ? dayjs().date(parseInt(schedule.firstDate)).add(30, 'day') : null}
                     minDate={schedule.firstDate ? dayjs().date(Number(schedule.firstDate)).add(1, 'day') : null}
-                    onChange={(v) =>
+                    onChange={(v) => {
                       setSchedule({
                         ...schedule,
                         secondDate: v ? dayjs(v).format('DD') : ''
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      });
+                      setErrors((prev) => ({ ...prev, secondDate: '' }));
+                    }}
+                    slotProps={{
+                      textField: { fullWidth: true, size: 'small', error: !!errors.secondDate, helperText: errors.secondDate }
+                    }}
                     inputFormat="DD"
                   />
                 </Col>
@@ -603,13 +586,14 @@ const handleCodeEdit = (e) => {
                     value={schedule.date ? dayjs(schedule.date, 'YYYY-MM-DD') : null}
                     format="YYYY-MM-DD"
                     minDate={dayjs()}
-                    onChange={(v) =>
+                    onChange={(v) => {
                       setSchedule({
                         ...schedule,
                         date: v ? dayjs(v).format('YYYY-MM-DD') : ''
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      });
+                      setErrors((prev) => ({ ...prev, date: '' }));
+                    }}
+                    slotProps={{ textField: { fullWidth: true, size: 'small', error: !!errors.date, helperText: errors.date } }}
                   />
                 </Col>
               )}
@@ -619,13 +603,14 @@ const handleCodeEdit = (e) => {
                   <DatePicker
                     views={['day']} // Only allow selecting the day
                     value={schedule.date ? dayjs().date(parseInt(schedule.date)) : null} // show selected day
-                    onChange={(v) =>
+                    onChange={(v) => {
                       setSchedule({
                         ...schedule,
                         date: v ? dayjs(v).format('DD') : '' // store day as string
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      });
+                      setErrors((prev) => ({ ...prev, date: '' }));
+                    }}
+                    slotProps={{ textField: { fullWidth: true, size: 'small', error: !!errors.date, helperText: errors.date } }}
                     inputFormat="DD"
                   />
                 </Col>
@@ -638,8 +623,11 @@ const handleCodeEdit = (e) => {
                   <TimePicker
                     ampm={false}
                     value={schedule.time}
-                    onChange={(v) => setSchedule({ ...schedule, time: v })}
-                    slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                    onChange={(v) => {
+                      setSchedule({ ...schedule, time: v });
+                      setErrors((prev) => ({ ...prev, time: '' }));
+                    }}
+                    slotProps={{ textField: { fullWidth: true, size: 'small', error: !!errors.time, helperText: errors.time } }}
                   />
                 </Col>
               )}
@@ -652,38 +640,53 @@ const handleCodeEdit = (e) => {
               <Select
                 options={deliveryOptions}
                 value={deliveryOptions.find((o) => o.value === formData.deliveryType)}
-                onChange={(v) => setFormData({ ...formData, deliveryType: v?.value || '' })}
+                onChange={(v) => {
+                  setFormData({ ...formData, deliveryType: v?.value || '' });
+                  setErrors((prev) => ({ ...prev, deliveryType: '' }));
+                }}
                 isClearable
               />
+              {errors.deliveryType && <div className="text-danger mt-1 small">{errors.deliveryType}</div>}
             </Col>
             <Col md={3}>
               <Form.Label className="required">Delivery Mode</Form.Label>
               <Select
                 options={deliveryModeOptions}
                 value={deliveryModeOptions.find((o) => o.value === formData.deliveryMode)}
-                onChange={(v) => setFormData({ ...formData, deliveryMode: v?.value || '' })}
+                onChange={(v) => {
+                  setFormData({ ...formData, deliveryMode: v?.value || '' });
+                  setErrors((prev) => ({ ...prev, deliveryMode: '' }));
+                }}
                 isClearable
               />
+              {errors.deliveryMode && <div className="text-danger mt-1 small">{errors.deliveryMode}</div>}
             </Col>
-                    
 
             <Col md={3}>
               <Form.Label className="required">BDE (Bussiness Development Executive)</Form.Label>
               <Select
                 options={SalesOptions}
                 value={formData.salesPerson}
-                onChange={(v) => setFormData({ ...formData, salesPerson: v })}
+                onChange={(v) => {
+                  setFormData({ ...formData, salesPerson: v });
+                  setErrors((prev) => ({ ...prev, salesPerson: '' }));
+                }}
                 isClearable
               />
+              {errors.salesPerson && <div className="text-danger mt-1 small">{errors.salesPerson}</div>}
             </Col>
-             <Col md={3}>
+            <Col md={3}>
               <Form.Label className="required">Client Success Manager</Form.Label>
               <Select
                 options={csManagerOptions}
                 value={formData.csprojectManager}
-                onChange={(v) => setFormData({ ...formData, csprojectManager: v })}
+                onChange={(v) => {
+                  setFormData({ ...formData, csprojectManager: v });
+                  setErrors((prev) => ({ ...prev, csprojectManager: '' }));
+                }}
                 isClearable
               />
+              {errors.csprojectManager && <div className="text-danger mt-1 small">{errors.csprojectManager}</div>}
             </Col>
             {/* <Col md={4}>
               <Form.Label className="required"> Project Priority</Form.Label>
@@ -708,11 +711,13 @@ const handleCodeEdit = (e) => {
                     department: v?.value || '',
                     projectManager: null
                   }));
+                  setErrors((prev) => ({ ...prev, department: '' }));
 
                   fetchmanager(v?.value);
                 }}
                 isClearable
               />
+              {errors.department && <div className="text-danger mt-1 small">{errors.department}</div>}
             </Col>
             <Col md={3}>
               <Form.Label className="required">Project Manager</Form.Label>
@@ -721,26 +726,31 @@ const handleCodeEdit = (e) => {
                 value={formData.projectManager}
                 onChange={(v) => {
                   setFormData({ ...formData, projectManager: v });
+                  setErrors((prev) => ({ ...prev, projectManager: '' }));
                   toast.success('Project code updated');
                 }}
                 isClearable
               />
+              {errors.projectManager && <div className="text-danger mt-1 small">{errors.projectManager}</div>}
             </Col>
             <Col md={3}>
               <Form.Label className="required">Project Technical Manager</Form.Label>
               <Select
                 options={ManagerOptions}
                 value={formData.projectTechManager}
-                onChange={(v) => setFormData({ ...formData, projectTechManager: v })}
+                onChange={(v) => {
+                  setFormData({ ...formData, projectTechManager: v });
+                  setErrors((prev) => ({ ...prev, projectTechManager: '' }));
+                }}
                 isClearable
               />
+              {errors.projectTechManager && <div className="text-danger mt-1 small">{errors.projectTechManager}</div>}
             </Col>
-   
           </Row>
 
           <Row className="mb-3">
             <Col md={4}>
-              <FileDropZone label="SOW Document" file={sowFile} setFile={setSowFile} />
+              <FileDropZone label="SOW Document" file={sowFile} setFile={setSowFile} error={errors.sowFile} />
             </Col>
 
             <Col md={4}>
@@ -753,12 +763,22 @@ const handleCodeEdit = (e) => {
           <Row className="mb-3">
             <Col md={12}>
               <Form.Label className="required">Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={4}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
+
+              <div className={errors.description ? 'border border-danger rounded' : ''}>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={(value) => {
+                    setFormData({ ...formData, description: value });
+                    if (value && value !== '<p><br></p>') {
+                      setErrors((prev) => ({ ...prev, description: '' }));
+                    }
+                  }}
+                  placeholder="Enter detailed description..."
+                />
+              </div>
+
+              {errors.description && <div className="text-danger mt-1">{errors.description}</div>}
             </Col>
           </Row>
 

@@ -64,6 +64,7 @@ const CreateProject = () => {
 
   const [sowFile, setSowFile] = useState([]);
   const [inputFile, setInputFile] = useState([]);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     projectName: '',
@@ -113,62 +114,22 @@ const CreateProject = () => {
     label: u.name
   }));
   const validateForm = () => {
-    if (!formData.projectName?.trim()) {
-      toast.error('Project Name is required');
-      return false;
-    }
+    const newErrors = {};
 
-    if (!formData.description?.trim()) {
-      toast.error('Description is required');
-      return false;
-    }
+    if (!formData.projectName?.trim()) newErrors.projectName = 'Project Name is required';
+    if (!formData.description?.trim()) newErrors.description = 'Description is required';
+    if (!formData.deliveryType) newErrors.deliveryType = 'Delivery Type is required';
+    if (!formData.IndustryType) newErrors.IndustryType = 'Industry Type is required';
+    if (!formData.department) newErrors.department = 'Department is required';
+    if (!formData.projectPriority) newErrors.projectPriority = 'Project Priority is required';
+    if (!formData.projectFrequency) newErrors.projectFrequency = 'Project Frequency is required';
+    if (!formData.projectManager) newErrors.projectManager = 'Project Manager is required';
+    if (!formData.salesPerson) newErrors.salesPerson = 'Sales Person is required';
+    if (!sowFile || sowFile.length === 0) newErrors.sowFile = 'SOW document is required';
+    if (!inputFile || inputFile.length === 0) newErrors.inputFile = 'Input document is required';
 
-    if (!formData.deliveryType) {
-      toast.error('Delivery Type is required');
-      return false;
-    }
-
-    if (!formData.IndustryType) {
-      toast.error('Industry Type is required');
-      return false;
-    }
-
-    if (!formData.department) {
-      toast.error('Department is required');
-      return false;
-    }
-
-    if (!formData.projectPriority) {
-      toast.error('Project Priority is required');
-      return false;
-    }
-
-    if (!formData.projectFrequency) {
-      toast.error('Project Frequency is required');
-      return false;
-    }
-
-    if (!formData.projectManager) {
-      toast.error('Project Manager is required');
-      return false;
-    }
-
-    if (!formData.salesPerson) {
-      toast.error('Sales Person is required');
-      return false;
-    }
-
-    if (!sowFile || sowFile.length === 0) {
-      toast.error('SOW document is required');
-      return false;
-    }
-
-    if (!inputFile || inputFile.length === 0) {
-      toast.error('Input document is required');
-      return false;
-    }
-
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   /* ================= SUBMIT ================= */
 
@@ -235,7 +196,7 @@ const CreateProject = () => {
       setLoading(false);
     }
   };
-  const FileDropZone = ({ label, file, setFile }) => {
+  const FileDropZone = ({ label, file, setFile, error }) => {
     const inputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -260,7 +221,7 @@ const CreateProject = () => {
           className="text-center p-4 rounded"
           style={{
             cursor: 'pointer',
-            border: '2px dashed #3F4D67',
+            border: error ? '2px dashed #dc3545' : '2px dashed #3F4D67',
             backgroundColor: dragOver ? '#f8f9fa' : 'transparent'
           }}
           onClick={() => inputRef.current.click()}
@@ -295,6 +256,7 @@ const CreateProject = () => {
             </Button>
           </div>
         ))}
+        {error && <div className="text-danger mt-1 text-sm">{error}</div>}
       </>
     );
   };
@@ -307,7 +269,12 @@ const CreateProject = () => {
           <Row className="mb-3">
             <Col md={6}>
               <Form.Label className="required text-bold">Project Name</Form.Label>
-              <Form.Control value={formData.projectName} onChange={(e) => setFormData({ ...formData, projectName: e.target.value })} />
+              <Form.Control
+                value={formData.projectName}
+                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                isInvalid={!!errors.projectName}
+              />
+              <Form.Control.Feedback type="invalid">{errors.projectName}</Form.Control.Feedback>
             </Col>
             <Col md={6}>
               <Form.Label className="required">Industry Type</Form.Label>
@@ -317,6 +284,7 @@ const CreateProject = () => {
                 isClearable
                 onChange={(v) => setFormData({ ...formData, IndustryType: v?.value || '' })}
               />
+              {errors.IndustryType && <div className="text-danger mt-1">{errors.IndustryType}</div>}
             </Col>
           </Row>
 
@@ -329,6 +297,7 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, projectFrequency: v?.value || '' })}
                 isClearable
               />
+              {errors.projectFrequency && <div className="text-danger mt-1">{errors.projectFrequency}</div>}
             </Col>
             <Col md={4}>
               <Form.Label className="required">Delivery Type</Form.Label>
@@ -338,6 +307,7 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, deliveryType: v?.value || '' })}
                 isClearable
               />
+              {errors.deliveryType && <div className="text-danger mt-1">{errors.deliveryType}</div>}
             </Col>
             <Col md={4}>
               <Form.Label className="required">Priority</Form.Label>
@@ -347,6 +317,7 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, projectPriority: v.value })}
                 isClearable
               />
+              {errors.projectPriority && <div className="text-danger mt-1">{errors.projectPriority}</div>}
             </Col>
           </Row>
 
@@ -367,6 +338,7 @@ const CreateProject = () => {
                 }}
                 isClearable
               />
+              {errors.department && <div className="text-danger mt-1">{errors.department}</div>}
             </Col>
             <Col md={4}>
               <Form.Label className="required">Project Manager</Form.Label>
@@ -376,6 +348,7 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, projectManager: v })}
                 isClearable
               />
+              {errors.projectManager && <div className="text-danger mt-1">{errors.projectManager}</div>}
             </Col>
 
             <Col md={4}>
@@ -386,16 +359,17 @@ const CreateProject = () => {
                 onChange={(v) => setFormData({ ...formData, salesPerson: v })}
                 isClearable
               />
+              {errors.salesPerson && <div className="text-danger mt-1">{errors.salesPerson}</div>}
             </Col>
           </Row>
 
           <Row className="mb-3">
             <Col md={6}>
-              <FileDropZone label="SOW Document" file={sowFile} setFile={setSowFile} />
+              <FileDropZone label="SOW Document" file={sowFile} setFile={setSowFile} error={errors.sowFile} />
             </Col>
 
             <Col md={6}>
-              <FileDropZone label="Input Document" file={inputFile} setFile={setInputFile} />
+              <FileDropZone label="Input Document" file={inputFile} setFile={setInputFile} error={errors.inputFile} />
             </Col>
           </Row>
           <Row className="mb-3">
@@ -406,7 +380,9 @@ const CreateProject = () => {
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                isInvalid={!!errors.description}
               />
+              <Form.Control.Feedback type="invalid">{errors.description}</Form.Control.Feedback>
             </Col>
           </Row>
 

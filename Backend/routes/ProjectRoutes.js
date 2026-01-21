@@ -11,12 +11,16 @@ const {
   getassignusers,
   assignteam,
   assigndevelopers,
-  getProjectbyId,projectUpdated ,feedupdated ,getfeedbyId ,feedstatusupdate ,feeddeleted
+  getProjectbyId,
+  projectUpdated,
+  feedupdated,
+  getfeedbyId,
+  feedstatusupdate,
+  feeddeleted,
 } = require("../controllers/ProjectController");
 const protect = require("../middleware/AuthMiddleware");
 const RolePermissionMiddleware = require("../middleware/RolePermissionMiddleware");
 const upload = require("../utils/multer");
-
 
 router.post(
   "/Project-Integration",
@@ -52,7 +56,7 @@ router.put(
     { name: "annotationDocument", maxCount: 20 },
   ]),
   projectUpdated
-)
+);
 router.post("/project-assign-team", protect, assignteam);
 router.put(
   "/projectstatusupdate/:id",
@@ -69,14 +73,54 @@ router.get(
   getFeedsByProject
 );
 
-router.get("/feed-view/:id", protect, getfeedbyId);
-router.put("/feed-update/:id" , protect, feedupdated);
-router.delete("/feed-deleted/:id" , protect, feeddeleted);
+router.get(
+  "/feed-view/:id",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  getfeedbyId
+);
+router.put(
+  "/feed-update/:id",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  feedupdated
+);
+router.delete(
+  "/feed-deleted/:id",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  feeddeleted
+);
 
-router.put("/feed-status-update/:id" , protect, feedstatusupdate);
-router.post("/feed-assign-developers", protect, assigndevelopers);
-router.get("/project-assign-users", protect, getassignusers);
-router.get("/get-developers", protect, getdevelopers);
-router.put("/feedActivestatusupdate/:id", protect ,feedActivestatusupdate);
+router.put(
+  "/feed-status-update/:id",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  feedstatusupdate
+);
+router.post(
+  "/feed-assign-developers",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  assigndevelopers
+);
+router.get(
+  "/project-assign-users",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  getassignusers
+);
+router.get(
+  "/get-developers",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  getdevelopers
+);
+router.put(
+  "/feedActivestatusupdate/:id",
+  protect,
+  RolePermissionMiddleware("Projects"),
+  feedActivestatusupdate
+);
 
 module.exports = router;

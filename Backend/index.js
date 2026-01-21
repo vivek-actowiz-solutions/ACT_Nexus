@@ -1,6 +1,3 @@
-
-
-
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -21,12 +18,9 @@ const dashboardRoutes = require("./routes/DashboardRoutes");
 const escalationRoutes = require("./routes/EscalationRoutes");
 
 const app = express();
-const path = require('path');
+const path = require("path");
 
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, 'uploads'))
-);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 /* ===============================
    TRUST PROXY (IMPORTANT)
 ================================ */
@@ -87,12 +81,12 @@ app.use("/api", workReportRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", escalationRoutes);
 
-
 /* ===============================
    GLOBAL ERROR HANDLER
 ================================ */
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.message);
+  console.log("❌ Error:", err.message);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",

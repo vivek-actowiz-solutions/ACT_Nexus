@@ -11,27 +11,32 @@ const {
   getReportingUsers,
   getuserslist,
 } = require("../controllers/managementController");
-
 const protect = require("../middleware/AuthMiddleware");
 const RolePermissionMiddleware = require("../middleware/RolePermissionMiddleware");
 // router.post("/userRegister", userRegister);
-router.get("/get-modules", getModules);
+router.get(
+  "/get-modules",
+  protect,
+  RolePermissionMiddleware("Role"),
+  getModules
+);
 router.get("/get-roles", protect, RolePermissionMiddleware("Role"), getRoles);
 router.get("/get-roles-name", protect, getRolesname);
-router.put("/update-role-permissions/:id", updatePermissions);
+router.put(
+  "/update-role-permissions/:id",
+  protect,
+  RolePermissionMiddleware("Role"),
+  updatePermissions
+);
 router.get("/get-user", protect, RolePermissionMiddleware("User"), getusers);
 router.get(
-  "/get-reporting-users", 
+  "/get-reporting-users",
   protect,
   RolePermissionMiddleware("User"),
   getReportingUsers
 );
 
-router.get(
-  "/users-list",
-  protect,
-  getuserslist
-);
+router.get("/users-list", protect, getuserslist);
 
 router.put("/update-user-role/:id", updateUserRole);
 router.put("/user-status/:id", updateuserstatus);

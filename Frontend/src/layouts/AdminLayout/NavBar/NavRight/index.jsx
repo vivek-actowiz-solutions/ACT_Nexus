@@ -1,146 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { ListGroup, Dropdown, Modal, Button, Form } from 'react-bootstrap';
-// import { Link } from 'react-router-dom';
-// import Cookies from 'js-cookie';
-// import { jwtDecode } from 'jwt-decode';
-// import { IoKeyOutline } from 'react-icons/io5';
-// import ChatList from './ChatList';
-// import avatar1 from '../../../../assets/images/user/avatar-1.jpg';
-
-// const NavRight = () => {
-//   const [listOpen, setListOpen] = useState(false);
-//   const [userName, setUserName] = useState('User');
-//   const [showPasswordModal, setShowPasswordModal] = useState(false);
-//   const [showProfileModal, setShowProfileModal] = useState(false);
-//   const [newPassword, setNewPassword] = useState('');
-//   const [updatedName, setUpdatedName] = useState('');
-//   const [updatedEmail, setUpdatedEmail] = useState('');
-
-//   useEffect(() => {
-//     const token = Cookies.get('token'); // Make sure cookie name is correct (e.g., 'token')
-//     console.log('token', token);
-//     if (token) {
-//       try {
-//         const decoded = jwtDecode(token);
-//         console.log('decoded', decoded);
-//         setUserName(decoded.name || 'User'); // Adjust according to your token payload
-//       } catch (error) {
-//         console.error('Invalid JWT token:', error);
-//       }
-//     }
-//   }, []);
-
-//   const logout = () => {
-//     Cookies.remove('token');
-
-//     window.location.href = '/API-management/login';
-//   };
-//   return (
-//     <>
-//       <ListGroup as="ul" bsPrefix=" " className="navbar-nav ml-auto" id="navbar-right">
-//         <ListGroup.Item as="li" bsPrefix=" ">
-//           <Dropdown align="end" className="drp-user">
-//             <Dropdown.Toggle variant="" id="dropdown-basic">
-//               <img src={avatar1} className="img-radius" alt="User Profile" style={{ width: '40px', height: '40px', marginRight: '10px' }} />
-//               <span>{userName}</span>
-//             </Dropdown.Toggle>
-//             <Dropdown.Menu align="end" className="profile-notification">
-//               <div className="pro-head">
-//                 {/* <img src={avatar1} className="img-radius" alt="User Profile" />
-//                 <span>{userName}</span> */}
-//                 {/* <Link to="#" className="dud-logout" title="Logout">
-//                   <i className="feather icon-log-out" />
-//                 </Link> */}
-//               </div>
-//               <ListGroup as="ul" bsPrefix=" " variant="flush" className="pro-body">
-//                 <ListGroup.Item as="li" bsPrefix=" ">
-//                   <Link to="#" className="dropdown-item" onClick={() => setShowPasswordModal(true)}>
-//                     <IoKeyOutline size={15} /> <span style={{ marginLeft: '9px' }}>Change Password</span>
-//                   </Link>
-//                 </ListGroup.Item>
-//                 <ListGroup.Item as="li" bsPrefix=" ">
-//                   <Link to="#" className="dropdown-item" onClick={() => setShowProfileModal(true)}>
-//                     <i className="feather icon-user" /> Profile
-//                   </Link>
-//                 </ListGroup.Item>
-
-//                 <ListGroup.Item as="li" bsPrefix=" ">
-//                   <Link to="#" className="dropdown-item" onClick={logout}>
-//                     <i className="feather icon-lock" /> log out
-//                   </Link>
-//                 </ListGroup.Item>
-//               </ListGroup>
-//             </Dropdown.Menu>
-//           </Dropdown>
-//         </ListGroup.Item>
-//       </ListGroup>
-//       <ChatList listOpen={listOpen} closed={() => setListOpen(false)} />
-//       <Modal show={showPasswordModal} onHide={() => setShowPasswordModal(false)} centered>
-//         <Modal.Header closeButton>
-//           <Modal.Title>Change Password</Modal.Title>
-//         </Modal.Header>
-//         <Modal.Body>
-//           <Form.Group>
-//             <Form.Label>current Password</Form.Label>
-//             <Form.Control
-//               type="password"
-//               s
-//               placeholder="Enter new password"
-//               value={currentPassword}
-//               onChange={(e) => setNewPassword(e.target.value)}
-//             />
-//           </Form.Group>
-//           <Form.Group>
-//             <Form.Label>New Password</Form.Label>
-//             <Form.Control
-//               type="password"
-//               s
-//               placeholder="Enter new password"
-//               value={newPassword}
-//               onChange={(e) => setNewPassword(e.target.value)}
-//             />
-//           </Form.Group>
-//         </Modal.Body>
-//         <Modal.Footer>
-//           <Button variant="secondary" onClick={() => setShowPasswordModal(false)}>
-//             Cancel
-//           </Button>
-//           <Button variant="primary" onClick={''}>
-//             Update
-//           </Button>
-//         </Modal.Footer>
-//       </Modal>
-//       <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered>
-//         <Modal.Header closeButton>
-//           <Modal.Title>Profile Info</Modal.Title>
-//         </Modal.Header>
-//         <Modal.Body>
-//           <Form>
-//             <Form.Group>
-//               <Form.Label>Name</Form.Label>
-//               <Form.Control type="text" value={updatedName} onChange={(e) => setUpdatedName(e.target.value)} />
-//             </Form.Group>
-//             <Form.Group className="mt-2">
-//               <Form.Label>Email</Form.Label>
-//               <Form.Control type="email" value={updatedEmail} onChange={(e) => setUpdatedEmail(e.target.value)} />
-//             </Form.Group>
-//           </Form>
-//         </Modal.Body>
-//         <Modal.Footer>
-//           <Button variant="secondary" onClick={() => setShowProfileModal(false)}>
-//             Cancel
-//           </Button>
-//           <Button variant="primary" onClick={''}>
-//             Save
-//           </Button>
-//         </Modal.Footer>
-//       </Modal>
-//     </>
-//   );
-// };
-
-// export default NavRight;
-
 import React, { useEffect, useState } from 'react';
 import { ListGroup, Dropdown, Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -156,7 +13,7 @@ import { set } from 'date-fns';
 
 const NavRight = () => {
   const [listOpen, setListOpen] = useState(false);
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState('');
 
   // Password Modal states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -165,7 +22,7 @@ const NavRight = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [clinet , setClient] = useState(true);
+  const [clinet, setClient] = useState(true);
 
   // Profile Modal states
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -173,40 +30,32 @@ const NavRight = () => {
   const [updatedEmail, setUpdatedEmail] = useState('');
 
   useEffect(() => {
- isAuthenticated();
+    isAuthenticated();
   }, []);
-const isAuthenticated = async () => {
-  try {
-    const res = await axios.get(
-      `${api}/checkAuth`,
-      { withCredentials: true }
-    );
- if (res.data.authenticated === true) {
-  console.log("user" , res)
-  const users = res.data.user;
-  setUserName(users.name || 'xyz');
-  if(users.Rolelevel === 4){
-    setClient(false);
-  }
-
-}
-  } catch (error) {
-   console.error('Authentication check failed:', error);
-  }
-};
+  const isAuthenticated = async () => {
+    try {
+      const res = await axios.get(`${api}/checkAuth`, { withCredentials: true });
+      if (res.data.authenticated === true) {
+        console.log('user', res);
+        const users = res.data.user;
+        setUserName(users.name || 'xyz');
+        if (users.Rolelevel === 4) {
+          setClient(false);
+        }
+      }
+    } catch (error) {
+      console.error('Authentication check failed:', error);
+    }
+  };
 
   const logout = async () => {
-  try {
-    await axios.post(
-      `${api}/logout`,
-      {},
-      { withCredentials: true }
-    );
-      window.location.href = "/ACT-Nexus/login";
-  } catch (error) {
-    console.error("Logout failed", error);
-  }
-};
+    try {
+      await axios.post(`${api}/logout`, {}, { withCredentials: true });
+      window.location.href = '/ACT-Nexus/login';
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
 
   // Change Password handlers
   const handlePasswordUpdate = async () => {
@@ -285,17 +134,13 @@ const isAuthenticated = async () => {
             </Dropdown.Toggle>
             <Dropdown.Menu align="end" className="profile-notification">
               <ListGroup as="ul" bsPrefix=" " variant="flush" className="pro-body">
-                {clinet && (  <ListGroup.Item as="li" bsPrefix=" ">
-                  <Link to="#" className="dropdown-item" onClick={() => setShowPasswordModal(true)}>
-                    <IoKeyOutline size={15} /> <span style={{ marginLeft: '9px' }}>Change Password</span>
-                  </Link>
-                </ListGroup.Item>)}
-              
-                {/* <ListGroup.Item as="li" bsPrefix=" ">
-                  <Link to="#" className="dropdown-item" onClick={() => setShowProfileModal(true)}>
-                    <i className="feather icon-user" /> Profile
-                  </Link>
-                </ListGroup.Item> */}
+                {clinet && (
+                  <ListGroup.Item as="li" bsPrefix=" ">
+                    <Link to="#" className="dropdown-item" onClick={() => setShowPasswordModal(true)}>
+                      <IoKeyOutline size={15} /> <span style={{ marginLeft: '9px' }}>Change Password</span>
+                    </Link>
+                  </ListGroup.Item>
+                )}
 
                 <ListGroup.Item as="li" bsPrefix=" ">
                   <Link to="#" className="dropdown-item" onClick={logout}>
@@ -308,7 +153,7 @@ const isAuthenticated = async () => {
         </ListGroup.Item>
       </ListGroup>
 
-      <ChatList listOpen={listOpen} closed={() => setListOpen(false)} />
+      {/* <ChatList listOpen={listOpen} closed={() => setListOpen(false)} /> */}
 
       {/* Change Password Modal */}
       <Modal show={showPasswordModal} onHide={handlePasswordModalClose} centered>

@@ -44,7 +44,7 @@ const UserList = () => {
   // Roles & Reporting Users
   const [roles, setRoles] = useState([]);
   const [reportingUsers, setReportingUsers] = useState([]);
-
+  const [hasKeyColumn, sethaskeycolumn] = useState(false);
   const departments = [
     { value: 'Management', label: 'Management' },
     { value: 'Development', label: 'Development' },
@@ -95,6 +95,7 @@ const UserList = () => {
         withCredentials: true
       });
       setUsers(res.data.data || []);
+      sethaskeycolumn(res.data.data?.some((row) => !!row.originalPassword));
       setPermission(res.data.permission || []);
       setTotalRows(res.data.total || 0);
       setCurrentPage(page);
@@ -262,6 +263,29 @@ const UserList = () => {
       setLoading(false);
     }
   };
+  const keyColumn = {
+    name: 'Key',
+    cell: (row) => (
+      <div className="d-flex align-items-center gap-2">
+        <span>******</span>
+        <MdContentCopy
+          size={18}
+          role="button"
+          tabIndex={0}
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            copyToClipboard(row.originalPassword, 'Key');
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              copyToClipboard(row.originalPassword, 'Key');
+            }
+          }}
+        />
+      </div>
+    )
+  };
 
   const columns = [
     {
@@ -269,10 +293,10 @@ const UserList = () => {
       selector: (_, i) => i + 1 + (currentPage - 1) * perPage,
       width: '60px'
     },
-    { name: 'Name', selector: (row) => row.name },
+    { name: 'Name', selector: (row) => row.name, width: '200px' },
     {
       name: 'Email',
-      width: '260px', // ✅ proper fixed width
+      width: '300px',
       cell: (row) => (
         <div className="d-flex align-items-center justify-content-between" style={{ width: '100%' }}>
           <span
@@ -286,22 +310,23 @@ const UserList = () => {
           >
             {row.email}
           </span>
-
-          <MdContentCopy
-            size={18}
-            role="button"
-            tabIndex={0}
-            style={{ cursor: 'pointer', flexShrink: 0 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              copyToClipboard(row.email, 'Email');
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+          {hasKeyColumn && (
+            <MdContentCopy
+              size={18}
+              role="button"
+              tabIndex={0}
+              style={{ cursor: 'pointer', flexShrink: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
                 copyToClipboard(row.email, 'Email');
-              }
-            }}
-          />
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  copyToClipboard(row.email, 'Email');
+                }
+              }}
+            />
+          )}
         </div>
       )
     },
@@ -311,35 +336,36 @@ const UserList = () => {
       name: 'Reporting',
       selector: (row) => row.reportingTo || 'N/A'
     },
-    {
-      name: 'Key',
-      cell: (row) =>
-        row.originalPassword ? (
-          <div className="d-flex align-items-center gap-2">
-            <span>******</span>
-            <MdContentCopy
-              size={18}
-              role="button"
-              tabIndex={0}
-              style={{ cursor: 'pointer' }}
-              onClick={(e) => {
-                e.stopPropagation(); // prevents row click issues
-                copyToClipboard(row.originalPassword, 'Key');
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  copyToClipboard(row.originalPassword, 'Key');
-                }
-              }}
-            />
-            {/* <Button size="sm" variant="outline-secondary" onClick={() => copyToClipboard(row.originalPassword, 'Key')}>
-              Copy
-            </Button> */}
-          </div>
-        ) : (
-          'N/A'
-        )
-    },
+    // {
+    //   name: 'Key',
+    //   cell: (row) =>
+    //     row.originalPassword ? (
+    //       <div className="d-flex align-items-center gap-2">
+    //         <span>******</span>
+    //         <MdContentCopy
+    //           size={18}
+    //           role="button"
+    //           tabIndex={0}
+    //           style={{ cursor: 'pointer' }}
+    //           onClick={(e) => {
+    //             e.stopPropagation(); // prevents row click issues
+    //             copyToClipboard(row.originalPassword, 'Key');
+    //           }}
+    //           onKeyDown={(e) => {
+    //             if (e.key === 'Enter') {
+    //               copyToClipboard(row.originalPassword, 'Key');
+    //             }
+    //           }}
+    //         />
+    //         {/* <Button size="sm" variant="outline-secondary" onClick={() => copyToClipboard(row.originalPassword, 'Key')}>
+    //           Copy
+    //         </Button> */}
+    //       </div>
+    //     ) : (
+    //       'N/A'
+    //     )
+    // },
+    ...(hasKeyColumn ? [keyColumn] : []),
     {
       name: 'Status',
       cell: (row) =>
