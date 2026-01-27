@@ -127,7 +127,7 @@ const userRegister = async (req, res) => {
     // Send email
     const emailSent = await sendMail({
       to: [email], // primary receiver
-      cc: ["vivekpankhaniyaactowiz@gmail.com"], // CC receiver
+      cc: ["actowiznexus2026@gmail.com"], // CC receiver
       subject: "Your Account credentials for Actowiz Nexus Dashboard",
       html: emailHtml,
     });
@@ -228,7 +228,7 @@ const login = async (req, res) => {
       .collection("roles")
       .findOne(
         { _id: new ObjectId(user.roleId) },
-        { projection: { permissions: 1, Rolelevel: 1, tokenVersion: 1 } }
+        { projection: { permissions: 1, Rolelevel: 1, tokenVersion: 1 } },
       );
 
     // ✅ Generate JWT token
@@ -244,7 +244,7 @@ const login = async (req, res) => {
         roleVersion: permission?.tokenVersion,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // ✅ Set cookie (valid 1 day)
@@ -328,7 +328,7 @@ const getRoleBasePermission = async (req, res) => {
       .findOne({ _id: new ObjectId(id) }, { projection: { permissions: 1 } });
     console.log("permissions", permissions);
     const moduleNames = permissions.permissions.map(
-      (permission) => permission.moduleName
+      (permission) => permission.moduleName,
     );
     console.log("moduleNames", moduleNames);
     res.status(200).json(moduleNames);
@@ -411,7 +411,7 @@ const sendotp = async (req, res) => {
     const emailSent = await sendMail(
       email,
       "Your OTP Code - Actowiz Solutions",
-      emailHtml
+      emailHtml,
     );
 
     if (emailSent) {
