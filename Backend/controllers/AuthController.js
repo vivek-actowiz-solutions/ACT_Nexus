@@ -107,16 +107,6 @@ const userRegister = async (req, res) => {
           Access ACT-Nexus Dashboard
         </a>
       </div>
-
-      <!-- Support Info -->
-      <div style="font-size: 14px; color: #475569; line-height: 1.6;">
-        <p style="margin-bottom: 10px;">
-          If you have any questions, issues, or requirements related to the <strong>ACT-Nexus Dashboard</strong>,
-          please feel free to reach out using the contact details below:
-        </p>
-      </div>
-    </div>
-
     <!-- Footer -->
     <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 28px; text-align: center;">
       <p style="margin: 0 0 10px; font-size: 13px; color: #94a3b8;">
