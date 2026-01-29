@@ -8,6 +8,9 @@ const transporter = nodemailer.createTransport({
     user: email,
     pass: password,
   },
+  pool: true, // ✅ reuse connection
+  maxConnections: 5,
+  maxMessages: 100,
 });
 
 // Send email function
@@ -20,12 +23,15 @@ const sendMail = async ({ to = [], cc = [], subject, html }) => {
     html,
   };
 
+  console.log("Email options:", mailOptions);
+
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("✅ Email sent:", info.response);
     return true;
   } catch (err) {
     console.error("❌ Error sending email:", err);
+    console.log("❌ Error sending email:", err);
     return false;
   }
 };

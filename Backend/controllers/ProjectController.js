@@ -711,18 +711,31 @@ const ProjectIntegration = async (req, res) => {
   </div>
 </div>
 `;
-    sendMail({
-      to: toEmails, // Project Manager, Tech Manager, CS, BDE
-      cc: ccEmails, // Creator
-      subject: `New Project Created: ${projectName} (${projectCode})`,
-      html: projectEmailHtml,
-    });
-
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Project created successfully",
       data: project,
     });
+
+    setImmediate(async () => {
+      try {
+        await sendMail({
+          to: toEmails,
+          cc: ccEmails,
+          subject: `New Project Created: ${projectName} (${projectCode})`,
+          html: projectEmailHtml,
+        });
+      } catch (err) {
+        console.error("Email error:", err);
+        console.log("Email error:", err);
+      }
+    });
+
+    // return res.status(201).json({
+    //   success: true,
+    //   message: "Project created successfully",
+    //   data: project,
+    // });
   } catch (error) {
     console.error("Create Project Error:", error);
     console.log("Create Project Error:", error);

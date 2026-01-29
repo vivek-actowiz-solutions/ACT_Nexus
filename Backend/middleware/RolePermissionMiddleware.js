@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
-const RolePermissionMiddleware = (moduleName , action) => {
-  console.log("==============this is call" ,moduleName);
+const RolePermissionMiddleware = (moduleName, action) => {
+  // console.log("==============this is call" ,moduleName);
   return async (req, res, next) => {
     try {
       if (!req.user) {
@@ -20,9 +20,8 @@ const RolePermissionMiddleware = (moduleName , action) => {
 
       if (moduleName) {
         const hasPermission = role.permissions?.filter(
-          (perm) => perm.moduleName === moduleName
+          (perm) => perm.moduleName === moduleName,
         );
-
 
         if (hasPermission.length === 0) {
           return res.status(403).json({ message: "Module   " });
@@ -30,9 +29,8 @@ const RolePermissionMiddleware = (moduleName , action) => {
         if (action && !hasPermission[0].action.includes(action)) {
           return res.status(403).json({ message: "Forbidden" });
         }
-      
 
-console.log("hasPermission", hasPermission , action);
+        console.log("hasPermission", hasPermission, action);
         //   res.locals.role = role.roleName;
         res.locals.permissions = hasPermission;
       } else {

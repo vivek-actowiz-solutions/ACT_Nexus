@@ -267,8 +267,8 @@ const CreateProject = () => {
 
       console.log(form);
       const res = await axios.post(`${api}/Project-Integration`, form, {
-        withCredentials: true
-        // headers: { 'Content-Type': 'multipart/form-data' }
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (res.status === 201) {
