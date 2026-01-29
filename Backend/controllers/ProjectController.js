@@ -722,7 +722,7 @@ const ProjectIntegration = async (req, res) => {
         await sendMail({
           to: toEmails,
           cc: ccEmails,
-          subject: `New Project Created: ${projectName} (${projectCode})`,
+          subject: `[${projectCode}-${projectName}] New Project Created `,
           html: projectEmailHtml,
         });
       } catch (err) {
