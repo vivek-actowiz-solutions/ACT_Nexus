@@ -523,21 +523,66 @@ const Project = () => {
 
     {
       name: 'Action',
-      minWidth: '180px',
-      center: true,
       cell: (row) => (
-        <div className="d-flex align-items-center gap-3">
-          {permission[0]?.action?.includes('View') && (
-            <FaEye onClick={() => navigate(`/Project-view/${row._id}`)} style={{ cursor: 'pointer', color: 'green' }} size={18} />
-          )}
+        <>
+          <div className="d-flex align-items-center gap-3">
+            {permission[0]?.action?.includes('View') && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>View</Tooltip>}>
+                <span>
+                  <FaEye
+                    onClick={() => {
+                      navigate(`/Project-view/${row._id}`);
+                    }}
+                    style={{ cursor: 'pointer', color: 'green' }}
+                    size={20}
+                  />
+                </span>
+              </OverlayTrigger>
+            )}
+            {permission?.[0]?.action?.includes('AssignTeam') && userDepartment !== 'Sales' && row?.isActive && !row?.teamLead?.length && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign Team</Tooltip>}>
+                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignTeamModal(row)}>
+                  <FaUserPlus size={18} color="#0d6efd" />
+                </span>
+              </OverlayTrigger>
+            )}
+            {permission?.[0]?.action?.includes('AssignPc') && userDepartment !== 'Sales' && row?.isActive && !row?.projectCoordinator && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign PC</Tooltip>}>
+                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignpcModal(row)}>
+                  <FaUserPlus size={18} color="black" />
+                </span>
+              </OverlayTrigger>
+            )}
 
-          {permission[0]?.action?.includes('Update') && (
-            <FiEdit onClick={() => navigate(`/Project-Edit/${row._id}`)} style={{ cursor: 'pointer', color: 'blue' }} size={18} />
-          )}
+            {permission[0]?.action?.includes('Update') && (
+              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>Edit</Tooltip>}>
+                <span>
+                  <FiEdit
+                    onClick={() => {
+                      navigate(`/Project-Edit/${row._id}`);
+                    }}
+                    style={{ cursor: 'pointer', color: 'blue' }}
+                    size={20}
+                  />
+                </span>
+              </OverlayTrigger>
+            )}
 
-          <CgFeed onClick={() => navigate(`/Project-feeds/${row._id}`)} style={{ cursor: 'pointer', color: 'blue' }} size={18} />
-        </div>
-      )
+            <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>Feeds</Tooltip>}>
+              <span>
+                <CgFeed
+                  onClick={() => {
+                    navigate(`/Project-feeds/${row._id}`);
+                  }}
+                  style={{ cursor: 'pointer', color: 'blue' }}
+                  size={20}
+                />
+              </span>
+            </OverlayTrigger>
+          </div>
+        </>
+      ),
+      width: '200px'
     }
   ];
 
