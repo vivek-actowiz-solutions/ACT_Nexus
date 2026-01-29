@@ -58,28 +58,28 @@ const projectSchema = new mongoose.Schema(
     //   default: "Medium",
     // },
 
-    projectFrequency: {
-      frequencyType: {
-        type: String,
-        required: true,
-      },
-      firstDate: {
-        type: String,
-      },
-      secondDate: {
-        type: String,
-      },
-      deliveryTime: {
-        type: String,
-        required: true,
-      },
-      deliveryDay: {
-        type: String,
-      },
-      deliveryDate: {
-        type: String,
-      },
-    },
+    // projectFrequency: {
+    //   frequencyType: {
+    //     type: String,
+    //     required: true,
+    //   },
+    //   firstDate: {
+    //     type: String,
+    //   },
+    //   secondDate: {
+    //     type: String,
+    //   },
+    //   deliveryTime: {
+    //     type: String,
+    //     required: true,
+    //   },
+    //   deliveryDay: {
+    //     type: String,
+    //   },
+    //   deliveryDate: {
+    //     type: String,
+    //   },
+    // },
     projectManager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -137,7 +137,7 @@ const projectSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Project", projectSchema);

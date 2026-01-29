@@ -22,14 +22,14 @@ const priorityOptions = [
   { label: 'Low', value: 'Low' }
 ];
 
-const frequencyOptions = [
-  { label: 'Daily', value: 'Daily' },
-  { label: 'Weekly', value: 'Weekly' },
-  { label: 'Bi-Weekly', value: 'Bi-Weekly' },
-  { label: 'Monthly', value: 'Monthly' },
-  { label: 'Bi-Monthly', value: 'Bi-Monthly' },
-  { label: 'Custom', value: 'Custom' }
-];
+// const frequencyOptions = [
+//   { label: 'Daily', value: 'Daily' },
+//   { label: 'Weekly', value: 'Weekly' },
+//   { label: 'Bi-Weekly', value: 'Bi-Weekly' },
+//   { label: 'Monthly', value: 'Monthly' },
+//   { label: 'Bi-Monthly', value: 'Bi-Monthly' },
+//   { label: 'Custom', value: 'Custom' }
+// ];
 
 const deliveryOptions = [
   { label: 'API', value: 'API' },
@@ -88,7 +88,7 @@ const CreateProject = () => {
     IndustryType: '',
     department: '',
     // projectPriority: 'Medium',
-    projectFrequency: '',
+    // projectFrequency: '',
     projectManager: null,
     projectTechManager: null,
     csprojectManager: null,
@@ -105,17 +105,17 @@ const CreateProject = () => {
   });
 
   console.log('schedule', schedule);
-  const handleFrequencyChange = (v) => {
-    setFormData({ ...formData, projectFrequency: v?.value || '' });
-    setErrors((prev) => ({ ...prev, projectFrequency: '' }));
-    setSchedule({
-      day: '',
-      date: null,
-      firstDate: null,
-      secondDate: null,
-      time: null
-    });
-  };
+  // const handleFrequencyChange = (v) => {
+  //   setFormData({ ...formData, projectFrequency: v?.value || '' });
+  //   setErrors((prev) => ({ ...prev, projectFrequency: '' }));
+  //   setSchedule({
+  //     day: '',
+  //     date: null,
+  //     firstDate: null,
+  //     secondDate: null,
+  //     time: null
+  //   });
+  // };
 
   useEffect(() => {
     fetchSales('Sales');
@@ -178,7 +178,7 @@ const CreateProject = () => {
     if (!formData.IndustryType) newErrors.IndustryType = 'Industry Type is required';
     if (!formData.department) newErrors.department = 'Department is required';
     // if (!formData.projectPriority) newErrors.projectPriority = 'Project Priority is required';
-    if (!formData.projectFrequency) newErrors.projectFrequency = 'Project Frequency is required';
+    // if (!formData.projectFrequency) newErrors.projectFrequency = 'Project Frequency is required';
     if (!formData.projectManager) newErrors.projectManager = 'Project Manager is required';
     if (!formData.csprojectManager) newErrors.csprojectManager = 'CS Manager is required';
     if (!formData.projectTechManager) newErrors.projectTechManager = 'Project Tech Manager is required';
@@ -186,21 +186,21 @@ const CreateProject = () => {
 
     if (!sowFile || sowFile.length === 0) newErrors.sowFile = 'SOW document is required';
 
-    if (formData.projectFrequency) {
-      if (!schedule.time) newErrors.time = 'Delivery time is required';
+    // if (formData.projectFrequency) {
+    //   if (!schedule.time) newErrors.time = 'Delivery time is required';
 
-      if (['Weekly', 'Bi-Weekly'].includes(formData.projectFrequency) && !schedule.day) {
-        newErrors.day = 'Delivery day is required';
-      }
+    //   if (['Weekly', 'Bi-Weekly'].includes(formData.projectFrequency) && !schedule.day) {
+    //     newErrors.day = 'Delivery day is required';
+    //   }
 
-      if (['Custom', 'Monthly'].includes(formData.projectFrequency) && !schedule.date) {
-        newErrors.date = 'Delivery date is required';
-      }
-      if (['Bi-Monthly'].includes(formData.projectFrequency)) {
-        if (!schedule.firstDate) newErrors.firstDate = 'First Date is required';
-        if (!schedule.secondDate) newErrors.secondDate = 'Second Date is required';
-      }
-    }
+    //   if (['Custom', 'Monthly'].includes(formData.projectFrequency) && !schedule.date) {
+    //     newErrors.date = 'Delivery date is required';
+    //   }
+    //   if (['Bi-Monthly'].includes(formData.projectFrequency)) {
+    //     if (!schedule.firstDate) newErrors.firstDate = 'First Date is required';
+    //     if (!schedule.secondDate) newErrors.secondDate = 'Second Date is required';
+    //   }
+    // }
     if (!formData.description?.trim()) newErrors.description = 'Description is required';
 
     setErrors(newErrors);
@@ -241,16 +241,16 @@ const CreateProject = () => {
       });
 
       /* ---------- PROJECT FREQUENCY (NEW SCHEMA) ---------- */
-      const projectFrequencyConfig = {
-        frequencyType: formData.projectFrequency,
-        firstDate: schedule.firstDate ? schedule.firstDate : null,
-        secondDate: schedule.secondDate ? schedule.secondDate : null,
-        deliveryDay: schedule.day || null,
-        deliveryDate: schedule.date ? schedule.date : null,
-        deliveryTime: schedule.time ? schedule.time.format('HH:mm') : null
-      };
+      // const projectFrequencyConfig = {
+      //   frequencyType: formData.projectFrequency,
+      //   firstDate: schedule.firstDate ? schedule.firstDate : null,
+      //   secondDate: schedule.secondDate ? schedule.secondDate : null,
+      //   deliveryDay: schedule.day || null,
+      //   deliveryDate: schedule.date ? schedule.date : null,
+      //   deliveryTime: schedule.time ? schedule.time.format('HH:mm') : null
+      // };
 
-      form.append('projectFrequencyConfig', JSON.stringify(projectFrequencyConfig));
+      // form.append('projectFrequencyConfig', JSON.stringify(projectFrequencyConfig));
 
       /* ---------- FILES ---------- */
       sowFile.forEach((file) => {
@@ -282,7 +282,7 @@ const CreateProject = () => {
           IndustryType: '',
           department: '',
           // projectPriority: 'Medium',
-          projectFrequency: '',
+          // projectFrequency: '',
           projectManager: null,
           csprojectManager: null,
           projectTechManager: null,
@@ -481,7 +481,7 @@ const CreateProject = () => {
             </Col>
           </Row>
 
-          <Row className="mb-3">
+          {/* <Row className="mb-3">
             <Col md={4}>
               <Form.Label className="required">Frequency</Form.Label>
               <Select
@@ -534,7 +534,7 @@ const CreateProject = () => {
               )}
 
               {/* BI-WEEKLY / BI-MONTHLY → FIRST DATE */}
-              {['Bi-Monthly'].includes(formData.projectFrequency) && (
+          {/* {['Bi-Monthly'].includes(formData.projectFrequency) && (
                 <Col md={2}>
                   <Form.Label className="required">First Date</Form.Label>
                   <DatePicker
@@ -577,9 +577,9 @@ const CreateProject = () => {
                     inputFormat="DD"
                   />
                 </Col>
-              )}
-              {/* MONTHLY */}
-              {['Custom'].includes(formData.projectFrequency) && (
+              )} */}
+          {/* MONTHLY */}
+          {/* {['Custom'].includes(formData.projectFrequency) && (
                 <Col md={2}>
                   <Form.Label className="required">Delivery Date</Form.Label>
                   <DatePicker
@@ -614,10 +614,10 @@ const CreateProject = () => {
                     inputFormat="DD"
                   />
                 </Col>
-              )}
+              )} */}
 
-              {/* TIME → ALWAYS */}
-              {formData.projectFrequency && (
+          {/* TIME → ALWAYS */}
+          {/* {formData.projectFrequency && (
                 <Col md={2}>
                   <Form.Label className="required">Delivery Time</Form.Label>
                   <TimePicker
@@ -630,9 +630,9 @@ const CreateProject = () => {
                     slotProps={{ textField: { fullWidth: true, size: 'small', error: !!errors.time, helperText: errors.time } }}
                   />
                 </Col>
-              )}
-            </LocalizationProvider>
-          </Row>
+              )} */}
+          {/* </LocalizationProvider>
+          </Row> */}
 
           <Row className="mb-3">
             <Col md={3}>

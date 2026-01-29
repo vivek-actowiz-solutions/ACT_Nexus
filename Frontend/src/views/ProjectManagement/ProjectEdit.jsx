@@ -20,14 +20,14 @@ const priorityOptions = [
   { label: 'Low', value: 'Low' }
 ];
 
-const frequencyOptions = [
-  { label: 'Daily', value: 'Daily' },
-  { label: 'Weekly', value: 'Weekly' },
-  { label: 'Bi-Weekly', value: 'Bi-Weekly' },
-  { label: 'Monthly', value: 'Monthly' },
-  { label: 'Bi-Monthly', value: 'Bi-Monthly' },
-  { label: 'Custom', value: 'Custom' }
-];
+// const frequencyOptions = [
+//   { label: 'Daily', value: 'Daily' },
+//   { label: 'Weekly', value: 'Weekly' },
+//   { label: 'Bi-Weekly', value: 'Bi-Weekly' },
+//   { label: 'Monthly', value: 'Monthly' },
+//   { label: 'Bi-Monthly', value: 'Bi-Monthly' },
+//   { label: 'Custom', value: 'Custom' }
+// ];
 
 const deliveryOptions = [
   { label: 'API', value: 'API' },
@@ -126,7 +126,7 @@ const EditProject = () => {
         IndustryType: p.industryType || '',
         department: p.department || '',
         projectPriority: p.projectPriority || '',
-        projectFrequency: p.projectFrequency?.frequencyType || '',
+        // projectFrequency: p.projectFrequency?.frequencyType || '',
         projectManager: p.projectManager ? { value: p.projectManager._id, label: p.projectManager.name } : null,
         projectTechManager: p.projectTechManager ? { value: p.projectTechManager._id, label: p.projectTechManager.name } : null,
         csprojectManager: p.csprojectManager ? { value: p.csprojectManager._id, label: p.csprojectManager.name } : null,
@@ -146,13 +146,13 @@ const EditProject = () => {
         // projectCoordinator: p.projectCoordinator ? { value: p.projectCoordinator._id, label: p.projectCoordinator.name } : null
       });
 
-      setSchedule({
-        day: p.projectFrequency?.deliveryDay || '',
-        date: p.projectFrequency?.deliveryDate || '',
-        firstDate: p.projectFrequency?.firstDate || '',
-        secondDate: p.projectFrequency?.secondDate || '',
-        time: p.projectFrequency?.deliveryTime ? dayjs(p.projectFrequency.deliveryTime, 'HH:mm') : null
-      });
+      // setSchedule({
+      //   day: p.projectFrequency?.deliveryDay || '',
+      //   date: p.projectFrequency?.deliveryDate || '',
+      //   firstDate: p.projectFrequency?.firstDate || '',
+      //   secondDate: p.projectFrequency?.secondDate || '',
+      //   time: p.projectFrequency?.deliveryTime ? dayjs(p.projectFrequency.deliveryTime, 'HH:mm') : null
+      // });
 
       setSowFile(p.sowDocument || []);
       setInputFile(p.inputDocument || []);
@@ -251,10 +251,10 @@ const EditProject = () => {
       return false;
     }
 
-    if (!formData.projectFrequency) {
-      toast.error('Project Frequency is required');
-      return false;
-    }
+    // if (!formData.projectFrequency) {
+    //   toast.error('Project Frequency is required');
+    //   return false;
+    // }
 
     if (!formData.deliveryType) {
       toast.error('Delivery Type is required');
@@ -282,63 +282,63 @@ const EditProject = () => {
     }
 
     // ===== FREQUENCY BASED VALIDATION =====
-    const freq = formData.projectFrequency;
+    // const freq = formData.projectFrequency;
 
-    if (freq === 'Weekly') {
-      if (!schedule.day) {
-        toast.error('Delivery Day is required for Weekly frequency');
-        return false;
-      }
-    }
+    // if (freq === 'Weekly') {
+    //   if (!schedule.day) {
+    //     toast.error('Delivery Day is required for Weekly frequency');
+    //     return false;
+    //   }
+    // }
 
-    if (freq === 'Bi-Weekly') {
-      if (!schedule.day) {
-        toast.error('Delivery Days are required for Bi-Weekly frequency');
-        return false;
-      }
+    // if (freq === 'Bi-Weekly') {
+    //   if (!schedule.day) {
+    //     toast.error('Delivery Days are required for Bi-Weekly frequency');
+    //     return false;
+    //   }
 
-      const daysCount = schedule.day.split(',').length;
-      if (daysCount > 2) {
-        toast.error('You can select only 2 days for Bi-Weekly frequency');
-        return false;
-      }
-      if (daysCount < 2) {
-        toast.error('Please select 2 days for Bi-Weekly frequency');
-        return false;
-      }
-    }
+    //   const daysCount = schedule.day.split(',').length;
+    //   if (daysCount > 2) {
+    //     toast.error('You can select only 2 days for Bi-Weekly frequency');
+    //     return false;
+    //   }
+    //   if (daysCount < 2) {
+    //     toast.error('Please select 2 days for Bi-Weekly frequency');
+    //     return false;
+    //   }
+    // }
 
-    if (freq === 'Monthly') {
-      if (!schedule.date) {
-        toast.error('Delivery Date is required for Monthly frequency');
-        return false;
-      }
-    }
+    // if (freq === 'Monthly') {
+    //   if (!schedule.date) {
+    //     toast.error('Delivery Date is required for Monthly frequency');
+    //     return false;
+    //   }
+    // }
 
-    if (freq === 'Bi-Monthly') {
-      if (!schedule.firstDate || !schedule.secondDate) {
-        toast.error('Both delivery dates are required for Bi-Monthly frequency');
-        return false;
-      }
+    // if (freq === 'Bi-Monthly') {
+    //   if (!schedule.firstDate || !schedule.secondDate) {
+    //     toast.error('Both delivery dates are required for Bi-Monthly frequency');
+    //     return false;
+    //   }
 
-      if (schedule.firstDate === schedule.secondDate) {
-        toast.error('Bi-Monthly dates cannot be the same');
-        return false;
-      }
-    }
+    //   if (schedule.firstDate === schedule.secondDate) {
+    //     toast.error('Bi-Monthly dates cannot be the same');
+    //     return false;
+    //   }
+    // }
 
-    if (freq === 'Custom') {
-      if (!schedule.date) {
-        toast.error('Delivery Date is required for Custom frequency');
-        return false;
-      }
-    }
+    // if (freq === 'Custom') {
+    //   if (!schedule.date) {
+    //     toast.error('Delivery Date is required for Custom frequency');
+    //     return false;
+    //   }
+    // }
 
     // ===== TIME REQUIRED FOR ALL FREQUENCIES =====
-    if (!schedule.time) {
-      toast.error('Delivery Time is required');
-      return false;
-    }
+    // if (!schedule.time) {
+    //   toast.error('Delivery Time is required');
+    //   return false;
+    // }
 
     if (!sowFile || sowFile.length === 0) {
       toast.error('SoW Document is required ');
@@ -506,48 +506,48 @@ const EditProject = () => {
       </>
     );
   };
-  const handleFrequencyChange = (v) => {
-    const value = v?.value || '';
+  // const handleFrequencyChange = (v) => {
+  //   const value = v?.value || '';
 
-    setFormData((prev) => ({ ...prev, projectFrequency: value }));
+  //   setFormData((prev) => ({ ...prev, projectFrequency: value }));
 
-    // reset schedule on frequency change
-    const clearedSchedule = {
-      day: '',
-      date: '',
-      firstDate: '',
-      secondDate: '',
-      time: null
-    };
-    setSchedule(clearedSchedule);
+  //   // reset schedule on frequency change
+  //   const clearedSchedule = {
+  //     day: '',
+  //     date: '',
+  //     firstDate: '',
+  //     secondDate: '',
+  //     time: null
+  //   };
+  //   setSchedule(clearedSchedule);
 
-    // mark as updated
-    setUpdatedFields((prev) => ({
-      ...prev,
-      projectFrequencyConfig: {
-        frequencyType: value
-      }
-    }));
-  };
-  const handleScheduleChange = (key, value) => {
-    setSchedule((prev) => {
-      const updated = { ...prev, [key]: value };
+  //   // mark as updated
+  //   setUpdatedFields((prev) => ({
+  //     ...prev,
+  //     projectFrequencyConfig: {
+  //       frequencyType: value
+  //     }
+  //   }));
+  // };
+  // const handleScheduleChange = (key, value) => {
+  //   setSchedule((prev) => {
+  //     const updated = { ...prev, [key]: value };
 
-      setUpdatedFields((prevFields) => ({
-        ...prevFields,
-        projectFrequencyConfig: {
-          frequencyType: formData.projectFrequency,
-          deliveryDay: updated.day || null,
-          deliveryDate: updated.date || null,
-          firstDate: updated.firstDate || null,
-          secondDate: updated.secondDate || null,
-          deliveryTime: updated.time ? updated.time.format('HH:mm') : null
-        }
-      }));
+  //     setUpdatedFields((prevFields) => ({
+  //       ...prevFields
+  //       // projectFrequencyConfig: {
+  //       //   frequencyType: formData.projectFrequency,
+  //       //   deliveryDay: updated.day || null,
+  //       //   deliveryDate: updated.date || null,
+  //       //   firstDate: updated.firstDate || null,
+  //       //   secondDate: updated.secondDate || null,
+  //       //   deliveryTime: updated.time ? updated.time.format('HH:mm') : null
+  //       // }
+  //     }));
 
-      return updated;
-    });
-  };
+  //     return updated;
+  //   });
+  // };
 
   /* ================= UI ================= */
 
@@ -575,7 +575,7 @@ const EditProject = () => {
               />
             </Col>
           </Row>
-          <Row className="mb-3">
+          {/* <Row className="mb-3">
             <Col md={4}>
               <Form.Label className="required">Frequency</Form.Label>
               <Select
@@ -588,7 +588,7 @@ const EditProject = () => {
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {/* WEEKLY */}
-              {formData.projectFrequency === 'Weekly' && (
+          {/* {formData.projectFrequency === 'Weekly' && (
                 <Col md={3}>
                   <Form.Label className="required">Delivery Day</Form.Label>
                   <Select
@@ -598,10 +598,10 @@ const EditProject = () => {
                     isClearable
                   />
                 </Col>
-              )}
+              )} */}
 
-              {/* BI-WEEKLY */}
-              {formData.projectFrequency === 'Bi-Weekly' && (
+          {/* BI-WEEKLY */}
+          {/* {formData.projectFrequency === 'Bi-Weekly' && (
                 <Col md={3}>
                   <Form.Label className="required">Delivery Day(s)</Form.Label>
                   <Select
@@ -617,10 +617,10 @@ const EditProject = () => {
                     }}
                   />
                 </Col>
-              )}
+              )} */}
 
-              {/* BI-MONTHLY */}
-              {formData.projectFrequency === 'Bi-Monthly' && (
+          {/* BI-MONTHLY */}
+          {/* {formData.projectFrequency === 'Bi-Monthly' && (
                 <>
                   <Col md={2}>
                     <Form.Label className="required">First Date</Form.Label>
@@ -642,10 +642,10 @@ const EditProject = () => {
                     />
                   </Col>
                 </>
-              )}
+              )} */}
 
-              {/* CUSTOM */}
-              {formData.projectFrequency === 'Custom' && (
+          {/* CUSTOM */}
+          {/* {formData.projectFrequency === 'Custom' && (
                 <Col md={2}>
                   <Form.Label className="required">Delivery Date</Form.Label>
                   <DatePicker
@@ -655,10 +655,10 @@ const EditProject = () => {
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                   />
                 </Col>
-              )}
+              )} */}
 
-              {/* MONTHLY */}
-              {formData.projectFrequency === 'Monthly' && (
+          {/* MONTHLY */}
+          {/* {formData.projectFrequency === 'Monthly' && (
                 <Col md={2}>
                   <Form.Label className="required">Delivery Date</Form.Label>
                   <DatePicker
@@ -668,10 +668,10 @@ const EditProject = () => {
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                   />
                 </Col>
-              )}
+              )} */}
 
-              {/* TIME */}
-              {formData.projectFrequency && (
+          {/* TIME */}
+          {/* {formData.projectFrequency && (
                 <Col md={2}>
                   <Form.Label className="required">Delivery Time</Form.Label>
                   <TimePicker
@@ -681,9 +681,9 @@ const EditProject = () => {
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                   />
                 </Col>
-              )}
-            </LocalizationProvider>
-          </Row>
+              )} */}
+          {/* </LocalizationProvider>
+          </Row> */}
           <Row className="mb-3">
             <Col md={3}>
               <Form.Label className="required">Delivery Type</Form.Label>

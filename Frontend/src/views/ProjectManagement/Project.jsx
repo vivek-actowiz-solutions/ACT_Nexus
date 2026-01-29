@@ -425,18 +425,20 @@ const Project = () => {
   const columns = [
     {
       name: 'No.',
-      width: '60px',
+      width: '70px', // OK to keep fixed
+      center: true,
       selector: (row, index) => index + 1 + (currentPage - 1) * perPage
     },
+
     {
       name: 'Project Code',
-      width: '160px',
+      minWidth: '160px',
+      grow: 1,
       cell: (row) => {
         const content = (
           <div
             style={{
               backgroundColor: row.hasEscalation ? '#f09799ff' : 'transparent',
-              color: row.hasEscalation ? '#000' : 'inherit',
               padding: '4px 8px',
               borderRadius: '4px',
               width: '100%',
@@ -450,7 +452,7 @@ const Project = () => {
         );
 
         return row.hasEscalation ? (
-          <OverlayTrigger placement="top" overlay={<Tooltip>Escalation Open for this Project</Tooltip>}>
+          <OverlayTrigger placement="top" overlay={<Tooltip>Escalation Open</Tooltip>}>
             {content}
           </OverlayTrigger>
         ) : (
@@ -458,169 +460,87 @@ const Project = () => {
         );
       }
     },
-    { name: 'Name', selector: (row) => row.projectName },
-    { name: 'Total Feed', width: '100px', selector: (row) => row.feedIds.length },
+
+    {
+      name: 'Name',
+      minWidth: '200px',
+      grow: 2,
+      selector: (row) => row.projectName,
+      wrap: true
+    },
+
+    {
+      name: 'Total Feed',
+      width: '110px',
+      center: true,
+      selector: (row) => row.feedIds.length
+    },
+
     {
       name: 'Status',
-      width: '200px',
+      width: '120px',
+      center: true,
       cell: (row) => (
         <Badge bg={statusColor(row.status)} className="px-3 py-2">
-          <span style={{ fontSize: '13px' }}> {row.status}</span>
+          <span style={{ fontSize: '13px' }}>{row.status}</span>
         </Badge>
       )
     },
-    {
-      name: 'Frequency',
-      width: '300px',
-      cell: (row) => {
-        const f = row.projectFrequency;
-        if (!f) return '-';
 
-        return (
-          <div>
-            <div className="fw-semibold">{f.frequencyType}</div>
-
-            {f.frequencyType === 'Weekly' && f.deliveryDay && (
-              <small className="text-muted">
-                <FaClock /> Every Week {f.deliveryDay} • {f.deliveryTime}
-              </small>
-            )}
-
-            {f.frequencyType === 'Daily' && f.deliveryTime && (
-              <small className="text-muted">
-                {' '}
-                <FaClock /> Every Day • {f.deliveryTime}
-              </small>
-            )}
-
-            {f.frequencyType === 'Monthly' && f.deliveryDate && (
-              <small className="text-muted">
-                {' '}
-                <FaClock /> Every Month {f.deliveryDate}th • {f.deliveryTime}
-              </small>
-            )}
-            {f.frequencyType === 'Bi-Monthly' && (
-              <small className="text-muted">
-                {' '}
-                <FaClock /> Every Month {f.firstDate}th & {f.secondDate}th • {f.deliveryTime}
-              </small>
-            )}
-
-            {f.frequencyType === 'Bi-Weekly' && (
-              <small className="text-muted">
-                <FaClock /> Every Week {f.deliveryDay} • {f.deliveryTime}
-              </small>
-            )}
-            {f.frequencyType === 'Custom' && (
-              <small className="text-muted">
-                {' '}
-                <FaClock /> {f.deliveryDate} • {f.deliveryTime}
-              </small>
-            )}
-          </div>
-        );
-      }
-    },
     {
       name: 'Team',
-      width: '150px',
+      minWidth: '140px',
+      grow: 1,
       cell: (row) => <TeamAvatars team={buildTeamList(row)} />,
       ignoreRowClick: true
     },
+
     {
       name: 'Posted On',
-      width: '150px',
+      width: '140px',
+      center: true,
       cell: (row) => (row.createdAt ? format(new Date(row.createdAt), 'dd MMM yyyy') : '-'),
       ignoreRowClick: true
     },
+
     {
-      name: 'Active Status',
+      name: 'Active',
       width: '120px',
+      center: true,
       cell: (row) => (
-        <>
-          {permission[0]?.action?.includes('Update') ? (
-            <Button
-              size="sm"
-              variant={row.isActive ? 'success' : 'danger'}
-              onClick={() => {
-                setSelectedAPI(row);
-                setShowStatusModal(true);
-              }}
-            >
-              {row.isActive ? 'Active' : 'Inactive'}
-            </Button>
-          ) : (
-            <Button size="sm" variant={row.isActive ? 'success' : 'danger'}>
-              {row.isActive ? 'Active' : 'Inactive'}
-            </Button>
-          )}
-        </>
+        <Button
+          size="sm"
+          variant={row.isActive ? 'success' : 'danger'}
+          onClick={() => {
+            setSelectedAPI(row);
+            setShowStatusModal(true);
+          }}
+        >
+          {row.isActive ? 'Active' : 'Inactive'}
+        </Button>
       )
     },
+
     {
       name: 'Action',
+      minWidth: '180px',
+      center: true,
       cell: (row) => (
-        <>
-          <div className="d-flex align-items-center gap-3">
-            {permission[0]?.action?.includes('View') && (
-              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>View</Tooltip>}>
-                <span>
-                  <FaEye
-                    onClick={() => {
-                      navigate(`/Project-view/${row._id}`);
-                    }}
-                    style={{ cursor: 'pointer', color: 'green' }}
-                    size={20}
-                  />
-                </span>
-              </OverlayTrigger>
-            )}
-            {permission?.[0]?.action?.includes('AssignTeam') && userDepartment !== 'Sales' && row?.isActive && !row?.teamLead?.length && (
-              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign Team</Tooltip>}>
-                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignTeamModal(row)}>
-                  <FaUserPlus size={18} color="#0d6efd" />
-                </span>
-              </OverlayTrigger>
-            )}
-            {permission?.[0]?.action?.includes('AssignPc') && userDepartment !== 'Sales' && row?.isActive && !row?.projectCoordinator && (
-              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-assign-${row._id}`}>Assign PC</Tooltip>}>
-                <span style={{ cursor: 'pointer', display: 'inline-flex' }} onClick={() => openAssignpcModal(row)}>
-                  <FaUserPlus size={18} color="black" />
-                </span>
-              </OverlayTrigger>
-            )}
+        <div className="d-flex align-items-center gap-3">
+          {permission[0]?.action?.includes('View') && (
+            <FaEye onClick={() => navigate(`/Project-view/${row._id}`)} style={{ cursor: 'pointer', color: 'green' }} size={18} />
+          )}
 
-            {permission[0]?.action?.includes('Update') && (
-              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>Edit</Tooltip>}>
-                <span>
-                  <FiEdit
-                    onClick={() => {
-                      navigate(`/Project-Edit/${row._id}`);
-                    }}
-                    style={{ cursor: 'pointer', color: 'blue' }}
-                    size={20}
-                  />
-                </span>
-              </OverlayTrigger>
-            )}
+          {permission[0]?.action?.includes('Update') && (
+            <FiEdit onClick={() => navigate(`/Project-Edit/${row._id}`)} style={{ cursor: 'pointer', color: 'blue' }} size={18} />
+          )}
 
-            <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${row._id}`}>Feeds</Tooltip>}>
-              <span>
-                <CgFeed
-                  onClick={() => {
-                    navigate(`/Project-feeds/${row._id}`);
-                  }}
-                  style={{ cursor: 'pointer', color: 'blue' }}
-                  size={20}
-                />
-              </span>
-            </OverlayTrigger>
-          </div>
-        </>
-      ),
-      width: '200px'
+          <CgFeed onClick={() => navigate(`/Project-feeds/${row._id}`)} style={{ cursor: 'pointer', color: 'blue' }} size={18} />
+        </div>
+      )
     }
   ];
+
   document.title = 'Projects Overview';
 
   const conditionalRowStyles = [

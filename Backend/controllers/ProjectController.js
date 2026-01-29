@@ -523,7 +523,7 @@ const ProjectIntegration = async (req, res) => {
       department,
 
       // projectPriority,
-      projectFrequencyConfig,
+      // projectFrequencyConfig,
       projectManager,
       projectTechManager,
       csprojectManager,
@@ -539,7 +539,7 @@ const ProjectIntegration = async (req, res) => {
       !salesPerson ||
       !IndustryType ||
       !csprojectManager ||
-      !projectFrequencyConfig ||
+      // !projectFrequencyConfig ||
       // !projectPriority ||
       !projectTechManager
     ) {
@@ -548,19 +548,19 @@ const ProjectIntegration = async (req, res) => {
         message: "Required fields are missing",
       });
     }
-    let parsedProjectFrequency;
+    // let parsedProjectFrequency;
 
-    try {
-      parsedProjectFrequency =
-        typeof projectFrequencyConfig === "string"
-          ? JSON.parse(projectFrequencyConfig)
-          : projectFrequencyConfig;
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid projectFrequencyConfig JSON format",
-      });
-    }
+    // try {
+    //   parsedProjectFrequency =
+    //     typeof projectFrequencyConfig === "string"
+    //       ? JSON.parse(projectFrequencyConfig)
+    // : projectFrequencyConfig;
+    // } catch (error) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid projectFrequencyConfig JSON format",
+    //   });
+    // }
     // 🔹 3. Handle files safely
     const sowFiles = req.files?.sowDocument || [];
     const inputFiles = req.files?.inputDocument || [];
@@ -568,15 +568,15 @@ const ProjectIntegration = async (req, res) => {
 
     // Store file paths as array (recommended)
     const sowDocumentPaths = sowFiles.map(
-      (file) => `uploads/sowdocument/${file.filename}`
+      (file) => `uploads/sowdocument/${file.filename}`,
     );
 
     const inputDocumentPaths = inputFiles.map(
-      (file) => `uploads/inputdocument/${file.filename}`
+      (file) => `uploads/inputdocument/${file.filename}`,
     );
 
     const annotationDocumentPaths = annotationFiles.map(
-      (file) => `uploads/annotationDocument/${file.filename}`
+      (file) => `uploads/annotationDocument/${file.filename}`,
     );
 
     const projectcodecheck = await Project.findOne({
@@ -599,7 +599,7 @@ const ProjectIntegration = async (req, res) => {
       industryType: IndustryType,
       department,
       // projectPriority,
-      projectFrequency: parsedProjectFrequency,
+      // projectFrequency: parsedProjectFrequency,
       sowDocument: sowDocumentPaths,
       inputDocument: inputDocumentPaths,
       annotationDocument: annotationDocumentPaths,
@@ -611,7 +611,6 @@ const ProjectIntegration = async (req, res) => {
       isActive: true,
       createdBy: userId,
     });
-
     await logProjectActivity({
       userid: userId,
       username: req.user.name,
@@ -712,7 +711,7 @@ const ProjectIntegration = async (req, res) => {
   </div>
 </div>
 `;
-    await sendMail({
+    sendMail({
       to: toEmails, // Project Manager, Tech Manager, CS, BDE
       cc: ccEmails, // Creator
       subject: `New Project Created: ${projectName} (${projectCode})`,
@@ -1038,7 +1037,7 @@ const assignteam = async (req, res) => {
     if (coordinator === "true") {
       updateQuery.$addToSet.projectCoordinator = {
         $each: projectCoordinatorId.map(
-          (id) => new mongoose.Types.ObjectId(id)
+          (id) => new mongoose.Types.ObjectId(id),
         ),
       };
     }
@@ -1047,7 +1046,7 @@ const assignteam = async (req, res) => {
     const updatedProject = await Project.findByIdAndUpdate(
       projId,
       updateQuery,
-      { new: true }
+      { new: true },
     )
       .populate("teamLead", "name email reportingTo")
       .populate("projectCoordinator", "name email reportingTo");
@@ -1068,7 +1067,7 @@ const assignteam = async (req, res) => {
       newData = {
         teamLead: updatedProject.teamLead.map((tl) => tl.name),
         projectCoordinator: updatedProject.projectCoordinator.map(
-          (pc) => pc.name
+          (pc) => pc.name,
         ),
       };
     } else if (teamlead === "true") {
@@ -1080,7 +1079,7 @@ const assignteam = async (req, res) => {
       activityTitle = "Project Coordinators Assigned";
       newData = {
         projectCoordinator: updatedProject.projectCoordinator.map(
-          (pc) => pc.name
+          (pc) => pc.name,
         ),
       };
     }
@@ -1173,7 +1172,7 @@ const assignteam = async (req, res) => {
         .map((pc) => pc.email)
         .filter(Boolean);
       const reportingTo = updatedProject.projectCoordinator.map(
-        (pc) => pc.reportingTo
+        (pc) => pc.reportingTo,
       );
       const reportingPerson = await User.find({ _id: { $in: reportingTo } })
         .select("email")
@@ -1741,7 +1740,7 @@ const getdevelopers = async (req, res) => {
       .findOne({ Rolelevel: 6 }, { projection: { _id: 1 } });
 
     const getProjectTl = await Project.findOne({ _id: projectId }).select(
-      "teamLead"
+      "teamLead",
     );
     const reportingIds = getProjectTl.teamLead;
 
@@ -1787,7 +1786,7 @@ const assigndevelopers = async (req, res) => {
     const feedObjectId = new mongoose.Types.ObjectId(feedId);
     const projectObjectId = new mongoose.Types.ObjectId(projectId);
     const developerObjectIds = developerIds.map(
-      (id) => new mongoose.Types.ObjectId(id)
+      (id) => new mongoose.Types.ObjectId(id),
     );
 
     /* ---------------- UPDATE FEED ---------------- */
@@ -1801,7 +1800,7 @@ const assigndevelopers = async (req, res) => {
           status: status,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedFeed) {
@@ -1819,7 +1818,7 @@ const assigndevelopers = async (req, res) => {
           developers: { $each: developerObjectIds }, // ✅ same developers
         },
       },
-      { new: true }
+      { new: true },
     );
 
     const NewData = {
@@ -1848,7 +1847,7 @@ const assigndevelopers = async (req, res) => {
     try {
       // 1. Fetch Project Details
       const project = await Project.findById(projectId).select(
-        "projectName projectCode"
+        "projectName projectCode",
       );
 
       // 2. Fetch Current User (Action Performer)
@@ -2028,13 +2027,13 @@ const feedupdated = async (req, res) => {
       updates.feedName = `${capFirst(platformName)}|${countries
         .map((c) => c.code)
         .join(",")}|${capFirst(platformType)}|${capFirst(scopeType)}|${capFirst(
-        frequencyType
+        frequencyType,
       )}`;
     }
     const updatedFeed = await Feed.findByIdAndUpdate(
       id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedFeed) {
@@ -2051,7 +2050,7 @@ const feedupdated = async (req, res) => {
       // 2️⃣ Union of all developers across feeds
       const projectDevelopers = [
         ...new Set(
-          allFeeds.flatMap((f) => f.developers.map((d) => d.toString()))
+          allFeeds.flatMap((f) => f.developers.map((d) => d.toString())),
         ),
       ];
 
