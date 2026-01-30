@@ -52,7 +52,7 @@ const feedSchema = new mongoose.Schema(
     },
     frameworkType: {
       type: String,
-      default: null
+      default: null,
     },
     // 📅 Frequency
     feedfrequency: {
@@ -84,13 +84,30 @@ const feedSchema = new mongoose.Schema(
       required: true,
     },
 
-    // 🌍 Country (single or multiple supported)
+    // 🌍 Location Arrays (Multi-Select)
     countries: [
       {
-        name: { type: String, required: true }, // India
-        code: { type: String, required: true }, // IN
+        name: { type: String },
+        code: { type: String },
       },
     ],
+    states: [
+      {
+        name: { type: String },
+        code: { type: String },
+        countryCode: { type: String }, // Link to parent country
+      },
+    ],
+    cities: [
+      {
+        name: { type: String },
+        code: { type: String },
+        stateCode: { type: String }, // Link to parent state
+      },
+    ],
+    pincode: {
+      type: String, // Comma separated values
+    },
 
     // 📝 Description / Additional Info
     description: {
@@ -107,7 +124,7 @@ const feedSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // auto adds createdAt & updatedAt
-  }
+  },
 );
 
 module.exports = mongoose.model("Feed", feedSchema);

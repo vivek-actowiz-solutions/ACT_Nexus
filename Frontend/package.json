@@ -36,6 +36,7 @@
     "chance": "^1.1.11",
     "chart.js": "^4.5.0",
     "country-list": "^2.3.0",
+    "country-state-city": "^3.2.1",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",

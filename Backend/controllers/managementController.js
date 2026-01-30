@@ -89,7 +89,7 @@ const updatePermissions = async (req, res) => {
       .collection("roles")
       .updateOne(
         { _id: new mongoose.Types.ObjectId(id) },
-        { $set: { permissions }, $inc: { tokenVersion: 1 } }
+        { $set: { permissions }, $inc: { tokenVersion: 1 } },
       );
 
     res.status(200).json({
@@ -360,7 +360,7 @@ const getuserslist = async (req, res) => {
     }
 
     if (BDE === "true") {
-      roleFilter = { "role.Rolelevel": 7 };
+      roleFilter = { "role.Rolelevel": { $in: [7, 3] } };
     }
 
     const users = await mongoose.connection.db
@@ -424,7 +424,7 @@ const updateuserstatus = async (req, res) => {
       .collection("users")
       .updateOne(
         { _id: new mongoose.Types.ObjectId(id) },
-        { $set: { status } }
+        { $set: { status } },
       );
     if (!User) return res.status(404).json({ message: "user not found" });
     res.status(200).json({ message: "User status updated successfully" });
@@ -441,7 +441,7 @@ const updateUserRole = async (req, res) => {
       .collection("users")
       .updateOne(
         { _id: new mongoose.Types.ObjectId(id) },
-        { $set: { roleId: new mongoose.Types.ObjectId(roleId) } }
+        { $set: { roleId: new mongoose.Types.ObjectId(roleId) } },
       );
     if (!User) return res.status(404).json({ message: "user not found" });
     res.status(200).json({ message: "User role updated successfully" });

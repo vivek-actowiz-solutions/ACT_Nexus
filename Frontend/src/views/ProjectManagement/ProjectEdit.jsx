@@ -65,7 +65,7 @@ const departments = [
   { label: 'R&D', value: 'R&D' }
 ];
 
-const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => ({ label: d, value: d }));
+// const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => ({ label: d, value: d }));
 
 /* ================= COMPONENT ================= */
 
@@ -142,8 +142,9 @@ const EditProject = () => {
               value: u._id,
               label: u.name
             }))
-          : []
+          : [],
         // projectCoordinator: p.projectCoordinator ? { value: p.projectCoordinator._id, label: p.projectCoordinator.name } : null
+        rpm: p.rpm || ''
       });
 
       // setSchedule({
@@ -263,6 +264,11 @@ const EditProject = () => {
 
     if (!formData.deliveryMode) {
       toast.error('Delivery Mode is required');
+      return false;
+    }
+
+    if ((formData.deliveryType === 'API' || formData.deliveryType === 'Both (API & DaaS)') && !formData.rpm) {
+      toast.error('RPM is required for API delivery type');
       return false;
     }
 
@@ -694,6 +700,33 @@ const EditProject = () => {
                 isClearable
               />
             </Col>
+            {(formData.deliveryType === 'API' || formData.deliveryType === 'Both (API & DaaS)') && (
+              <Col md={3}>
+                <Form.Label className="required">RPM</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter RPM"
+                  value={formData.rpm || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // Allow empty value (for backspace)
+                    if (value === '') {
+                      handleChange('rpm', value);
+                      return;
+                    }
+
+                    // Regex: 1–3 digits, first digit 1–9 (no 0)
+                    const rpmRegex = /^[1-9][0-9]{0,2}$/;
+
+                    if (rpmRegex.test(value)) {
+                      handleChange('rpm', value);
+                    }
+                  }}
+                  maxLength={3}
+                />
+              </Col>
+            )}
             <Col md={3}>
               <Form.Label className="required">Delivery Mode</Form.Label>
               <Select

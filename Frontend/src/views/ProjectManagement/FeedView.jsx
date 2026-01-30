@@ -78,6 +78,9 @@ const FeedView = () => {
     feedfrequency,
     developers = [],
     countries = [],
+    states = [],
+    cities = [],
+    pincodes = '',
     description,
     createdBy,
     createdAt,
@@ -276,7 +279,25 @@ const FeedView = () => {
               <Col md={4} className="text-dark fw-medium">
                 Region :
               </Col>
-              <Col md={8}>{countries.map((c) => `${c.name} (${c.code})`).join(', ')}</Col>
+              <Col md={8}>{countries?.length > 0 ? countries?.map((c) => `${c.name} (${c.code})`).join(', ') : '--'}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                State :
+              </Col>
+              <Col md={8}>{states?.length > 0 ? states?.map((c) => `${c.name} (${c.code})`).join(', ') : '--'}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                City :
+              </Col>
+              <Col md={8}>{cities?.length > 0 ? cities?.map((c) => `${c.name} (${c.code})`).join(', ') : '--'}</Col>
+            </Row>
+            <Row className="py-2 border-bottom align-items-center">
+              <Col md={4} className="text-dark fw-medium">
+                Pincode :
+              </Col>
+              <Col md={8}>{pincodes ? pincodes : '--'}</Col>
             </Row>
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">

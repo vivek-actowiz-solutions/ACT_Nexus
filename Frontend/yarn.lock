@@ -2971,6 +2971,11 @@ country-list@^2.3.0:
   resolved "https://registry.npmjs.org/country-list/-/country-list-2.3.0.tgz"
   integrity sha512-qZk66RlmQm7fQjMYWku1AyjlKPogjPEorAZJG88owPExoPV8EsyCcuFLvO2afTXHEhi9liVOoyd+5A6ZS5QwaA==
 
+country-state-city@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/country-state-city/-/country-state-city-3.2.1.tgz"
+  integrity sha512-kxbanqMc6izjhc/EHkGPCTabSPZ2G6eG4/97akAYHJUN4stzzFEvQPZoF8oXDQ+10gM/O/yUmISCR1ZVxyb6EA==
+
 crc-32@~1.2.0, crc-32@~1.2.1:
   version "1.2.2"
   resolved "https://registry.npmjs.org/crc-32/-/crc-32-1.2.2.tgz"

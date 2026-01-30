@@ -47,6 +47,9 @@ const projectSchema = new mongoose.Schema(
     deliveryMode: {
       type: String,
     },
+    rpm: {
+      type: Number,
+    },
 
     department: {
       type: String,

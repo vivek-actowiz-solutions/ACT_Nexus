@@ -92,7 +92,8 @@ const CreateProject = () => {
     projectManager: null,
     projectTechManager: null,
     csprojectManager: null,
-    salesPerson: null
+    salesPerson: null,
+    rpm: ''
   });
   const [errors, setErrors] = useState({});
   console.log('formdata', formData);
@@ -184,6 +185,10 @@ const CreateProject = () => {
     if (!formData.projectTechManager) newErrors.projectTechManager = 'Project Tech Manager is required';
     if (!formData.salesPerson) newErrors.salesPerson = 'Sales Person is required';
 
+    if ((formData.deliveryType === 'API' || formData.deliveryType === 'Both (API & DaaS)') && !formData.rpm) {
+      newErrors.rpm = 'RPM is required';
+    }
+
     if (!sowFile || sowFile.length === 0) newErrors.sowFile = 'SOW document is required';
 
     // if (formData.projectFrequency) {
@@ -231,7 +236,8 @@ const CreateProject = () => {
         projectManager: formData.projectManager?.value,
         csprojectManager: formData.csprojectManager?.value,
         projectTechManager: formData.projectTechManager?.value,
-        salesPerson: formData.salesPerson?.value
+        salesPerson: formData.salesPerson?.value,
+        rpm: formData.rpm
       };
 
       Object.entries(textFields).forEach(([key, value]) => {
@@ -286,7 +292,9 @@ const CreateProject = () => {
           projectManager: null,
           csprojectManager: null,
           projectTechManager: null,
-          salesPerson: null
+          projectTechManager: null,
+          salesPerson: null,
+          rpm: ''
         });
         setSowFile([]);
         setInputFile([]);
@@ -648,6 +656,37 @@ const CreateProject = () => {
               />
               {errors.deliveryType && <div className="text-danger mt-1 small">{errors.deliveryType}</div>}
             </Col>
+            {(formData.deliveryType === 'API' || formData.deliveryType === 'Both (API & DaaS)') && (
+              <Col md={3}>
+                <Form.Label className="required">RPM</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter RPM"
+                  value={formData.rpm}
+                  isInvalid={!!errors.rpm}
+                  maxLength={3}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // Allow empty value (for delete/backspace)
+                    if (value === '') {
+                      setFormData({ ...formData, rpm: value });
+                      setErrors((prev) => ({ ...prev, rpm: '' }));
+                      return;
+                    }
+
+                    // Regex: first digit 1–9, total 1–3 digits
+                    const rpmRegex = /^[1-9][0-9]{0,2}$/;
+
+                    if (rpmRegex.test(value)) {
+                      setFormData({ ...formData, rpm: value });
+                      setErrors((prev) => ({ ...prev, rpm: '' }));
+                    }
+                  }}
+                />
+                <Form.Control.Feedback type="invalid">{errors.rpm}</Form.Control.Feedback>
+              </Col>
+            )}
             <Col md={3}>
               <Form.Label className="required">Delivery Mode</Form.Label>
               <Select

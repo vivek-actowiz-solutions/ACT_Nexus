@@ -235,6 +235,7 @@ const getProject = async (req, res) => {
 };
 const getProjectbyId = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({
@@ -493,6 +494,7 @@ const getProjectbyId = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: project[0],
+      user,
       projectActivities,
       workReports: developerEffort,
     });
@@ -528,6 +530,7 @@ const ProjectIntegration = async (req, res) => {
       projectTechManager,
       csprojectManager,
       salesPerson,
+      rpm,
     } = req.body;
 
     // 🔹 2. Validate required fields
@@ -546,6 +549,16 @@ const ProjectIntegration = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Required fields are missing",
+      });
+    }
+
+    if (
+      (deliveryType === "API" || deliveryType === "Both (API & DaaS)") &&
+      !rpm
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "RPM is required for API delivery type",
       });
     }
     // let parsedProjectFrequency;
@@ -607,6 +620,7 @@ const ProjectIntegration = async (req, res) => {
       projectManager,
       csprojectManager,
       bde: salesPerson,
+      rpm,
       status: "New",
       isActive: true,
       createdBy: userId,
@@ -684,6 +698,14 @@ const ProjectIntegration = async (req, res) => {
             <td style="padding: 6px 0;"><strong>Delivery Type:</strong></td>
             <td>${deliveryType}</td>
           </tr>
+          ${
+            deliveryType === "API" || deliveryType === "Both (API & DaaS)"
+              ? `<tr>
+            <td style="padding: 6px 0;"><strong>RPM:</strong></td>
+            <td>${rpm}</td>
+          </tr>`
+              : ""
+          }
           <tr>
             <td style="padding: 6px 0;"><strong>Status:</strong></td>
             <td><span style="color:#16a34a; font-weight:600;">New</span></td>
@@ -1493,11 +1515,15 @@ const createFeed = async (req, res) => {
       platformType,
       frequencyType,
       countries = [],
+      states = [],
+      cities = [],
+      pincode,
       description,
       frequencyConfig,
     } = req.body;
 
     /* ---------------- VALIDATION ---------------- */
+    // Check country/state requirements (At least one country required)
     if (!projectId || !platformName || !countries.length) {
       return res.status(400).json({
         success: false,
@@ -1522,9 +1548,11 @@ const createFeed = async (req, res) => {
     /* ---------------- FEED NAME ---------------- */
     const capFirst = (t = "") => t.charAt(0).toUpperCase() + t.slice(1);
 
-    const feedName = `${capFirst(platformName)}|${countries
-      .map((c) => c.code)
-      .join(",")}|${platformType}|${scopeType}|${frequencyType}`;
+    // Use country.code if available, else fallback to countries array
+    // Use countries array for code
+    const locationCode = countries.map((c) => c.code).join(",");
+
+    const feedName = `${capFirst(platformName)}|${locationCode}|${platformType}|${scopeType}|${frequencyType}`;
 
     const existingFeed = await Feed.findOne({ feedName });
     if (existingFeed) {
@@ -1550,7 +1578,12 @@ const createFeed = async (req, res) => {
       platformType,
       scopeType,
       feedfrequency: parsedFrequency,
+      scopeType,
+      feedfrequency: parsedFrequency,
       countries,
+      states,
+      cities,
+      pincode,
       description,
       status: "New",
       createdBy: req.user.id,
@@ -2037,9 +2070,10 @@ const feedupdated = async (req, res) => {
       console.log("frequencyType", frequencyType);
       const countries = updates.countries ?? oldFeed.countries;
 
-      updates.feedName = `${capFirst(platformName)}|${countries
-        .map((c) => c.code)
-        .join(",")}|${capFirst(platformType)}|${capFirst(scopeType)}|${capFirst(
+      // Use countries list for location code
+      const locationCode = (countries || []).map((c) => c.code).join(",");
+
+      updates.feedName = `${capFirst(platformName)}|${locationCode}|${capFirst(platformType)}|${capFirst(scopeType)}|${capFirst(
         frequencyType,
       )}`;
     }

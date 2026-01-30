@@ -40,6 +40,7 @@ const ProjectView = () => {
   const [workReports, setWorkReports] = useState([]);
   const [totalDevelopers, setTotalDevelopers] = useState(0);
   const [totalProjectTime, setTotalProjectTime] = useState('00:00');
+  const [user, setUser] = useState(null);
 
   const [showWorkModal, setShowWorkModal] = useState(false);
   useEffect(() => {
@@ -52,6 +53,7 @@ const ProjectView = () => {
       const res = await axios.get(`${api}/Project-list/${projectId}`, { withCredentials: true });
       const json = await res.data;
       setProject(json?.data || null);
+      setUser(json?.user || null);
       setProjectActivities(json?.projectActivities || []);
       const reports = json?.workReports || [];
       setWorkReports(reports);
@@ -102,6 +104,7 @@ const ProjectView = () => {
     projectPriority,
     description,
     deliveryMode,
+    rpm,
     projectFrequency,
     sowDocument = [],
     inputDocument = [],
@@ -224,7 +227,7 @@ const ProjectView = () => {
             }
           >
             <Row className="g-1 mb-2">
-              <Col xs={12} sm={6} md={6}>
+              {/* <Col xs={12} sm={6} md={6}>
                 <Card style={{ minHeight: '120px' }} className="p-3">
                   <Card.Body className="py-2 px-2">
                     <small className="text-semibold d-flex align-items-center gap-2">
@@ -256,8 +259,8 @@ const ProjectView = () => {
                     </small>
                   </Card.Body>
                 </Card>
-              </Col>
-              <Col xs={12} sm={6} md={6}>
+              </Col> */}
+              <Col xs={12} sm={12} md={12}>
                 <Card
                   role="button"
                   tabIndex={0}
@@ -309,22 +312,23 @@ const ProjectView = () => {
                   </Card.Body>
                 </Card>
               </Col>
-
-              <Col xs={12} sm={6} md={3}>
-                <Card
-                  className="p-3"
-                  role="button"
-                  style={{ cursor: 'pointer', minHeight: '120px' }}
-                  onClick={() => setShowWorkModal(true)}
-                >
-                  <small className="text-semibold d-flex align-items-center gap-1">
-                    {' '}
-                    <IoMdTime />
-                    Overall Effort
-                  </small>
-                  <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
-                </Card>
-              </Col>
+              {!(user?.Rolelevel === 7) && (
+                <Col xs={12} sm={6} md={3}>
+                  <Card
+                    className="p-3"
+                    role="button"
+                    style={{ cursor: 'pointer', minHeight: '120px' }}
+                    onClick={() => setShowWorkModal(true)}
+                  >
+                    <small className="text-semibold d-flex align-items-center gap-1">
+                      {' '}
+                      <IoMdTime />
+                      Overall Effort
+                    </small>
+                    <h5 className="fw-bold mb-0 text-primary">{totalProjectTime}</h5>
+                  </Card>
+                </Col>
+              )}
             </Row>
             <Row>
               <Col md={12}>
@@ -409,6 +413,16 @@ const ProjectView = () => {
                 {deliveryMode}
               </Col>
             </Row>
+            {rpm && (
+              <Row className="py-2 border-bottom align-items-center">
+                <Col md={4} className="text-dark fw-medium">
+                  RPM:
+                </Col>
+                <Col md={8} className="content-between-end">
+                  {rpm ? rpm : '-'}
+                </Col>
+              </Row>
+            )}
             <Row className="py-2 border-bottom align-items-center">
               <Col md={4} className="text-dark fw-medium">
                 Posted by :

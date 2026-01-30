@@ -7,7 +7,7 @@ import DataTable from 'react-data-table-component';
 import { FaEye } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import Select from 'react-select';
-import { getData } from 'country-list';
+import { Country, State, City } from 'country-state-city';
 import { api } from 'views/api';
 import 'react-toastify/dist/ReactToastify.css';
 import dayjs from 'dayjs';
@@ -120,6 +120,8 @@ const ApiconfigrationList = () => {
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [countryList, setCountryList] = useState([]);
+  const [stateList, setStateList] = useState([]);
+  const [cityList, setCityList] = useState([]);
   const [formData, setFormData] = useState({
     platformName: '',
     // industryType: '',
@@ -127,8 +129,12 @@ const ApiconfigrationList = () => {
     scopeType: '',
     feedPriority: 'Medium',
     // deliveryType: '',
+
     frequencyType: '',
     countries: [],
+    states: [],
+    cities: [],
+    pincode: '',
     description: ''
   });
   console.log('formData', formData);
@@ -153,9 +159,10 @@ const ApiconfigrationList = () => {
     platformType: '',
     scopeType: '',
     feedPriority: '',
-    frameworkType: '',
     frequencyType: '',
     countries: [],
+    states: [],
+    cities: [],
     description: ''
   });
 
@@ -178,8 +185,8 @@ const ApiconfigrationList = () => {
   const [loadingfeedcreate, setLoadingfeedcreate] = useState(false);
   const [loadingfeedassigndev, setLoadingfeedassigndev] = useState(false);
   useEffect(() => {
-    const countries = getData();
-    const options = countries.map(({ name, code }) => ({ label: name, value: code })).sort((a, b) => a.label.localeCompare(b.label));
+    const countries = Country.getAllCountries();
+    const options = countries.map((c) => ({ label: c.name, value: c.isoCode, ...c })).sort((a, b) => a.label.localeCompare(b.label));
     setCountryList(options);
   }, []);
   useEffect(() => {
@@ -235,7 +242,7 @@ const ApiconfigrationList = () => {
     }
 
     if (!formData.countries || formData.countries.length === 0) {
-      toast.error('Please select at least one country');
+      toast.error('At least one Country is required');
       return false;
     }
 
@@ -299,8 +306,12 @@ const ApiconfigrationList = () => {
         platformType: '',
         feedPriority: '',
         // deliveryType: '',
-        frequency: '',
+        frequencyType: '',
+
         countries: [],
+        states: [],
+        cities: [],
+        pincode: '',
         description: ''
       });
       fetchFeeds(1, limit, search);
@@ -375,8 +386,45 @@ const ApiconfigrationList = () => {
       frameworkType: feed.frameworkType || '',
       frequencyType: feed.feedfrequency?.frequencyType || '',
       countries: feed.countries || [],
+      states: feed.states || [],
+      cities: feed.cities || [],
+      pincode: feed.pincode || '',
       description: feed.description || ''
     });
+
+    // Populate state/city lists for Edit
+    if (feed.countries?.length) {
+      let states = [];
+      feed.countries.forEach((country) => {
+        const countryStates = State.getStatesOfCountry(country.code).map((s) => ({
+          label: s.name,
+          value: s.isoCode,
+          countryCode: country.code,
+          ...s
+        }));
+        states = [...states, ...countryStates];
+      });
+      states.unshift({ label: 'All States', value: 'All', name: 'All States', isoCode: 'All', countryCode: 'All' });
+      setStateList(states);
+    }
+
+    if (feed.states?.length) {
+      let cities = [];
+      // If "All States" is selected or logic suggests, we might fetch all.
+      // Assuming we fetch cities for selected states:
+      feed.states.forEach((state) => {
+        if (state.value === 'All') return;
+        const stateCities = City.getCitiesOfState(state.countryCode, state.code).map((c) => ({
+          label: c.name,
+          value: c.name,
+          stateCode: state.code,
+          ...c
+        }));
+        cities = [...cities, ...stateCities];
+      });
+      cities.unshift({ label: 'All Cities', value: 'All', name: 'All Cities', code: 'All' });
+      setCityList(cities);
+    }
 
     // 🔹 Prefill frequency schedule
     setEditSchedule({
@@ -449,8 +497,9 @@ const ApiconfigrationList = () => {
     }
 
     // 🔹 Countries
-    if ('countries' in changes && (!changes.countries || !changes.countries.length)) {
-      toast.error('Please select at least one country');
+    // 🔹 Countries
+    if ('countries' in changes && (!changes.countries || changes.countries.length === 0)) {
+      toast.error('At least one Country is required');
       return false;
     }
 
@@ -512,6 +561,9 @@ const ApiconfigrationList = () => {
       frameworkType: editFormData.frameworkType,
       description: editFormData.description,
       countries: editFormData.countries,
+      states: editFormData.states,
+      cities: editFormData.cities,
+      pincode: editFormData.pincode,
       developers: editDevelopers.map((d) => d.value)
     };
 
@@ -528,6 +580,9 @@ const ApiconfigrationList = () => {
       frameworkType: editFeed.frameworkType,
       description: editFeed.description,
       countries: editFeed.countries,
+      states: editFeed.states,
+      cities: editFeed.cities,
+      pincode: editFeed.pincode,
       developers: editFeed.developers?.map((d) => d._id),
       frequencyConfig: originalFrequencyConfig
     };
@@ -1244,21 +1299,145 @@ const ApiconfigrationList = () => {
               </LocalizationProvider>
             </Row>
             <Row>
-              <Col md={8} className="mt-3">
+              <Col md={3} className="mt-3">
                 <Form.Group>
                   <Form.Label className="required">Country </Form.Label>
                   <Select
                     options={countryList}
                     isMulti
-                    onChange={(v) =>
+                    value={
+                      formData.countries?.map((c) => ({
+                        label: c.name,
+                        value: c.code,
+                        ...c
+                      })) || []
+                    }
+                    onChange={(selected) => {
+                      const countries = selected ? selected.map((s) => ({ name: s.label, code: s.value })) : [];
                       setFormData({
                         ...formData,
-                        countries: v.map((c) => ({
-                          name: c.label,
-                          code: c.value
-                        }))
-                      })
+                        countries,
+                        states: [],
+                        cities: []
+                      });
+
+                      if (selected && selected.length > 0) {
+                        let states = [];
+                        selected.forEach((country) => {
+                          const countryStates = State.getStatesOfCountry(country.value).map((s) => ({
+                            label: s.name,
+                            value: s.isoCode,
+                            countryCode: country.value,
+                            ...s
+                          }));
+                          states = [...states, ...countryStates];
+                        });
+                        states.unshift({ label: 'All States', value: 'All', name: 'All States', isoCode: 'All', countryCode: 'All' });
+                        setStateList(states);
+                      } else {
+                        setStateList([]);
+                      }
+                      setCityList([]);
+                    }}
+                    placeholder="Select Countries"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3} className="mt-3">
+                <Form.Group>
+                  <Form.Label>State </Form.Label>
+                  <Select
+                    options={stateList}
+                    isMulti
+                    value={
+                      formData.states?.map((s) => ({
+                        label: s.name,
+                        value: s.code,
+                        ...s
+                      })) || []
                     }
+                    onChange={(selected) => {
+                      // Check for "All" selection logic
+                      let states = [];
+                      if (selected && selected.some((s) => s.value === 'All')) {
+                        states = [{ name: 'All States', code: 'All', countryCode: 'All' }];
+                      } else {
+                        states = selected ? selected.map((s) => ({ name: s.label, code: s.value, countryCode: s.countryCode })) : [];
+                      }
+
+                      setFormData({
+                        ...formData,
+                        states,
+                        cities: []
+                      });
+
+                      if (states.length > 0 && states[0].code !== 'All') {
+                        let cities = [];
+                        states.forEach((state) => {
+                          const stateCities = City.getCitiesOfState(state.countryCode, state.code).map((c) => ({
+                            label: c.name,
+                            value: c.name,
+                            stateCode: state.code,
+                            ...c
+                          }));
+                          cities = [...cities, ...stateCities];
+                        });
+                        cities.unshift({ label: 'All Cities', value: 'All', name: 'All Cities', code: 'All' });
+                        setCityList(cities);
+                      } else if (states.length > 0 && states[0].code === 'All') {
+                        setCityList([{ label: 'All Cities', value: 'All', name: 'All Cities', code: 'All' }]);
+                      } else {
+                        setCityList([]);
+                      }
+                    }}
+                    placeholder="Select States"
+                    isDisabled={!formData.countries.length}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3} className="mt-3">
+                <Form.Group>
+                  <Form.Label>City </Form.Label>
+                  <Select
+                    options={cityList}
+                    isMulti
+                    value={
+                      formData.cities?.map((c) => ({
+                        label: c.name,
+                        value: c.code,
+                        ...c
+                      })) || []
+                    }
+                    onChange={(selected) => {
+                      let cities = [];
+                      if (selected && selected.some((c) => c.value === 'All')) {
+                        cities = [{ name: 'All Cities', code: 'All', stateCode: 'All' }];
+                      } else {
+                        cities = selected ? selected.map((c) => ({ name: c.label, code: c.value, stateCode: c.stateCode })) : [];
+                      }
+                      setFormData({
+                        ...formData,
+                        cities
+                      });
+                    }}
+                    placeholder="Select Cities"
+                    isDisabled={!formData.states.length}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3} className="mt-3">
+                <Form.Group>
+                  <Form.Label>Pincode </Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={formData.pincode}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^[\d,\s]*$/.test(val)) {
+                        setFormData({ ...formData, pincode: val });
+                      }
+                    }}
+                    placeholder="Enter Pincodes (comma separated)"
                   />
                 </Form.Group>
               </Col>
@@ -1498,21 +1677,135 @@ const ApiconfigrationList = () => {
 
             {/* COUNTRY */}
 
-            <Col md={6} className="mt-3">
+            {/* COUNTRY */}
+            <Col md={3} className="mt-3">
               <Form.Label className="required">Country</Form.Label>
               <Select
                 options={countryList}
                 isMulti
-                value={editFormData.countries.map((c) => ({
-                  label: c.name,
-                  value: c.code
-                }))}
-                onChange={(v) =>
+                value={
+                  editFormData.countries?.map((c) => ({
+                    label: c.name,
+                    value: c.code,
+                    ...c
+                  })) || []
+                }
+                onChange={(selected) => {
+                  const countries = selected ? selected.map((s) => ({ name: s.label, code: s.value })) : [];
                   setEditFormData({
                     ...editFormData,
-                    countries: v.map((c) => ({ name: c.label, code: c.value }))
-                  })
+                    countries,
+                    states: [],
+                    cities: []
+                  });
+
+                  if (selected && selected.length > 0) {
+                    let states = [];
+                    selected.forEach((country) => {
+                      const countryStates = State.getStatesOfCountry(country.value).map((s) => ({
+                        label: s.name,
+                        value: s.isoCode,
+                        countryCode: country.value,
+                        ...s
+                      }));
+                      states = [...states, ...countryStates];
+                    });
+                    states.unshift({ label: 'All States', value: 'All', name: 'All States', isoCode: 'All', countryCode: 'All' });
+                    setStateList(states);
+                  } else {
+                    setStateList([]);
+                  }
+                  setCityList([]);
+                }}
+              />
+            </Col>
+            <Col md={3} className="mt-3">
+              <Form.Label>State</Form.Label>
+              <Select
+                options={stateList}
+                isMulti
+                value={
+                  editFormData.states?.map((s) => ({
+                    label: s.name,
+                    value: s.code,
+                    ...s
+                  })) || []
                 }
+                onChange={(selected) => {
+                  let states = [];
+                  if (selected && selected.some((s) => s.value === 'All')) {
+                    states = [{ name: 'All States', code: 'All', countryCode: 'All' }];
+                  } else {
+                    states = selected ? selected.map((s) => ({ name: s.label, code: s.value, countryCode: s.countryCode })) : [];
+                  }
+
+                  setEditFormData({
+                    ...editFormData,
+                    states,
+                    cities: []
+                  });
+
+                  if (states.length > 0 && states[0].code !== 'All') {
+                    let cities = [];
+                    states.forEach((state) => {
+                      const stateCities = City.getCitiesOfState(state.countryCode, state.code).map((c) => ({
+                        label: c.name,
+                        value: c.name,
+                        stateCode: state.code,
+                        ...c
+                      }));
+                      cities = [...cities, ...stateCities];
+                    });
+                    cities.unshift({ label: 'All Cities', value: 'All', name: 'All Cities', code: 'All' });
+                    setCityList(cities);
+                  } else if (states.length > 0 && states[0].code === 'All') {
+                    setCityList([{ label: 'All Cities', value: 'All', name: 'All Cities', code: 'All' }]);
+                  } else {
+                    setCityList([]);
+                  }
+                }}
+                isDisabled={!editFormData.countries.length}
+              />
+            </Col>
+            <Col md={2} className="mt-3">
+              <Form.Label>City</Form.Label>
+              <Select
+                options={cityList}
+                isMulti
+                value={
+                  editFormData.cities?.map((c) => ({
+                    label: c.name,
+                    value: c.code,
+                    ...c
+                  })) || []
+                }
+                onChange={(selected) => {
+                  let cities = [];
+                  if (selected && selected.some((c) => c.value === 'All')) {
+                    cities = [{ name: 'All Cities', code: 'All', stateCode: 'All' }];
+                  } else {
+                    cities = selected ? selected.map((c) => ({ name: c.label, code: c.value, stateCode: c.stateCode })) : [];
+                  }
+                  setEditFormData({
+                    ...editFormData,
+                    cities
+                  });
+                }}
+                isDisabled={!editFormData.states.length}
+              />
+            </Col>
+            <Col md={3} className="mt-3">
+              <Form.Label>Pincode</Form.Label>
+              <Form.Control
+                type="text"
+                value={editFormData.pincode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[\d,\s]*$/.test(val)) {
+                    setEditFormData({ ...editFormData, pincode: val });
+                  }
+                }}
+                placeholder="Enter Pincodes (comma separated)"
               />
             </Col>
             <Col md={2} className="mt-3">
